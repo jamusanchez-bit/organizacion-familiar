@@ -1,0 +1,12 @@
+service:
+  name: organizacion-familiar
+  type: web
+  env: node
+  buildCommand: npm ci && npm run build
+  startCommand: npm start
+  plan: free
+  envVars:
+    - key: DATABASE_URL
+      fromSecret: true
+    - key: NODE_ENV
+      value: production
