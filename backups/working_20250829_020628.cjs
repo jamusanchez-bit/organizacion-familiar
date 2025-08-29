@@ -2,42 +2,14 @@ const http = require('http');
 const url = require('url');
 
 const USERS = {
-  javier: { id: 'javier', name: 'Javier', token: 'jav_abc123xyz789def456', allowedIPs: [] },
-  raquel: { id: 'raquel', name: 'Raquel', token: 'raq_uvw012rst345ghi678', allowedIPs: [] },
-  mario: { id: 'mario', name: 'Mario', token: 'mar_jkl901mno234pqr567', allowedIPs: [] },
-  alba: { id: 'alba', name: 'Alba', token: 'alb_stu890vwx123yzb456', allowedIPs: [] },
-  javi_administrador: { id: 'javi_administrador', name: 'Administrador', token: 'adm_cde789fgh012ijl345', allowedIPs: [] }
+  javier: { id: 'javier', name: 'Javier', password: 'password123' },
+  raquel: { id: 'raquel', name: 'Raquel', password: 'password456' },
+  mario: { id: 'mario', name: 'Mario', password: 'password789' },
+  alba: { id: 'alba', name: 'Alba', password: 'password000' },
+  javi_administrador: { id: 'javi_administrador', name: 'Javi (Admin)', password: 'admin123' }
 };
 
-const suspiciousIPs = new Set();
-const ipAttempts = {};
-
-function getClientIP(req) {
-  return req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress || '127.0.0.1';
-}
-
-function isIPBlocked(ip) {
-  return suspiciousIPs.has(ip);
-}
-
-function recordFailedAttempt(ip) {
-  if (!ipAttempts[ip]) ipAttempts[ip] = 0;
-  ipAttempts[ip]++;
-  
-  if (ipAttempts[ip] >= 3) {
-    suspiciousIPs.add(ip);
-    console.log(`IP bloqueada por actividad sospechosa: ${ip}`);
-  }
-}
-
-function recordSuccessfulAccess(userId, ip) {
-  const user = Object.values(USERS).find(u => u.id === userId);
-  if (user && !user.allowedIPs.includes(ip)) {
-    user.allowedIPs.push(ip);
-    console.log(`Nueva IP autorizada para ${userId}: ${ip}`);
-  }
-  delete ipAttempts[ip];
-}
+let sessions = {};
 
 const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url, true);
@@ -45,121 +17,6 @@ const server = http.createServer((req, res) => {
   // Manejar offset de semana
   if (parsedUrl.query.weekOffset) {
     currentWeekOffset = parseInt(parsedUrl.query.weekOffset) || 0;
-  }
-  
-  // API para mensajes
-  if (req.method === 'POST' && parsedUrl.pathname === '/api/send-message') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', () => {
-      const data = JSON.parse(body);
-      const { type, message, from, to } = data;
-      
-      const newMessage = {
-        id: messageIdCounter++,
-        message: message.trim(),
-        timestamp: getTimestamp(),
-        user: from,
-        from: from
-      };
-      
-      if (type === 'group') {
-        groupMessages.push(newMessage);
-        addNotification(from);
-      } else if (type === 'admin') {
-        adminMessages.push(newMessage);
-        addNotification(from);
-      } else if (type === 'private') {
-        const chatKey = [from, to].sort().join('-');
-        if (!privateChats[chatKey]) privateChats[chatKey] = [];
-        newMessage.to = to;
-        privateChats[chatKey].push(newMessage);
-        if (unreadMessages[to] !== undefined) unreadMessages[to]++;
-      }
-      
-      res.writeHead(200, {'Content-Type': 'application/json'});
-      res.end(JSON.stringify({ success: true, message: newMessage }));
-    });
-    return;
-  }
-  
-  if (req.method === 'POST' && parsedUrl.pathname === '/api/delete-message') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', () => {
-      const data = JSON.parse(body);
-      const { type, messageId, chatKey } = data;
-      
-      if (type === 'group') {
-        const index = groupMessages.findIndex(m => m.id == messageId);
-        if (index !== -1) groupMessages.splice(index, 1);
-      } else if (type === 'admin') {
-        const index = adminMessages.findIndex(m => m.id == messageId);
-        if (index !== -1) adminMessages.splice(index, 1);
-      } else if (type === 'private' && chatKey) {
-        if (privateChats[chatKey]) {
-          const index = privateChats[chatKey].findIndex(m => m.id == messageId);
-          if (index !== -1) privateChats[chatKey].splice(index, 1);
-        }
-      }
-      
-      res.writeHead(200, {'Content-Type': 'application/json'});
-      res.end(JSON.stringify({ success: true }));
-    });
-    return;
-  }
-  
-  if (req.method === 'GET' && parsedUrl.pathname === '/api/messages') {
-    res.writeHead(200, {'Content-Type': 'application/json'});
-    res.end(JSON.stringify({ 
-      groupMessages, 
-      adminMessages, 
-      privateChats,
-      unreadMessages
-    }));
-    return;
-  }
-  
-  if (req.method === 'POST' && parsedUrl.pathname === '/api/mark-read') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', () => {
-      const data = JSON.parse(body);
-      const { userId } = data;
-      if (unreadMessages[userId] !== undefined) {
-        unreadMessages[userId] = 0;
-      }
-      res.writeHead(200, {'Content-Type': 'application/json'});
-      res.end(JSON.stringify({ success: true }));
-    });
-    return;
-  }
-  
-  // API para toggle activity
-  if (req.method === 'POST' && parsedUrl.pathname === '/api/toggle-activity') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', () => {
-      const data = JSON.parse(body);
-      const { activityId, userId } = data;
-      
-      const userActivities = activities[userId];
-      if (userActivities) {
-        const activity = userActivities.find(a => a.id == activityId);
-        if (activity && canCompleteActivity(activity)) {
-          activity.completed = !activity.completed;
-          updateActivityStreak(activity, activity.completed);
-          
-          res.writeHead(200, {'Content-Type': 'application/json'});
-          res.end(JSON.stringify({ success: true, activity }));
-          return;
-        }
-      }
-      
-      res.writeHead(400, {'Content-Type': 'application/json'});
-      res.end(JSON.stringify({ success: false }));
-    });
-    return;
   }
   
   // API para toggle meal status
@@ -186,100 +43,37 @@ const server = http.createServer((req, res) => {
     return;
   }
   
-  // Acceso directo por token
-  const pathMatch = parsedUrl.pathname.match(/^\/(javier|raquel|mario|alba|admin)\/([a-zA-Z0-9_]+)$/);
-  if (pathMatch) {
-    const [, userType, token] = pathMatch;
-    const clientIP = getClientIP(req);
-    
-    if (isIPBlocked(clientIP)) {
-      res.writeHead(403, {'Content-Type': 'text/html'});
-      res.end('<h1>Acceso bloqueado</h1><p>Tu IP ha sido bloqueada por actividad sospechosa.</p>');
-      return;
-    }
-    
-    const userId = userType === 'admin' ? 'javi_administrador' : userType;
-    const user = USERS[userId];
-    
-    if (user && user.token === `${userType === 'admin' ? 'adm' : userId.substring(0,3)}_${token}`) {
-      // Verificar IP si ya tiene IPs autorizadas
-      if (user.allowedIPs.length > 0 && !user.allowedIPs.includes(clientIP)) {
-        recordFailedAttempt(clientIP);
-        res.writeHead(403, {'Content-Type': 'text/html'});
-        res.end('<h1>Acceso denegado</h1><p>Esta IP no está autorizada para este usuario.</p>');
-        return;
-      }
-      
-      recordSuccessfulAccess(userId, clientIP);
-      
-      res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
-      res.end(getMainHTML(user, parsedUrl.query.section || 'actividades'));
-      return;
-    } else {
-      recordFailedAttempt(clientIP);
-      res.writeHead(404, {'Content-Type': 'text/html'});
-      res.end('<h1>Enlace no válido</h1>');
-      return;
-    }
+  if (parsedUrl.pathname === '/logout') {
+    res.writeHead(302, {'Location': '/', 'Set-Cookie': 'session=; Max-Age=0'});
+    res.end();
+    return;
   }
   
-  // Página de enlaces de acceso
-  res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
-  res.end(`<!DOCTYPE html>
-<html>
-<head>
-  <title>Organización Familiar - Acceso</title>
-  <style>
-    * { font-family: Verdana, Geneva, sans-serif; margin: 0; padding: 0; }
-  </style>
-</head>
-<body>
-  <div style="min-height: 100vh; background: linear-gradient(135deg, #fbbf24, #f59e0b, #dbeafe, #f3e8ff); display: flex; align-items: center; justify-content: center; padding: 16px;">
-    <div style="background: rgba(255,255,255,0.95); border-radius: 16px; padding: 32px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 600px; width: 100%; backdrop-filter: blur(10px);">
-      <h1 style="font-size: 32px; font-weight: bold; text-align: center; margin-bottom: 24px; background: linear-gradient(to right, #3b82f6, #9333ea); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Organización Familiar</h1>
-      
-      <div style="background: rgba(59, 130, 246, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 32px; border-left: 4px solid #3b82f6;">
-        <p style="font-style: italic; text-align: center; color: #374151; font-size: 16px; line-height: 1.5; margin-bottom: 8px;">"Si vives con gratitud, estás reprogramando tu cerebro para la abundancia."</p>
-        <p style="text-align: center; color: #6b7280; font-size: 14px;">— Joe Dispenza</p>
-      </div>
-      
-      <div style="text-align: center; margin-bottom: 24px;">
-        <h2 style="font-size: 20px; margin-bottom: 16px; color: #374151;">Enlaces de Acceso Directo</h2>
-        <p style="color: #6b7280; margin-bottom: 20px;">Guarda tu enlace personal en favoritos o como acceso directo:</p>
-      </div>
-      
-      <div style="display: flex; flex-direction: column; gap: 12px;">
-        <div style="padding: 16px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #3b82f6;">
-          <strong style="color: #1e40af;">Javier:</strong><br>
-          <code style="font-size: 12px; color: #6b7280; word-break: break-all;">http://192.168.100.122:7777/javier/abc123xyz789def456</code>
-        </div>
-        <div style="padding: 16px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #ec4899;">
-          <strong style="color: #be185d;">Raquel:</strong><br>
-          <code style="font-size: 12px; color: #6b7280; word-break: break-all;">http://192.168.100.122:7777/raquel/uvw012rst345ghi678</code>
-        </div>
-        <div style="padding: 16px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #10b981;">
-          <strong style="color: #047857;">Mario:</strong><br>
-          <code style="font-size: 12px; color: #6b7280; word-break: break-all;">http://192.168.100.122:7777/mario/jkl901mno234pqr567</code>
-        </div>
-        <div style="padding: 16px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #f59e0b;">
-          <strong style="color: #d97706;">Alba:</strong><br>
-          <code style="font-size: 12px; color: #6b7280; word-break: break-all;">http://192.168.100.122:7777/alba/stu890vwx123yzb456</code>
-        </div>
-        <div style="padding: 16px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #8b5cf6;">
-          <strong style="color: #7c3aed;">Administrador:</strong><br>
-          <code style="font-size: 12px; color: #6b7280; word-break: break-all;">http://192.168.100.122:7777/admin/cde789fgh012ijl345</code>
-        </div>
-      </div>
-      
-      <div style="margin-top: 24px; padding: 16px; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
-        <p style="font-size: 14px; color: #92400e;"><strong>Importante:</strong> Cada enlace es personal y único. No lo compartas con otros.</p>
-      </div>
-    </div>
-  </div>
-</body>
-</html>`);
-function getMainHTML(user, section) {
-  return `<!DOCTYPE html>
+  if (req.method === 'POST' && parsedUrl.pathname === '/login') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = new URLSearchParams(body);
+      const username = data.get('username');
+      const user = USERS[username];
+      if (user) {
+        const sessionId = Math.random().toString(36);
+        sessions[sessionId] = user;
+        res.writeHead(302, {'Location': '/', 'Set-Cookie': `session=${sessionId}`});
+        res.end();
+      }
+    });
+    return;
+  }
+  
+  const cookies = req.headers.cookie || '';
+  const sessionId = cookies.split('session=')[1]?.split(';')[0];
+  const user = sessions[sessionId];
+  const section = parsedUrl.query.section || 'actividades';
+  
+  if (user) {
+    res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
+    res.end(`<!DOCTYPE html>
 <html>
 <head>
   <title>Organización Familiar</title>
@@ -310,7 +104,7 @@ function getMainHTML(user, section) {
         <div class="icon">🏠</div>
       </div>
       <div class="nav">
-        ${getNavigation(user.id, section, user.token)}
+        ${getNavigation(user.id, section)}
       </div>
       <div class="user">
         <span style="font-size: 12px; font-weight: 500;">${user.name}</span>
@@ -326,18 +120,45 @@ function getMainHTML(user, section) {
       </div>
     </div>
   </div>
-  <script>
-    function markMessagesAsRead() {
-      fetch('/api/mark-read', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: '${user.id}' })
-      });
-    }
-  </script>
 </body>
-</html>`;
-}
+</html>`);
+  } else {
+    res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
+    res.end(`<!DOCTYPE html>
+<html>
+<head>
+  <title>Organización Familiar</title>
+  <style>
+    * { font-family: Verdana, Geneva, sans-serif; margin: 0; padding: 0; }
+  </style>
+</head>
+<body>
+  <div style="min-height: 100vh; background: linear-gradient(135deg, #fbbf24, #f59e0b, #dbeafe, #f3e8ff); position: relative; display: flex; align-items: center; justify-content: center; padding: 16px;">
+    <div style="position: absolute; top: 10%; left: 50%; transform: translateX(-50%); z-index: 1;">
+      <div style="width: 120px; height: 120px; background: radial-gradient(circle, #fbbf24, #f59e0b); border-radius: 50%; box-shadow: 0 0 40px rgba(251, 191, 36, 0.6);"></div>
+      <div style="width: 100%; height: 2px; background: linear-gradient(to right, transparent, #f59e0b, transparent); margin-top: 20px;"></div>
+    </div>
+    
+    <div style="background: rgba(255,255,255,0.95); border-radius: 16px; padding: 32px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 500px; width: 100%; z-index: 2; backdrop-filter: blur(10px);">
+      <h1 style="font-size: 32px; font-weight: bold; text-align: center; margin-bottom: 24px; background: linear-gradient(to right, #3b82f6, #9333ea); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Organización Familiar</h1>
+      
+      <div style="background: rgba(59, 130, 246, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 32px; border-left: 4px solid #3b82f6;">
+        <p style="font-style: italic; text-align: center; color: #374151; font-size: 16px; line-height: 1.5; margin-bottom: 8px;">"Si vives con gratitud, estás reprogramando tu cerebro para la abundancia."</p>
+        <p style="text-align: center; color: #6b7280; font-size: 14px;">— Joe Dispenza</p>
+      </div>
+      
+      <form method="POST" action="/login" style="display: flex; flex-direction: column; gap: 16px;">
+        <button type="submit" name="username" value="javier" style="width: 100%; padding: 16px; background: linear-gradient(to right, #3b82f6, #9333ea); color: white; border: none; border-radius: 12px; font-weight: 500; cursor: pointer;">Javier</button>
+        <button type="submit" name="username" value="raquel" style="width: 100%; padding: 16px; background: linear-gradient(to right, #3b82f6, #9333ea); color: white; border: none; border-radius: 12px; font-weight: 500; cursor: pointer;">Raquel</button>
+        <button type="submit" name="username" value="mario" style="width: 100%; padding: 16px; background: linear-gradient(to right, #3b82f6, #9333ea); color: white; border: none; border-radius: 12px; font-weight: 500; cursor: pointer;">Mario</button>
+        <button type="submit" name="username" value="alba" style="width: 100%; padding: 16px; background: linear-gradient(to right, #3b82f6, #9333ea); color: white; border: none; border-radius: 12px; font-weight: 500; cursor: pointer;">Alba</button>
+        <button type="submit" name="username" value="javi_administrador" style="width: 100%; padding: 16px; background: linear-gradient(to right, #3b82f6, #9333ea); color: white; border: none; border-radius: 12px; font-weight: 500; cursor: pointer;">Javi (Admin)</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>`);
+  }
 });
 
 const recipesByCategory = {
@@ -815,62 +636,20 @@ function getInventarioContent(userId, isAdmin) {
 
 const activities = {
   javier: [
-    { id: 1, title: 'Ejercicio matutino', time: '07:00', duration: 30, completed: false, repeat: 'daily', streak: 0, lastCompleted: null },
-    { id: 2, title: 'Revisar emails', time: '09:00', duration: 15, completed: true, repeat: 'weekdays', streak: 0, lastCompleted: null }
+    { id: 1, title: 'Ejercicio matutino', time: '07:00', duration: 30, completed: false, repeat: 'daily' },
+    { id: 2, title: 'Revisar emails', time: '09:00', duration: 15, completed: true, repeat: 'weekdays' }
   ],
   raquel: [
-    { id: 3, title: 'Yoga', time: '06:30', duration: 45, completed: false, repeat: 'daily', streak: 0, lastCompleted: null },
-    { id: 4, title: 'Planificar comidas', time: '19:00', duration: 20, completed: false, repeat: 'weekly', streak: 0, lastCompleted: null }
+    { id: 3, title: 'Yoga', time: '06:30', duration: 45, completed: false, repeat: 'daily' },
+    { id: 4, title: 'Planificar comidas', time: '19:00', duration: 20, completed: false, repeat: 'weekly' }
   ],
   mario: [
-    { id: 5, title: 'Estudiar', time: '16:00', duration: 60, completed: false, repeat: 'weekdays', streak: 0, lastCompleted: null }
+    { id: 5, title: 'Estudiar', time: '16:00', duration: 60, completed: false, repeat: 'weekdays' }
   ],
   alba: [
-    { id: 6, title: 'Leer', time: '20:00', duration: 30, completed: true, repeat: 'daily', streak: 0, lastCompleted: null }
+    { id: 6, title: 'Leer', time: '20:00', duration: 30, completed: true, repeat: 'daily' }
   ]
 };
-
-function getTodayDateString() {
-  const today = new Date();
-  return today.toISOString().split('T')[0];
-}
-
-function canCompleteActivity(activity) {
-  const today = getTodayDateString();
-  return !activity.lastCompleted || activity.lastCompleted !== today;
-}
-
-function updateActivityStreak(activity, completed) {
-  const today = getTodayDateString();
-  
-  if (completed) {
-    if (activity.lastCompleted) {
-      const lastDate = new Date(activity.lastCompleted);
-      const todayDate = new Date(today);
-      const diffTime = todayDate - lastDate;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      if (diffDays === 1) {
-        activity.streak++;
-      } else if (diffDays > 1) {
-        activity.streak = 1;
-      }
-    } else {
-      activity.streak = 1;
-    }
-    activity.lastCompleted = today;
-  } else {
-    activity.streak = 0;
-    activity.lastCompleted = null;
-  }
-}
-
-function getStreakBadge(streak) {
-  if (streak >= 100) return { text: 'Conseguido: Eres una leyenda', medal: '🥇' };
-  if (streak >= 50) return { text: 'Conseguido: Eres un hacha', medal: '🥈' };
-  if (streak >= 21) return { text: 'Conseguido: Has cogido el hábito', medal: '🥉' };
-  return null;
-}
 
 function getActivitiesContent(userId, isAdmin) {
   if (isAdmin) {
@@ -1037,45 +816,17 @@ function getActivitiesContent(userId, isAdmin) {
       </div>
       <div id="daily-view">
         <h3 style="margin-bottom: 16px;">Hoy - ${getTodayDate()}</h3>
-        ${userActivities.length > 0 ? userActivities.map(activity => {
-          const canComplete = canCompleteActivity(activity);
-          const badge21 = getStreakBadge(21);
-          const badge50 = getStreakBadge(50);
-          const badge100 = getStreakBadge(100);
-          
-          return `
-            <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 16px; border-left: 4px solid ${activity.completed ? '#10b981' : '#6b7280'};">
-              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
-                <div style="flex: 1;">
-                  <h4 style="font-size: 18px; font-weight: bold; margin-bottom: 4px;">${activity.title}</h4>
-                  <p style="color: #6b7280; margin-bottom: 8px;">${activity.time} - ${activity.duration} minutos</p>
-                  <div style="background: #f9fafb; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
-                    <p style="font-weight: bold; margin-bottom: 8px; color: #374151;">Racha actual: ${activity.streak} días</p>
-                    <div style="display: grid; grid-template-columns: 1fr; gap: 6px; font-size: 14px;">
-                      <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>Reto 21 días:</span>
-                        ${activity.streak >= 21 ? `<span style="color: #10b981; font-weight: bold;">${badge21.text} ${badge21.medal}</span>` : `<span style="color: #6b7280;">${Math.max(0, 21 - activity.streak)} días restantes</span>`}
-                      </div>
-                      <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>Reto 50 días:</span>
-                        ${activity.streak >= 50 ? `<span style="color: #10b981; font-weight: bold;">${badge50.text} ${badge50.medal}</span>` : `<span style="color: #6b7280;">${Math.max(0, 50 - activity.streak)} días restantes</span>`}
-                      </div>
-                      <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>Reto 100 días:</span>
-                        ${activity.streak >= 100 ? `<span style="color: #10b981; font-weight: bold;">${badge100.text} ${badge100.medal}</span>` : `<span style="color: #6b7280;">${Math.max(0, 100 - activity.streak)} días restantes</span>`}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <button onclick="toggleActivity(${activity.id})" 
-                        style="padding: 12px 20px; background: ${!canComplete ? '#9ca3af' : (activity.completed ? '#ef4444' : '#10b981')}; color: white; border: none; border-radius: 8px; cursor: ${!canComplete ? 'not-allowed' : 'pointer'}; font-weight: 500; margin-left: 16px;"
-                        ${!canComplete ? 'disabled' : ''}>
-                  ${activity.completed ? 'Marcar Pendiente' : 'Marcar Hecho'}
-                </button>
-              </div>
+        ${userActivities.length > 0 ? userActivities.map(activity => `
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 12px; background: white;">
+            <div>
+              <strong>${activity.title}</strong><br>
+              <small style="color: #6b7280;">${activity.time} - ${activity.duration} minutos</small>
             </div>
-          `;
-        }).join('') : '<p style="color: #6b7280; background: white; padding: 24px; border-radius: 8px;">No tienes actividades para hoy</p>'}
+            <button onclick="toggleActivity(${activity.id})" style="padding: 8px 16px; background: ${activity.completed ? '#ef4444' : '#10b981'}; color: white; border: none; border-radius: 4px; cursor: pointer;">
+              ${activity.completed ? 'Marcar Pendiente' : 'Marcar Hecho'}
+            </button>
+          </div>
+        `).join('') : '<p style="color: #6b7280; background: white; padding: 24px; border-radius: 8px;">No tienes actividades para hoy</p>'}
       </div>
       <div id="weekly-view" style="display: none;">
         <h3 style="margin-bottom: 16px;">Vista Semanal</h3>
@@ -1088,19 +839,8 @@ function getActivitiesContent(userId, isAdmin) {
           document.getElementById('daily-btn').style.background = view === 'daily' ? '#10b981' : '#6b7280';
           document.getElementById('weekly-btn').style.background = view === 'weekly' ? '#10b981' : '#6b7280';
         }
-        
         function toggleActivity(id) {
-          fetch('/api/toggle-activity', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ activityId: id, userId: '${userId}' })
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              location.reload();
-            }
-          });
+          alert('Funcionalidad de marcar actividad pendiente');
         }
       </script>
     `;
@@ -1391,37 +1131,13 @@ const shoppingList = {
   'Otros': []
 };
 
-// Sistema de mensajes mejorado
-const groupMessages = [];
+const forumMessages = [];
+
 const adminMessages = [];
+
 const privateChats = {};
-const unreadMessages = {
-  javier: 0,
-  raquel: 0,
-  mario: 0,
-  alba: 0
-};
 
-let messageIdCounter = 1;
-
-// Función para obtener timestamp
-function getTimestamp() {
-  const now = new Date();
-  const day = now.getDate().toString().padStart(2, '0');
-  const month = (now.getMonth() + 1).toString().padStart(2, '0');
-  const hours = now.getHours().toString().padStart(2, '0');
-  const minutes = now.getMinutes().toString().padStart(2, '0');
-  return `${day}/${month} ${hours}:${minutes}`;
-}
-
-// Función para incrementar notificaciones
-function addNotification(excludeUser) {
-  Object.keys(unreadMessages).forEach(user => {
-    if (user !== excludeUser) {
-      unreadMessages[user]++;
-    }
-  });
-}
+const unreadMessages = {};
 
 function getComprasContent(userId, isAdmin) {
   // Generar lista automática basada en inventario
@@ -1508,386 +1224,133 @@ function getComprasContent(userId, isAdmin) {
 function getMensajesContent(userId, isAdmin) {
   const users = ['javier', 'raquel', 'mario', 'alba'];
   const userNames = { javier: 'Javier', raquel: 'Raquel', mario: 'Mario', alba: 'Alba' };
-  const otherUsers = users.filter(u => u !== userId && u !== 'javi_administracion');
   
   return `
     <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 24px; background: linear-gradient(to right, #8b5cf6, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Mensajes</h2>
     
-    <!-- Mensajes al grupo -->
+    <!-- Esta semana quiero que hablemos de -->
     <div style="margin-bottom: 32px;">
-      <h3 style="font-size: 20px; font-weight: bold; margin-bottom: 16px; color: #7c3aed;">Mensajes al grupo</h3>
+      <h3 style="font-size: 20px; font-weight: bold; margin-bottom: 16px; color: #7c3aed;">Esta semana quiero que hablemos de:</h3>
       <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-        <div id="group-messages" style="max-height: 400px; overflow-y: auto; margin-bottom: 16px; background: #f9fafb; border-radius: 8px; padding: 12px;">
-          ${groupMessages.length > 0 ? groupMessages.map(msg => `
-            <div style="margin-bottom: 12px; padding: 8px; background: white; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+        <div id="forum-messages" style="max-height: 300px; overflow-y: auto; margin-bottom: 16px;">
+          ${forumMessages.map(msg => `
+            <div style="padding: 12px; border-bottom: 1px solid #f3f4f6; margin-bottom: 8px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <strong style="color: #7c3aed; font-size: 14px;">${userNames[msg.user]}</strong>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <small style="color: #6b7280; font-size: 12px;">${msg.timestamp}</small>
-                  ${msg.user === userId ? `<button onclick="deleteMessage('group', ${msg.id})" style="padding: 2px 6px; background: #ef4444; color: white; border: none; border-radius: 3px; font-size: 10px; cursor: pointer;">Eliminar</button>` : ''}
-                </div>
+                <strong style="color: #7c3aed;">${msg.user}</strong>
+                <small style="color: #6b7280;">${msg.timestamp}</small>
               </div>
-              <p style="color: #374151; margin: 0; font-size: 14px;">${msg.message}</p>
+              <p style="color: #374151;">${msg.message}</p>
             </div>
-          `).join('') : '<p style="color: #6b7280; text-align: center; padding: 20px;">No hay mensajes aún. ¡Sé el primero en escribir!</p>'}
+          `).join('')}
         </div>
         <div style="display: flex; gap: 12px;">
-          <input type="text" id="group-input" placeholder="Escribe tu mensaje al grupo..." style="flex: 1; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;" onkeypress="if(event.key==='Enter') sendGroupMessage()">
-          <button onclick="sendGroupMessage()" style="padding: 12px 20px; background: #7c3aed; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">Enviar</button>
+          <input type="text" id="forum-input" placeholder="Escribe tu mensaje..." style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;" onkeypress="if(event.key==='Enter') sendForumMessage()">
+          <button onclick="sendForumMessage()" style="padding: 8px 16px; background: #7c3aed; color: white; border: none; border-radius: 4px; cursor: pointer;">Enviar</button>
         </div>
-      </div>
-    </div>
-    
-    <!-- Chats personales -->
-    <div style="margin-bottom: 32px;">
-      <h3 style="font-size: 20px; font-weight: bold; margin-bottom: 16px; color: #dc2626;">Chats personales</h3>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
-        ${otherUsers.map(targetUser => {
-          const chatKey = [userId, targetUser].sort().join('-');
-          const messages = privateChats[chatKey] || [];
-          const lastMessage = messages[messages.length - 1];
-          return `
-            <div style="background: white; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #dc2626;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h4 style="font-size: 16px; font-weight: bold; color: #dc2626; margin: 0;">${userNames[targetUser]}</h4>
-                <button onclick="toggleChat('${targetUser}')" id="toggle-${targetUser}" style="padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Abrir</button>
-              </div>
-              ${lastMessage ? `
-                <div style="background: #f3f4f6; border-radius: 6px; padding: 8px; margin-bottom: 8px;">
-                  <small style="color: #6b7280; font-size: 11px;">${lastMessage.from === userId ? 'Tú' : userNames[lastMessage.from]}: ${lastMessage.message.length > 30 ? lastMessage.message.substring(0, 30) + '...' : lastMessage.message}</small>
-                </div>
-              ` : '<p style="color: #9ca3af; font-size: 12px; margin: 0;">No hay mensajes</p>'}
-              <div id="chat-${targetUser}" style="display: none; margin-top: 12px;">
-                <div id="messages-${targetUser}" style="max-height: 200px; overflow-y: auto; margin-bottom: 12px; background: #f9fafb; border-radius: 6px; padding: 8px;">
-                  ${messages.length > 0 ? messages.map(msg => `
-                    <div style="margin-bottom: 8px; text-align: ${msg.from === userId ? 'right' : 'left'};">
-                      <div style="display: inline-block; max-width: 80%; padding: 6px 10px; border-radius: 12px; background: ${msg.from === userId ? '#3b82f6' : '#e5e7eb'}; color: ${msg.from === userId ? 'white' : '#374151'}; font-size: 13px;">
-                        <p style="margin: 0;">${msg.message}</p>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
-                          <small style="opacity: 0.8; font-size: 10px;">${msg.timestamp}</small>
-                          ${msg.from === userId ? `<button onclick="deleteMessage('private', ${msg.id}, '${targetUser}')" style="padding: 1px 4px; background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 2px; font-size: 9px; cursor: pointer; margin-left: 4px;">×</button>` : ''}
-                        </div>
-                      </div>
-                    </div>
-                  `).join('') : '<p style="color: #6b7280; text-align: center; font-size: 12px;">No hay mensajes</p>'}
-                </div>
-                <div style="display: flex; gap: 8px;">
-                  <input type="text" id="input-${targetUser}" placeholder="Escribe a ${userNames[targetUser]}..." style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;" onkeypress="if(event.key==='Enter') sendPrivateMessage('${targetUser}')">
-                  <button onclick="sendPrivateMessage('${targetUser}')" style="padding: 8px 12px; background: #dc2626; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">Enviar</button>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('')}
       </div>
     </div>
     
     <!-- Sugerencias para el administrador -->
-    <div>
+    <div style="margin-bottom: 32px;">
       <h3 style="font-size: 20px; font-weight: bold; margin-bottom: 16px; color: #059669;">Sugerencias para el administrador</h3>
       <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-        <div id="admin-messages" style="max-height: 300px; overflow-y: auto; margin-bottom: 16px; background: #f9fafb; border-radius: 8px; padding: 12px;">
-          ${adminMessages.length > 0 ? adminMessages.map(msg => `
-            <div style="margin-bottom: 12px; padding: 8px; background: white; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+        <div id="admin-messages" style="max-height: 300px; overflow-y: auto; margin-bottom: 16px;">
+          ${adminMessages.map(msg => `
+            <div style="padding: 12px; border-bottom: 1px solid #f3f4f6; margin-bottom: 8px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <strong style="color: #059669; font-size: 14px;">${userNames[msg.user]}</strong>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <small style="color: #6b7280; font-size: 12px;">${msg.timestamp}</small>
-                  ${msg.user === userId ? `<button onclick="deleteMessage('admin', ${msg.id})" style="padding: 2px 6px; background: #ef4444; color: white; border: none; border-radius: 3px; font-size: 10px; cursor: pointer;">Eliminar</button>` : ''}
-                </div>
+                <strong style="color: #059669;">${userNames[msg.user]}</strong>
+                <small style="color: #6b7280;">${msg.timestamp}</small>
               </div>
-              <p style="color: #374151; margin: 0; font-size: 14px;">${msg.message}</p>
-              ${msg.reply ? `<div style="margin-top: 8px; padding: 8px; background: #f0fdf4; border-radius: 4px; border-left: 3px solid #059669; font-size: 13px;"><strong>Javier:</strong> ${msg.reply}</div>` : ''}
+              <p style="color: #374151;">${msg.message}</p>
+              ${msg.reply ? `<div style="margin-top: 8px; padding: 8px; background: #f0fdf4; border-radius: 4px; border-left: 3px solid #059669;"><strong>Javier:</strong> ${msg.reply}</div>` : ''}
             </div>
-          `).join('') : '<p style="color: #6b7280; text-align: center; padding: 20px;">No hay sugerencias aún</p>'}
+          `).join('')}
         </div>
         <div style="display: flex; gap: 12px;">
-          <input type="text" id="admin-input" placeholder="Escribe tu sugerencia al Administrador..." style="flex: 1; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;" onkeypress="if(event.key==='Enter') sendAdminMessage()">
-          <button onclick="sendAdminMessage()" style="padding: 12px 20px; background: #059669; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">Enviar</button>
+          <input type="text" id="admin-input" placeholder="Escribe tu sugerencia a Javier..." style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;" onkeypress="if(event.key==='Enter') sendAdminMessage()">
+          <button onclick="sendAdminMessage()" style="padding: 8px 16px; background: #059669; color: white; border: none; border-radius: 4px; cursor: pointer;">Enviar</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Mensaje privado a -->
+    <div>
+      <h3 style="font-size: 20px; font-weight: bold; margin-bottom: 16px; color: #dc2626;">Mensaje privado a:</h3>
+      <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="margin-bottom: 16px;">
+          <select id="private-user-select" onchange="loadPrivateChat()" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+            <option value="">Seleccionar usuario...</option>
+            ${users.filter(u => u !== userId).map(user => `
+              <option value="${user}">${userNames[user]}</option>
+            `).join('')}
+          </select>
+        </div>
+        <div id="private-messages" style="max-height: 300px; overflow-y: auto; margin-bottom: 16px; min-height: 100px; background: #f9fafb; border-radius: 4px; padding: 12px;">
+          <p style="color: #6b7280; text-align: center;">Selecciona un usuario para ver la conversación</p>
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <input type="text" id="private-input" placeholder="Escribe tu mensaje privado..." style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;" disabled onkeypress="if(event.key==='Enter') sendPrivateMessage()">
+          <button onclick="sendPrivateMessage()" style="padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;" disabled id="private-send-btn">Enviar</button>
         </div>
       </div>
     </div>
     
     <script>
       const currentUser = '${userId}';
-      const userNames = ${JSON.stringify(userNames)};
+      const privateChatsData = ${JSON.stringify(privateChats)};
       
-      // Marcar mensajes como leídos al entrar a la sección
-      markMessagesAsRead();
-      
-      function markMessagesAsRead() {
-        fetch('/api/mark-read', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: currentUser })
-        });
-      }
-      
-      function sendGroupMessage() {
-        const input = document.getElementById('group-input');
+      function sendForumMessage() {
+        const input = document.getElementById('forum-input');
         if (input.value.trim()) {
-          fetch('/api/send-message', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              type: 'group',
-              message: input.value.trim(),
-              from: currentUser
-            })
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              addMessageToDOM('group-messages', data.message, 'group');
-              // Agregar atributo para tracking
-              const lastMessage = document.querySelector('#group-messages > div:last-child');
-              if (lastMessage) lastMessage.setAttribute('data-message-id', data.message.id);
-              input.value = '';
-            }
-          });
+          alert('Mensaje enviado al foro: ' + input.value);
+          input.value = '';
         }
       }
       
       function sendAdminMessage() {
         const input = document.getElementById('admin-input');
         if (input.value.trim()) {
-          fetch('/api/send-message', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              type: 'admin',
-              message: input.value.trim(),
-              from: currentUser
-            })
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              addMessageToDOM('admin-messages', data.message, 'admin');
-              // Agregar atributo para tracking
-              const lastMessage = document.querySelector('#admin-messages > div:last-child');
-              if (lastMessage) lastMessage.setAttribute('data-message-id', data.message.id);
-              input.value = '';
-            }
-          });
+          alert('Sugerencia enviada a Javier: ' + input.value);
+          input.value = '';
         }
       }
       
-      function toggleChat(targetUser) {
-        const chatDiv = document.getElementById('chat-' + targetUser);
-        const toggleBtn = document.getElementById('toggle-' + targetUser);
+      function loadPrivateChat() {
+        const select = document.getElementById('private-user-select');
+        const targetUser = select.value;
+        const messagesDiv = document.getElementById('private-messages');
+        const input = document.getElementById('private-input');
+        const sendBtn = document.getElementById('private-send-btn');
         
-        if (chatDiv.style.display === 'none') {
-          chatDiv.style.display = 'block';
-          toggleBtn.textContent = 'Cerrar';
-          toggleBtn.style.background = '#6b7280';
+        if (targetUser) {
+          const chatKey = [currentUser, targetUser].sort().join('-');
+          const messages = privateChatsData[chatKey] || [];
           
-          // Scroll al final del chat
-          const messagesDiv = document.getElementById('messages-' + targetUser);
-          messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        } else {
-          chatDiv.style.display = 'none';
-          toggleBtn.textContent = 'Abrir';
-          toggleBtn.style.background = '#3b82f6';
-        }
-      }
-      
-      function sendPrivateMessage(targetUser) {
-        const input = document.getElementById('input-' + targetUser);
-        if (input.value.trim()) {
-          fetch('/api/send-message', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              type: 'private',
-              message: input.value.trim(),
-              from: currentUser,
-              to: targetUser
-            })
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              addPrivateMessageToDOM(targetUser, data.message);
-              // Agregar atributo para tracking
-              const lastMessage = document.querySelector('#messages-' + targetUser + ' > div:last-child');
-              if (lastMessage) lastMessage.setAttribute('data-message-id', data.message.id);
-              input.value = '';
-            }
-          });
-        }
-      }
-      
-      function deleteMessage(type, messageId, targetUser = null) {
-        if (confirm('¿Estás seguro de que quieres eliminar este mensaje?')) {
-          const chatKey = targetUser ? [currentUser, targetUser].sort().join('-') : null;
-          
-          fetch('/api/delete-message', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type, messageId, chatKey })
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              const button = event.target;
-              const messageDiv = button.closest('div[style*="margin-bottom: 12px"], div[style*="margin-bottom: 8px"]');
-              if (messageDiv) {
-                messageDiv.remove();
-                
-                // Verificar si no quedan mensajes
-                if (type === 'group') {
-                  const container = document.getElementById('group-messages');
-                  if (!container.innerHTML.trim() || container.children.length === 0) {
-                    container.innerHTML = '<p style="color: #6b7280; text-align: center; padding: 20px;">No hay mensajes aún. ¡Sé el primero en escribir!</p>';
-                  }
-                } else if (type === 'admin') {
-                  const container = document.getElementById('admin-messages');
-                  if (!container.innerHTML.trim() || container.children.length === 0) {
-                    container.innerHTML = '<p style="color: #6b7280; text-align: center; padding: 20px;">No hay sugerencias aún</p>';
-                  }
-                } else if (type === 'private' && targetUser) {
-                  const container = document.getElementById('messages-' + targetUser);
-                  if (!container.innerHTML.trim() || container.children.length === 0) {
-                    container.innerHTML = '<p style="color: #6b7280; text-align: center; font-size: 12px;">No hay mensajes</p>';
-                  }
-                }
-              }
-            }
-          });
-        }
-      }
-      
-      function addMessageToDOM(containerId, message, type) {
-        const messagesDiv = document.getElementById(containerId);
-        const color = type === 'group' ? '#7c3aed' : '#059669';
-        const messageHtml = \`
-          <div style="margin-bottom: 12px; padding: 8px; background: white; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-              <strong style="color: \${color}; font-size: 14px;">\${userNames[message.user]}</strong>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <small style="color: #6b7280; font-size: 12px;">\${message.timestamp}</small>
-                \${message.user === currentUser ? \`<button onclick="deleteMessage('\${type}', \${message.id})" style="padding: 2px 6px; background: #ef4444; color: white; border: none; border-radius: 3px; font-size: 10px; cursor: pointer;">Eliminar</button>\` : ''}
+          messagesDiv.innerHTML = messages.length > 0 ? messages.map(msg => \`
+            <div style="margin-bottom: 12px; text-align: \${msg.from === currentUser ? 'right' : 'left'};">
+              <div style="display: inline-block; max-width: 70%; padding: 8px 12px; border-radius: 12px; background: \${msg.from === currentUser ? '#3b82f6' : '#e5e7eb'}; color: \${msg.from === currentUser ? 'white' : '#374151'};">
+                <p style="margin: 0;">\${msg.message}</p>
+                <small style="opacity: 0.8; font-size: 11px;">\${msg.timestamp}</small>
               </div>
             </div>
-            <p style="color: #374151; margin: 0; font-size: 14px;">\${message.message}</p>
-          </div>
-        \`;
-        
-        if (messagesDiv.innerHTML.includes('No hay mensajes') || messagesDiv.innerHTML.includes('No hay sugerencias')) {
-          messagesDiv.innerHTML = messageHtml;
+          \`).join('') : '<p style="color: #6b7280; text-align: center;">No hay mensajes aún</p>';
+          
+          input.disabled = false;
+          sendBtn.disabled = false;
+          input.placeholder = 'Escribe a ' + select.options[select.selectedIndex].text + '...';
         } else {
-          messagesDiv.innerHTML += messageHtml;
+          messagesDiv.innerHTML = '<p style="color: #6b7280; text-align: center;">Selecciona un usuario para ver la conversación</p>';
+          input.disabled = true;
+          sendBtn.disabled = true;
         }
-        
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
       }
       
-      function addPrivateMessageToDOM(targetUser, message) {
-        const messagesDiv = document.getElementById('messages-' + targetUser);
-        const messageHtml = \`
-          <div style="margin-bottom: 8px; text-align: right;" data-message-id="\${message.id}">
-            <div style="display: inline-block; max-width: 80%; padding: 6px 10px; border-radius: 12px; background: #3b82f6; color: white; font-size: 13px;">
-              <p style="margin: 0;">\${message.message}</p>
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
-                <small style="opacity: 0.8; font-size: 10px;">\${message.timestamp}</small>
-                <button onclick="deleteMessage('private', \${message.id}, '\${targetUser}')" style="padding: 1px 4px; background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 2px; font-size: 9px; cursor: pointer; margin-left: 4px;">×</button>
-              </div>
-            </div>
-          </div>
-        \`;
-        
-        if (messagesDiv.innerHTML.includes('No hay mensajes')) {
-          messagesDiv.innerHTML = messageHtml;
-        } else {
-          messagesDiv.innerHTML += messageHtml;
-        }
-        
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-      }
-      
-      // Actualizar mensajes cada 3 segundos
-      setInterval(() => {
-        if (document.visibilityState === 'visible') {
-          fetch('/api/messages')
-          .then(response => response.json())
-          .then(data => {
-            updateMessages(data);
-          });
-        }
-      }, 3000);
-      
-      function updateMessages(data) {
-        // Actualizar mensajes del grupo
-        const groupContainer = document.getElementById('group-messages');
-        if (groupContainer && data.groupMessages.length > 0) {
-          const currentMessages = groupContainer.querySelectorAll('[data-message-id]').length;
-          if (data.groupMessages.length > currentMessages) {
-            // Hay mensajes nuevos
-            const newMessages = data.groupMessages.slice(currentMessages);
-            newMessages.forEach(msg => {
-              if (msg.user !== currentUser) {
-                addMessageToDOM('group-messages', msg, 'group');
-              }
-            });
-          }
-        }
-        
-        // Actualizar mensajes de admin
-        const adminContainer = document.getElementById('admin-messages');
-        if (adminContainer && data.adminMessages.length > 0) {
-          const currentMessages = adminContainer.querySelectorAll('[data-message-id]').length;
-          if (data.adminMessages.length > currentMessages) {
-            const newMessages = data.adminMessages.slice(currentMessages);
-            newMessages.forEach(msg => {
-              if (msg.user !== currentUser) {
-                addMessageToDOM('admin-messages', msg, 'admin');
-              }
-            });
-          }
-        }
-        
-        // Actualizar chats privados
-        Object.keys(data.privateChats).forEach(chatKey => {
-          const [user1, user2] = chatKey.split('-');
-          const targetUser = user1 === currentUser ? user2 : user1;
-          const messagesContainer = document.getElementById('messages-' + targetUser);
-          
-          if (messagesContainer) {
-            const currentMessages = messagesContainer.querySelectorAll('[data-message-id]').length;
-            const chatMessages = data.privateChats[chatKey] || [];
-            
-            if (chatMessages.length > currentMessages) {
-              const newMessages = chatMessages.slice(currentMessages);
-              newMessages.forEach(msg => {
-                if (msg.from !== currentUser) {
-                  addReceivedPrivateMessage(targetUser, msg);
-                }
-              });
-            }
-          }
-        });
-      }
-      
-      function addReceivedPrivateMessage(fromUser, message) {
-        const messagesDiv = document.getElementById('messages-' + fromUser);
-        if (messagesDiv) {
-          const messageHtml = \`
-            <div style="margin-bottom: 8px; text-align: left;" data-message-id="\${message.id}">
-              <div style="display: inline-block; max-width: 80%; padding: 6px 10px; border-radius: 12px; background: #e5e7eb; color: #374151; font-size: 13px;">
-                <p style="margin: 0;">\${message.message}</p>
-                <small style="opacity: 0.8; font-size: 10px;">\${message.timestamp}</small>
-              </div>
-            </div>
-          \`;
-          
-          if (messagesDiv.innerHTML.includes('No hay mensajes')) {
-            messagesDiv.innerHTML = messageHtml;
-          } else {
-            messagesDiv.innerHTML += messageHtml;
-          }
-          
-          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      function sendPrivateMessage() {
+        const input = document.getElementById('private-input');
+        const select = document.getElementById('private-user-select');
+        if (input.value.trim() && select.value) {
+          alert('Mensaje privado enviado a ' + select.options[select.selectedIndex].text + ': ' + input.value);
+          input.value = '';
         }
       }
     </script>
@@ -1921,7 +1384,7 @@ function getTodayDate() {
   return dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
 }
 
-function getNavigation(userId, currentSection, userToken) {
+function getNavigation(userId, currentSection) {
   const permissions = {
     javier: ['actividades', 'comidas', 'recetas', 'inventario', 'compras', 'mensajes'],
     raquel: ['actividades', 'comidas', 'recetas', 'inventario', 'compras', 'mensajes'],
@@ -1941,14 +1404,12 @@ function getNavigation(userId, currentSection, userToken) {
   
   const userSections = permissions[userId] || [];
   const userUnread = unreadMessages[userId] || 0;
-  const userType = userId === 'javi_administrador' ? 'admin' : userId;
-  const baseUrl = `/${userType}/${userToken.split('_')[1]}`;
   
   return userSections.map(sectionId => {
     const section = sections[sectionId];
     const isActive = currentSection === sectionId;
-    const notification = sectionId === 'mensajes' && userUnread > 0 ? ` <span style="background: #ef4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center;">${userUnread}</span>` : '';
-    return `<a href="${baseUrl}?section=${sectionId}" class="btn ${isActive ? 'active' : ''}" ${sectionId === 'mensajes' ? 'onclick="markMessagesAsRead()"' : ''}>${section.icon} ${section.name}${notification}</a>`;
+    const notification = sectionId === 'mensajes' && userUnread > 0 ? ` <span style="background: #ef4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold;">${userUnread}</span>` : '';
+    return `<a href="/?section=${sectionId}" class="btn ${isActive ? 'active' : ''}">${section.icon} ${section.name}${notification}</a>`;
   }).join('');
 }
 
@@ -1965,14 +1426,6 @@ function getTodayQuote() {
   return quotes[(dayOfYear - 1) % quotes.length];
 }
 
-server.listen(7777, '0.0.0.0', () => {
-  console.log('App funcionando en:');
-  console.log('- Local: http://localhost:7777');
-  console.log('- Red: http://192.168.100.122:7777');
-  console.log('\nEnlaces de acceso directo:');
-  console.log('- Javier: http://192.168.100.122:7777/javier/abc123xyz789def456');
-  console.log('- Raquel: http://192.168.100.122:7777/raquel/uvw012rst345ghi678');
-  console.log('- Mario: http://192.168.100.122:7777/mario/jkl901mno234pqr567');
-  console.log('- Alba: http://192.168.100.122:7777/alba/stu890vwx123yzb456');
-  console.log('- Administrador: http://192.168.100.122:7777/admin/cde789fgh012ijl345');
+server.listen(7777, () => {
+  console.log('App funcionando en http://localhost:7777');
 });
