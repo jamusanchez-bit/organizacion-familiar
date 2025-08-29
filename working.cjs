@@ -19,6 +19,94 @@ const server = http.createServer((req, res) => {
     currentWeekOffset = parseInt(parsedUrl.query.weekOffset) || 0;
   }
   
+  // API para mensajes
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/send-message') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = JSON.parse(body);
+      const { type, message, from, to } = data;
+      
+      const newMessage = {
+        id: messageIdCounter++,
+        message: message.trim(),
+        timestamp: getTimestamp(),
+        user: from,
+        from: from
+      };
+      
+      if (type === 'group') {
+        groupMessages.push(newMessage);
+        addNotification(from);
+      } else if (type === 'admin') {
+        adminMessages.push(newMessage);
+        addNotification(from);
+      } else if (type === 'private') {
+        const chatKey = [from, to].sort().join('-');
+        if (!privateChats[chatKey]) privateChats[chatKey] = [];
+        newMessage.to = to;
+        privateChats[chatKey].push(newMessage);
+        if (unreadMessages[to] !== undefined) unreadMessages[to]++;
+      }
+      
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({ success: true, message: newMessage }));
+    });
+    return;
+  }
+  
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/delete-message') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = JSON.parse(body);
+      const { type, messageId, chatKey } = data;
+      
+      if (type === 'group') {
+        const index = groupMessages.findIndex(m => m.id == messageId);
+        if (index !== -1) groupMessages.splice(index, 1);
+      } else if (type === 'admin') {
+        const index = adminMessages.findIndex(m => m.id == messageId);
+        if (index !== -1) adminMessages.splice(index, 1);
+      } else if (type === 'private' && chatKey) {
+        if (privateChats[chatKey]) {
+          const index = privateChats[chatKey].findIndex(m => m.id == messageId);
+          if (index !== -1) privateChats[chatKey].splice(index, 1);
+        }
+      }
+      
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({ success: true }));
+    });
+    return;
+  }
+  
+  if (req.method === 'GET' && parsedUrl.pathname === '/api/messages') {
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    res.end(JSON.stringify({ 
+      groupMessages, 
+      adminMessages, 
+      privateChats,
+      unreadMessages
+    }));
+    return;
+  }
+  
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/mark-read') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = JSON.parse(body);
+      const { userId } = data;
+      if (unreadMessages[userId] !== undefined) {
+        unreadMessages[userId] = 0;
+      }
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({ success: true }));
+    });
+    return;
+  }
+  
   // API para toggle meal status
   if (req.method === 'POST' && parsedUrl.pathname === '/api/toggle-meal') {
     let body = '';
@@ -120,6 +208,15 @@ const server = http.createServer((req, res) => {
       </div>
     </div>
   </div>
+  <script>
+    function markMessagesAsRead() {
+      fetch('/api/mark-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: '${user.id}' })
+      });
+    }
+  </script>
 </body>
 </html>`);
   } else {
@@ -1135,7 +1232,14 @@ const shoppingList = {
 const groupMessages = [];
 const adminMessages = [];
 const privateChats = {};
-const unreadMessages = {};
+const unreadMessages = {
+  javier: 0,
+  raquel: 0,
+  mario: 0,
+  alba: 0
+};
+
+let messageIdCounter = 1;
 
 // Función para obtener timestamp
 function getTimestamp() {
@@ -1145,6 +1249,15 @@ function getTimestamp() {
   const hours = now.getHours().toString().padStart(2, '0');
   const minutes = now.getMinutes().toString().padStart(2, '0');
   return `${day}/${month} ${hours}:${minutes}`;
+}
+
+// Función para incrementar notificaciones
+function addNotification(excludeUser) {
+  Object.keys(unreadMessages).forEach(user => {
+    if (user !== excludeUser) {
+      unreadMessages[user]++;
+    }
+  });
 }
 
 function getComprasContent(userId, isAdmin) {
@@ -1335,77 +1448,65 @@ function getMensajesContent(userId, isAdmin) {
     <script>
       const currentUser = '${userId}';
       const userNames = ${JSON.stringify(userNames)};
-      let messageIdCounter = Date.now();
+      
+      // Marcar mensajes como leídos al entrar a la sección
+      markMessagesAsRead();
+      
+      function markMessagesAsRead() {
+        fetch('/api/mark-read', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: currentUser })
+        });
+      }
       
       function sendGroupMessage() {
         const input = document.getElementById('group-input');
         if (input.value.trim()) {
-          const message = {
-            id: messageIdCounter++,
-            user: currentUser,
-            message: input.value.trim(),
-            timestamp: getTimestamp()
-          };
-          
-          // Agregar mensaje al DOM
-          const messagesDiv = document.getElementById('group-messages');
-          const messageHtml = \`
-            <div style="margin-bottom: 12px; padding: 8px; background: white; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <strong style="color: #7c3aed; font-size: 14px;">\${userNames[currentUser]}</strong>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <small style="color: #6b7280; font-size: 12px;">\${message.timestamp}</small>
-                  <button onclick="deleteMessage('group', \${message.id})" style="padding: 2px 6px; background: #ef4444; color: white; border: none; border-radius: 3px; font-size: 10px; cursor: pointer;">Eliminar</button>
-                </div>
-              </div>
-              <p style="color: #374151; margin: 0; font-size: 14px;">\${message.message}</p>
-            </div>
-          \`;
-          
-          if (messagesDiv.innerHTML.includes('No hay mensajes aún')) {
-            messagesDiv.innerHTML = messageHtml;
-          } else {
-            messagesDiv.innerHTML += messageHtml;
-          }
-          
-          messagesDiv.scrollTop = messagesDiv.scrollHeight;
-          input.value = '';
+          fetch('/api/send-message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'group',
+              message: input.value.trim(),
+              from: currentUser
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              addMessageToDOM('group-messages', data.message, 'group');
+              // Agregar atributo para tracking
+              const lastMessage = document.querySelector('#group-messages > div:last-child');
+              if (lastMessage) lastMessage.setAttribute('data-message-id', data.message.id);
+              input.value = '';
+            }
+          });
         }
       }
       
       function sendAdminMessage() {
         const input = document.getElementById('admin-input');
         if (input.value.trim()) {
-          const message = {
-            id: messageIdCounter++,
-            user: currentUser,
-            message: input.value.trim(),
-            timestamp: getTimestamp()
-          };
-          
-          // Agregar mensaje al DOM
-          const messagesDiv = document.getElementById('admin-messages');
-          const messageHtml = \`
-            <div style="margin-bottom: 12px; padding: 8px; background: white; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <strong style="color: #059669; font-size: 14px;">\${userNames[currentUser]}</strong>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <small style="color: #6b7280; font-size: 12px;">\${message.timestamp}</small>
-                  <button onclick="deleteMessage('admin', \${message.id})" style="padding: 2px 6px; background: #ef4444; color: white; border: none; border-radius: 3px; font-size: 10px; cursor: pointer;">Eliminar</button>
-                </div>
-              </div>
-              <p style="color: #374151; margin: 0; font-size: 14px;">\${message.message}</p>
-            </div>
-          \`;
-          
-          if (messagesDiv.innerHTML.includes('No hay sugerencias aún')) {
-            messagesDiv.innerHTML = messageHtml;
-          } else {
-            messagesDiv.innerHTML += messageHtml;
-          }
-          
-          messagesDiv.scrollTop = messagesDiv.scrollHeight;
-          input.value = '';
+          fetch('/api/send-message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'admin',
+              message: input.value.trim(),
+              from: currentUser
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              addMessageToDOM('admin-messages', data.message, 'admin');
+              // Agregar atributo para tracking
+              const lastMessage = document.querySelector('#admin-messages > div:last-child');
+              if (lastMessage) lastMessage.setAttribute('data-message-id', data.message.id);
+              input.value = '';
+            }
+          });
         }
       }
       
@@ -1431,24 +1532,188 @@ function getMensajesContent(userId, isAdmin) {
       function sendPrivateMessage(targetUser) {
         const input = document.getElementById('input-' + targetUser);
         if (input.value.trim()) {
-          const message = {
-            id: messageIdCounter++,
-            from: currentUser,
-            to: targetUser,
-            message: input.value.trim(),
-            timestamp: getTimestamp()
-          };
+          fetch('/api/send-message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'private',
+              message: input.value.trim(),
+              from: currentUser,
+              to: targetUser
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              addPrivateMessageToDOM(targetUser, data.message);
+              // Agregar atributo para tracking
+              const lastMessage = document.querySelector('#messages-' + targetUser + ' > div:last-child');
+              if (lastMessage) lastMessage.setAttribute('data-message-id', data.message.id);
+              input.value = '';
+            }
+          });
+        }
+      }
+      
+      function deleteMessage(type, messageId, targetUser = null) {
+        if (confirm('¿Estás seguro de que quieres eliminar este mensaje?')) {
+          const chatKey = targetUser ? [currentUser, targetUser].sort().join('-') : null;
           
-          // Agregar mensaje al DOM
-          const messagesDiv = document.getElementById('messages-' + targetUser);
+          fetch('/api/delete-message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type, messageId, chatKey })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              const button = event.target;
+              const messageDiv = button.closest('div[style*="margin-bottom: 12px"], div[style*="margin-bottom: 8px"]');
+              if (messageDiv) {
+                messageDiv.remove();
+                
+                // Verificar si no quedan mensajes
+                if (type === 'group') {
+                  const container = document.getElementById('group-messages');
+                  if (!container.innerHTML.trim() || container.children.length === 0) {
+                    container.innerHTML = '<p style="color: #6b7280; text-align: center; padding: 20px;">No hay mensajes aún. ¡Sé el primero en escribir!</p>';
+                  }
+                } else if (type === 'admin') {
+                  const container = document.getElementById('admin-messages');
+                  if (!container.innerHTML.trim() || container.children.length === 0) {
+                    container.innerHTML = '<p style="color: #6b7280; text-align: center; padding: 20px;">No hay sugerencias aún</p>';
+                  }
+                } else if (type === 'private' && targetUser) {
+                  const container = document.getElementById('messages-' + targetUser);
+                  if (!container.innerHTML.trim() || container.children.length === 0) {
+                    container.innerHTML = '<p style="color: #6b7280; text-align: center; font-size: 12px;">No hay mensajes</p>';
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
+      
+      function addMessageToDOM(containerId, message, type) {
+        const messagesDiv = document.getElementById(containerId);
+        const color = type === 'group' ? '#7c3aed' : '#059669';
+        const messageHtml = \`
+          <div style="margin-bottom: 12px; padding: 8px; background: white; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <strong style="color: \${color}; font-size: 14px;">\${userNames[message.user]}</strong>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <small style="color: #6b7280; font-size: 12px;">\${message.timestamp}</small>
+                \${message.user === currentUser ? \`<button onclick="deleteMessage('\${type}', \${message.id})" style="padding: 2px 6px; background: #ef4444; color: white; border: none; border-radius: 3px; font-size: 10px; cursor: pointer;">Eliminar</button>\` : ''}
+              </div>
+            </div>
+            <p style="color: #374151; margin: 0; font-size: 14px;">\${message.message}</p>
+          </div>
+        \`;
+        
+        if (messagesDiv.innerHTML.includes('No hay mensajes') || messagesDiv.innerHTML.includes('No hay sugerencias')) {
+          messagesDiv.innerHTML = messageHtml;
+        } else {
+          messagesDiv.innerHTML += messageHtml;
+        }
+        
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+      
+      function addPrivateMessageToDOM(targetUser, message) {
+        const messagesDiv = document.getElementById('messages-' + targetUser);
+        const messageHtml = \`
+          <div style="margin-bottom: 8px; text-align: right;" data-message-id="\${message.id}">
+            <div style="display: inline-block; max-width: 80%; padding: 6px 10px; border-radius: 12px; background: #3b82f6; color: white; font-size: 13px;">
+              <p style="margin: 0;">\${message.message}</p>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
+                <small style="opacity: 0.8; font-size: 10px;">\${message.timestamp}</small>
+                <button onclick="deleteMessage('private', \${message.id}, '\${targetUser}')" style="padding: 1px 4px; background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 2px; font-size: 9px; cursor: pointer; margin-left: 4px;">×</button>
+              </div>
+            </div>
+          </div>
+        \`;
+        
+        if (messagesDiv.innerHTML.includes('No hay mensajes')) {
+          messagesDiv.innerHTML = messageHtml;
+        } else {
+          messagesDiv.innerHTML += messageHtml;
+        }
+        
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+      
+      // Actualizar mensajes cada 3 segundos
+      setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          fetch('/api/messages')
+          .then(response => response.json())
+          .then(data => {
+            updateMessages(data);
+          });
+        }
+      }, 3000);
+      
+      function updateMessages(data) {
+        // Actualizar mensajes del grupo
+        const groupContainer = document.getElementById('group-messages');
+        if (groupContainer && data.groupMessages.length > 0) {
+          const currentMessages = groupContainer.querySelectorAll('[data-message-id]').length;
+          if (data.groupMessages.length > currentMessages) {
+            // Hay mensajes nuevos
+            const newMessages = data.groupMessages.slice(currentMessages);
+            newMessages.forEach(msg => {
+              if (msg.user !== currentUser) {
+                addMessageToDOM('group-messages', msg, 'group');
+              }
+            });
+          }
+        }
+        
+        // Actualizar mensajes de admin
+        const adminContainer = document.getElementById('admin-messages');
+        if (adminContainer && data.adminMessages.length > 0) {
+          const currentMessages = adminContainer.querySelectorAll('[data-message-id]').length;
+          if (data.adminMessages.length > currentMessages) {
+            const newMessages = data.adminMessages.slice(currentMessages);
+            newMessages.forEach(msg => {
+              if (msg.user !== currentUser) {
+                addMessageToDOM('admin-messages', msg, 'admin');
+              }
+            });
+          }
+        }
+        
+        // Actualizar chats privados
+        Object.keys(data.privateChats).forEach(chatKey => {
+          const [user1, user2] = chatKey.split('-');
+          const targetUser = user1 === currentUser ? user2 : user1;
+          const messagesContainer = document.getElementById('messages-' + targetUser);
+          
+          if (messagesContainer) {
+            const currentMessages = messagesContainer.querySelectorAll('[data-message-id]').length;
+            const chatMessages = data.privateChats[chatKey] || [];
+            
+            if (chatMessages.length > currentMessages) {
+              const newMessages = chatMessages.slice(currentMessages);
+              newMessages.forEach(msg => {
+                if (msg.from !== currentUser) {
+                  addReceivedPrivateMessage(targetUser, msg);
+                }
+              });
+            }
+          }
+        });
+      }
+      
+      function addReceivedPrivateMessage(fromUser, message) {
+        const messagesDiv = document.getElementById('messages-' + fromUser);
+        if (messagesDiv) {
           const messageHtml = \`
-            <div style="margin-bottom: 8px; text-align: right;">
-              <div style="display: inline-block; max-width: 80%; padding: 6px 10px; border-radius: 12px; background: #3b82f6; color: white; font-size: 13px;">
+            <div style="margin-bottom: 8px; text-align: left;" data-message-id="\${message.id}">
+              <div style="display: inline-block; max-width: 80%; padding: 6px 10px; border-radius: 12px; background: #e5e7eb; color: #374151; font-size: 13px;">
                 <p style="margin: 0;">\${message.message}</p>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
-                  <small style="opacity: 0.8; font-size: 10px;">\${message.timestamp}</small>
-                  <button onclick="deleteMessage('private', \${message.id}, '\${targetUser}')" style="padding: 1px 4px; background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 2px; font-size: 9px; cursor: pointer; margin-left: 4px;">×</button>
-                </div>
+                <small style="opacity: 0.8; font-size: 10px;">\${message.timestamp}</small>
               </div>
             </div>
           \`;
@@ -1460,46 +1725,7 @@ function getMensajesContent(userId, isAdmin) {
           }
           
           messagesDiv.scrollTop = messagesDiv.scrollHeight;
-          input.value = '';
         }
-      }
-      
-      function deleteMessage(type, messageId, targetUser = null) {
-        if (confirm('¿Estás seguro de que quieres eliminar este mensaje?')) {
-          // Buscar y eliminar el mensaje del DOM
-          const button = event.target;
-          const messageDiv = button.closest('div[style*="margin-bottom: 12px"], div[style*="margin-bottom: 8px"]');
-          if (messageDiv) {
-            messageDiv.remove();
-            
-            // Verificar si no quedan mensajes y mostrar mensaje por defecto
-            if (type === 'group') {
-              const container = document.getElementById('group-messages');
-              if (!container.innerHTML.trim() || container.children.length === 0) {
-                container.innerHTML = '<p style="color: #6b7280; text-align: center; padding: 20px;">No hay mensajes aún. ¡Sé el primero en escribir!</p>';
-              }
-            } else if (type === 'admin') {
-              const container = document.getElementById('admin-messages');
-              if (!container.innerHTML.trim() || container.children.length === 0) {
-                container.innerHTML = '<p style="color: #6b7280; text-align: center; padding: 20px;">No hay sugerencias aún</p>';
-              }
-            } else if (type === 'private' && targetUser) {
-              const container = document.getElementById('messages-' + targetUser);
-              if (!container.innerHTML.trim() || container.children.length === 0) {
-                container.innerHTML = '<p style="color: #6b7280; text-align: center; font-size: 12px;">No hay mensajes</p>';
-              }
-            }
-          }
-        }
-      }
-      
-      function getTimestamp() {
-        const now = new Date();
-        const day = now.getDate().toString().padStart(2, '0');
-        const month = (now.getMonth() + 1).toString().padStart(2, '0');
-        const hours = now.getHours().toString().padStart(2, '0');
-        const minutes = now.getMinutes().toString().padStart(2, '0');
-        return \`\${day}/\${month} \${hours}:\${minutes}\`;
       }
     </script>
   `;
@@ -1556,8 +1782,8 @@ function getNavigation(userId, currentSection) {
   return userSections.map(sectionId => {
     const section = sections[sectionId];
     const isActive = currentSection === sectionId;
-    const notification = sectionId === 'mensajes' && userUnread > 0 ? ` <span style="background: #ef4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold;">${userUnread}</span>` : '';
-    return `<a href="/?section=${sectionId}" class="btn ${isActive ? 'active' : ''}">${section.icon} ${section.name}${notification}</a>`;
+    const notification = sectionId === 'mensajes' && userUnread > 0 ? ` <span style="background: #ef4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center;">${userUnread}</span>` : '';
+    return `<a href="/?section=${sectionId}" class="btn ${isActive ? 'active' : ''}" ${sectionId === 'mensajes' ? 'onclick="markMessagesAsRead()"' : ''}>${section.icon} ${section.name}${notification}</a>`;
   }).join('');
 }
 
