@@ -1,0 +1,2 @@
+No puedes anadir palabras (contenido) a la web sin mi consentimiento.
+Puedes programar (lenguaje de programacion) todo lo que necesites para hacer que funcione como te pido. No es necesario que me expliques qué estas haciendo ni que me pidas permiso. Si es mejor o necesario para el proyecto: hazlo!

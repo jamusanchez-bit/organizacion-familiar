@@ -1,0 +1,1 @@
+La sencillez debe ser el principal objetivo al programar cualquier cosa. Lo sencillo funciona mejor, se entiende mejor y es mas practico.
