@@ -1131,13 +1131,21 @@ const shoppingList = {
   'Otros': []
 };
 
-const forumMessages = [];
-
+// Sistema de mensajes mejorado
+const groupMessages = [];
 const adminMessages = [];
-
 const privateChats = {};
-
 const unreadMessages = {};
+
+// Función para obtener timestamp
+function getTimestamp() {
+  const now = new Date();
+  const day = now.getDate().toString().padStart(2, '0');
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
+  const hours = now.getHours().toString().padStart(2, '0');
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  return `${day}/${month} ${hours}:${minutes}`;
+}
 
 function getComprasContent(userId, isAdmin) {
   // Generar lista automática basada en inventario
@@ -1224,85 +1232,143 @@ function getComprasContent(userId, isAdmin) {
 function getMensajesContent(userId, isAdmin) {
   const users = ['javier', 'raquel', 'mario', 'alba'];
   const userNames = { javier: 'Javier', raquel: 'Raquel', mario: 'Mario', alba: 'Alba' };
+  const otherUsers = users.filter(u => u !== userId && u !== 'javi_administracion');
   
   return `
     <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 24px; background: linear-gradient(to right, #8b5cf6, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Mensajes</h2>
     
-    <!-- Esta semana quiero que hablemos de -->
+    <!-- Mensajes al grupo -->
     <div style="margin-bottom: 32px;">
-      <h3 style="font-size: 20px; font-weight: bold; margin-bottom: 16px; color: #7c3aed;">Esta semana quiero que hablemos de:</h3>
+      <h3 style="font-size: 20px; font-weight: bold; margin-bottom: 16px; color: #7c3aed;">Mensajes al grupo</h3>
       <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-        <div id="forum-messages" style="max-height: 300px; overflow-y: auto; margin-bottom: 16px;">
-          ${forumMessages.map(msg => `
-            <div style="padding: 12px; border-bottom: 1px solid #f3f4f6; margin-bottom: 8px;">
+        <div id="group-messages" style="max-height: 400px; overflow-y: auto; margin-bottom: 16px; background: #f9fafb; border-radius: 8px; padding: 12px;">
+          ${groupMessages.length > 0 ? groupMessages.map(msg => `
+            <div style="margin-bottom: 12px; padding: 8px; background: white; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <strong style="color: #7c3aed;">${msg.user}</strong>
-                <small style="color: #6b7280;">${msg.timestamp}</small>
+                <strong style="color: #7c3aed; font-size: 14px;">${userNames[msg.user]}</strong>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <small style="color: #6b7280; font-size: 12px;">${msg.timestamp}</small>
+                  ${msg.user === userId ? `<button onclick="deleteMessage('group', ${msg.id})" style="padding: 2px 6px; background: #ef4444; color: white; border: none; border-radius: 3px; font-size: 10px; cursor: pointer;">Eliminar</button>` : ''}
+                </div>
               </div>
-              <p style="color: #374151;">${msg.message}</p>
+              <p style="color: #374151; margin: 0; font-size: 14px;">${msg.message}</p>
             </div>
-          `).join('')}
+          `).join('') : '<p style="color: #6b7280; text-align: center; padding: 20px;">No hay mensajes aún. ¡Sé el primero en escribir!</p>'}
         </div>
         <div style="display: flex; gap: 12px;">
-          <input type="text" id="forum-input" placeholder="Escribe tu mensaje..." style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;" onkeypress="if(event.key==='Enter') sendForumMessage()">
-          <button onclick="sendForumMessage()" style="padding: 8px 16px; background: #7c3aed; color: white; border: none; border-radius: 4px; cursor: pointer;">Enviar</button>
+          <input type="text" id="group-input" placeholder="Escribe tu mensaje al grupo..." style="flex: 1; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;" onkeypress="if(event.key==='Enter') sendGroupMessage()">
+          <button onclick="sendGroupMessage()" style="padding: 12px 20px; background: #7c3aed; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">Enviar</button>
         </div>
+      </div>
+    </div>
+    
+    <!-- Chats personales -->
+    <div style="margin-bottom: 32px;">
+      <h3 style="font-size: 20px; font-weight: bold; margin-bottom: 16px; color: #dc2626;">Chats personales</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+        ${otherUsers.map(targetUser => {
+          const chatKey = [userId, targetUser].sort().join('-');
+          const messages = privateChats[chatKey] || [];
+          const lastMessage = messages[messages.length - 1];
+          return `
+            <div style="background: white; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #dc2626;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h4 style="font-size: 16px; font-weight: bold; color: #dc2626; margin: 0;">${userNames[targetUser]}</h4>
+                <button onclick="toggleChat('${targetUser}')" id="toggle-${targetUser}" style="padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Abrir</button>
+              </div>
+              ${lastMessage ? `
+                <div style="background: #f3f4f6; border-radius: 6px; padding: 8px; margin-bottom: 8px;">
+                  <small style="color: #6b7280; font-size: 11px;">${lastMessage.from === userId ? 'Tú' : userNames[lastMessage.from]}: ${lastMessage.message.length > 30 ? lastMessage.message.substring(0, 30) + '...' : lastMessage.message}</small>
+                </div>
+              ` : '<p style="color: #9ca3af; font-size: 12px; margin: 0;">No hay mensajes</p>'}
+              <div id="chat-${targetUser}" style="display: none; margin-top: 12px;">
+                <div id="messages-${targetUser}" style="max-height: 200px; overflow-y: auto; margin-bottom: 12px; background: #f9fafb; border-radius: 6px; padding: 8px;">
+                  ${messages.length > 0 ? messages.map(msg => `
+                    <div style="margin-bottom: 8px; text-align: ${msg.from === userId ? 'right' : 'left'};">
+                      <div style="display: inline-block; max-width: 80%; padding: 6px 10px; border-radius: 12px; background: ${msg.from === userId ? '#3b82f6' : '#e5e7eb'}; color: ${msg.from === userId ? 'white' : '#374151'}; font-size: 13px;">
+                        <p style="margin: 0;">${msg.message}</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
+                          <small style="opacity: 0.8; font-size: 10px;">${msg.timestamp}</small>
+                          ${msg.from === userId ? `<button onclick="deleteMessage('private', ${msg.id}, '${targetUser}')" style="padding: 1px 4px; background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 2px; font-size: 9px; cursor: pointer; margin-left: 4px;">×</button>` : ''}
+                        </div>
+                      </div>
+                    </div>
+                  `).join('') : '<p style="color: #6b7280; text-align: center; font-size: 12px;">No hay mensajes</p>'}
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <input type="text" id="input-${targetUser}" placeholder="Escribe a ${userNames[targetUser]}..." style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;" onkeypress="if(event.key==='Enter') sendPrivateMessage('${targetUser}')">
+                  <button onclick="sendPrivateMessage('${targetUser}')" style="padding: 8px 12px; background: #dc2626; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">Enviar</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('')}
       </div>
     </div>
     
     <!-- Sugerencias para el administrador -->
-    <div style="margin-bottom: 32px;">
+    <div>
       <h3 style="font-size: 20px; font-weight: bold; margin-bottom: 16px; color: #059669;">Sugerencias para el administrador</h3>
       <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-        <div id="admin-messages" style="max-height: 300px; overflow-y: auto; margin-bottom: 16px;">
-          ${adminMessages.map(msg => `
-            <div style="padding: 12px; border-bottom: 1px solid #f3f4f6; margin-bottom: 8px;">
+        <div id="admin-messages" style="max-height: 300px; overflow-y: auto; margin-bottom: 16px; background: #f9fafb; border-radius: 8px; padding: 12px;">
+          ${adminMessages.length > 0 ? adminMessages.map(msg => `
+            <div style="margin-bottom: 12px; padding: 8px; background: white; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <strong style="color: #059669;">${userNames[msg.user]}</strong>
-                <small style="color: #6b7280;">${msg.timestamp}</small>
+                <strong style="color: #059669; font-size: 14px;">${userNames[msg.user]}</strong>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <small style="color: #6b7280; font-size: 12px;">${msg.timestamp}</small>
+                  ${msg.user === userId ? `<button onclick="deleteMessage('admin', ${msg.id})" style="padding: 2px 6px; background: #ef4444; color: white; border: none; border-radius: 3px; font-size: 10px; cursor: pointer;">Eliminar</button>` : ''}
+                </div>
               </div>
-              <p style="color: #374151;">${msg.message}</p>
-              ${msg.reply ? `<div style="margin-top: 8px; padding: 8px; background: #f0fdf4; border-radius: 4px; border-left: 3px solid #059669;"><strong>Javier:</strong> ${msg.reply}</div>` : ''}
+              <p style="color: #374151; margin: 0; font-size: 14px;">${msg.message}</p>
+              ${msg.reply ? `<div style="margin-top: 8px; padding: 8px; background: #f0fdf4; border-radius: 4px; border-left: 3px solid #059669; font-size: 13px;"><strong>Javier:</strong> ${msg.reply}</div>` : ''}
             </div>
-          `).join('')}
+          `).join('') : '<p style="color: #6b7280; text-align: center; padding: 20px;">No hay sugerencias aún</p>'}
         </div>
         <div style="display: flex; gap: 12px;">
-          <input type="text" id="admin-input" placeholder="Escribe tu sugerencia a Javier..." style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;" onkeypress="if(event.key==='Enter') sendAdminMessage()">
-          <button onclick="sendAdminMessage()" style="padding: 8px 16px; background: #059669; color: white; border: none; border-radius: 4px; cursor: pointer;">Enviar</button>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Mensaje privado a -->
-    <div>
-      <h3 style="font-size: 20px; font-weight: bold; margin-bottom: 16px; color: #dc2626;">Mensaje privado a:</h3>
-      <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-        <div style="margin-bottom: 16px;">
-          <select id="private-user-select" onchange="loadPrivateChat()" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
-            <option value="">Seleccionar usuario...</option>
-            ${users.filter(u => u !== userId).map(user => `
-              <option value="${user}">${userNames[user]}</option>
-            `).join('')}
-          </select>
-        </div>
-        <div id="private-messages" style="max-height: 300px; overflow-y: auto; margin-bottom: 16px; min-height: 100px; background: #f9fafb; border-radius: 4px; padding: 12px;">
-          <p style="color: #6b7280; text-align: center;">Selecciona un usuario para ver la conversación</p>
-        </div>
-        <div style="display: flex; gap: 12px;">
-          <input type="text" id="private-input" placeholder="Escribe tu mensaje privado..." style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;" disabled onkeypress="if(event.key==='Enter') sendPrivateMessage()">
-          <button onclick="sendPrivateMessage()" style="padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;" disabled id="private-send-btn">Enviar</button>
+          <input type="text" id="admin-input" placeholder="Escribe tu sugerencia a Javier..." style="flex: 1; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;" onkeypress="if(event.key==='Enter') sendAdminMessage()">
+          <button onclick="sendAdminMessage()" style="padding: 12px 20px; background: #059669; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">Enviar</button>
         </div>
       </div>
     </div>
     
     <script>
       const currentUser = '${userId}';
-      const privateChatsData = ${JSON.stringify(privateChats)};
+      const userNames = ${JSON.stringify(userNames)};
+      let messageIdCounter = Date.now();
       
-      function sendForumMessage() {
-        const input = document.getElementById('forum-input');
+      function sendGroupMessage() {
+        const input = document.getElementById('group-input');
         if (input.value.trim()) {
-          alert('Mensaje enviado al foro: ' + input.value);
+          const message = {
+            id: messageIdCounter++,
+            user: currentUser,
+            message: input.value.trim(),
+            timestamp: getTimestamp()
+          };
+          
+          // Agregar mensaje al DOM
+          const messagesDiv = document.getElementById('group-messages');
+          const messageHtml = \`
+            <div style="margin-bottom: 12px; padding: 8px; background: white; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <strong style="color: #7c3aed; font-size: 14px;">\${userNames[currentUser]}</strong>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <small style="color: #6b7280; font-size: 12px;">\${message.timestamp}</small>
+                  <button onclick="deleteMessage('group', \${message.id})" style="padding: 2px 6px; background: #ef4444; color: white; border: none; border-radius: 3px; font-size: 10px; cursor: pointer;">Eliminar</button>
+                </div>
+              </div>
+              <p style="color: #374151; margin: 0; font-size: 14px;">\${message.message}</p>
+            </div>
+          \`;
+          
+          if (messagesDiv.innerHTML.includes('No hay mensajes aún')) {
+            messagesDiv.innerHTML = messageHtml;
+          } else {
+            messagesDiv.innerHTML += messageHtml;
+          }
+          
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
           input.value = '';
         }
       }
@@ -1310,48 +1376,130 @@ function getMensajesContent(userId, isAdmin) {
       function sendAdminMessage() {
         const input = document.getElementById('admin-input');
         if (input.value.trim()) {
-          alert('Sugerencia enviada a Javier: ' + input.value);
+          const message = {
+            id: messageIdCounter++,
+            user: currentUser,
+            message: input.value.trim(),
+            timestamp: getTimestamp()
+          };
+          
+          // Agregar mensaje al DOM
+          const messagesDiv = document.getElementById('admin-messages');
+          const messageHtml = \`
+            <div style="margin-bottom: 12px; padding: 8px; background: white; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <strong style="color: #059669; font-size: 14px;">\${userNames[currentUser]}</strong>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <small style="color: #6b7280; font-size: 12px;">\${message.timestamp}</small>
+                  <button onclick="deleteMessage('admin', \${message.id})" style="padding: 2px 6px; background: #ef4444; color: white; border: none; border-radius: 3px; font-size: 10px; cursor: pointer;">Eliminar</button>
+                </div>
+              </div>
+              <p style="color: #374151; margin: 0; font-size: 14px;">\${message.message}</p>
+            </div>
+          \`;
+          
+          if (messagesDiv.innerHTML.includes('No hay sugerencias aún')) {
+            messagesDiv.innerHTML = messageHtml;
+          } else {
+            messagesDiv.innerHTML += messageHtml;
+          }
+          
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
           input.value = '';
         }
       }
       
-      function loadPrivateChat() {
-        const select = document.getElementById('private-user-select');
-        const targetUser = select.value;
-        const messagesDiv = document.getElementById('private-messages');
-        const input = document.getElementById('private-input');
-        const sendBtn = document.getElementById('private-send-btn');
+      function toggleChat(targetUser) {
+        const chatDiv = document.getElementById('chat-' + targetUser);
+        const toggleBtn = document.getElementById('toggle-' + targetUser);
         
-        if (targetUser) {
-          const chatKey = [currentUser, targetUser].sort().join('-');
-          const messages = privateChatsData[chatKey] || [];
+        if (chatDiv.style.display === 'none') {
+          chatDiv.style.display = 'block';
+          toggleBtn.textContent = 'Cerrar';
+          toggleBtn.style.background = '#6b7280';
           
-          messagesDiv.innerHTML = messages.length > 0 ? messages.map(msg => \`
-            <div style="margin-bottom: 12px; text-align: \${msg.from === currentUser ? 'right' : 'left'};">
-              <div style="display: inline-block; max-width: 70%; padding: 8px 12px; border-radius: 12px; background: \${msg.from === currentUser ? '#3b82f6' : '#e5e7eb'}; color: \${msg.from === currentUser ? 'white' : '#374151'};">
-                <p style="margin: 0;">\${msg.message}</p>
-                <small style="opacity: 0.8; font-size: 11px;">\${msg.timestamp}</small>
+          // Scroll al final del chat
+          const messagesDiv = document.getElementById('messages-' + targetUser);
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        } else {
+          chatDiv.style.display = 'none';
+          toggleBtn.textContent = 'Abrir';
+          toggleBtn.style.background = '#3b82f6';
+        }
+      }
+      
+      function sendPrivateMessage(targetUser) {
+        const input = document.getElementById('input-' + targetUser);
+        if (input.value.trim()) {
+          const message = {
+            id: messageIdCounter++,
+            from: currentUser,
+            to: targetUser,
+            message: input.value.trim(),
+            timestamp: getTimestamp()
+          };
+          
+          // Agregar mensaje al DOM
+          const messagesDiv = document.getElementById('messages-' + targetUser);
+          const messageHtml = \`
+            <div style="margin-bottom: 8px; text-align: right;">
+              <div style="display: inline-block; max-width: 80%; padding: 6px 10px; border-radius: 12px; background: #3b82f6; color: white; font-size: 13px;">
+                <p style="margin: 0;">\${message.message}</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
+                  <small style="opacity: 0.8; font-size: 10px;">\${message.timestamp}</small>
+                  <button onclick="deleteMessage('private', \${message.id}, '\${targetUser}')" style="padding: 1px 4px; background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 2px; font-size: 9px; cursor: pointer; margin-left: 4px;">×</button>
+                </div>
               </div>
             </div>
-          \`).join('') : '<p style="color: #6b7280; text-align: center;">No hay mensajes aún</p>';
+          \`;
           
-          input.disabled = false;
-          sendBtn.disabled = false;
-          input.placeholder = 'Escribe a ' + select.options[select.selectedIndex].text + '...';
-        } else {
-          messagesDiv.innerHTML = '<p style="color: #6b7280; text-align: center;">Selecciona un usuario para ver la conversación</p>';
-          input.disabled = true;
-          sendBtn.disabled = true;
+          if (messagesDiv.innerHTML.includes('No hay mensajes')) {
+            messagesDiv.innerHTML = messageHtml;
+          } else {
+            messagesDiv.innerHTML += messageHtml;
+          }
+          
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+          input.value = '';
         }
       }
       
-      function sendPrivateMessage() {
-        const input = document.getElementById('private-input');
-        const select = document.getElementById('private-user-select');
-        if (input.value.trim() && select.value) {
-          alert('Mensaje privado enviado a ' + select.options[select.selectedIndex].text + ': ' + input.value);
-          input.value = '';
+      function deleteMessage(type, messageId, targetUser = null) {
+        if (confirm('¿Estás seguro de que quieres eliminar este mensaje?')) {
+          // Buscar y eliminar el mensaje del DOM
+          const button = event.target;
+          const messageDiv = button.closest('div[style*="margin-bottom: 12px"], div[style*="margin-bottom: 8px"]');
+          if (messageDiv) {
+            messageDiv.remove();
+            
+            // Verificar si no quedan mensajes y mostrar mensaje por defecto
+            if (type === 'group') {
+              const container = document.getElementById('group-messages');
+              if (!container.innerHTML.trim() || container.children.length === 0) {
+                container.innerHTML = '<p style="color: #6b7280; text-align: center; padding: 20px;">No hay mensajes aún. ¡Sé el primero en escribir!</p>';
+              }
+            } else if (type === 'admin') {
+              const container = document.getElementById('admin-messages');
+              if (!container.innerHTML.trim() || container.children.length === 0) {
+                container.innerHTML = '<p style="color: #6b7280; text-align: center; padding: 20px;">No hay sugerencias aún</p>';
+              }
+            } else if (type === 'private' && targetUser) {
+              const container = document.getElementById('messages-' + targetUser);
+              if (!container.innerHTML.trim() || container.children.length === 0) {
+                container.innerHTML = '<p style="color: #6b7280; text-align: center; font-size: 12px;">No hay mensajes</p>';
+              }
+            }
+          }
         }
+      }
+      
+      function getTimestamp() {
+        const now = new Date();
+        const day = now.getDate().toString().padStart(2, '0');
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        return \`\${day}/\${month} \${hours}:\${minutes}\`;
       }
     </script>
   `;
