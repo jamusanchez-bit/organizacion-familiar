@@ -38,16 +38,16 @@ const server = http.createServer((req, res) => {
       
       if (type === 'group') {
         groupMessages.push(newMessage);
-        addNotification(from);
+        addNotification(from, null, 'general');
       } else if (type === 'admin') {
         adminMessages.push(newMessage);
-        addNotification(from);
+        addNotification(from, null, 'general');
       } else if (type === 'private') {
         const chatKey = [from, to].sort().join('-');
         if (!privateChats[chatKey]) privateChats[chatKey] = [];
         newMessage.to = to;
         privateChats[chatKey].push(newMessage);
-        if (unreadMessages[to] !== undefined) unreadMessages[to]++;
+        addNotification(from, to, 'private');
       }
       
       res.writeHead(200, {'Content-Type': 'application/json'});
@@ -100,7 +100,8 @@ const server = http.createServer((req, res) => {
       const data = JSON.parse(body);
       const { userId } = data;
       if (unreadMessages[userId] !== undefined) {
-        unreadMessages[userId] = 0;
+        unreadMessages[userId].total = 0;
+        unreadMessages[userId].chats = {};
       }
       res.writeHead(200, {'Content-Type': 'application/json'});
       res.end(JSON.stringify({ success: true }));
@@ -1394,10 +1395,10 @@ const groupMessages = [];
 const adminMessages = [];
 const privateChats = {};
 const unreadMessages = {
-  javier: 0,
-  raquel: 0,
-  mario: 0,
-  alba: 0
+  javier: { total: 0, chats: {} },
+  raquel: { total: 0, chats: {} },
+  mario: { total: 0, chats: {} },
+  alba: { total: 0, chats: {} }
 };
 
 let messageIdCounter = 1;
@@ -1413,12 +1414,22 @@ function getTimestamp() {
 }
 
 // Función para incrementar notificaciones
-function addNotification(excludeUser) {
-  Object.keys(unreadMessages).forEach(user => {
-    if (user !== excludeUser) {
-      unreadMessages[user]++;
+function addNotification(excludeUser, targetUser = null, type = 'general') {
+  if (type === 'private' && targetUser) {
+    if (unreadMessages[targetUser]) {
+      unreadMessages[targetUser].total++;
+      if (!unreadMessages[targetUser].chats[excludeUser]) {
+        unreadMessages[targetUser].chats[excludeUser] = 0;
+      }
+      unreadMessages[targetUser].chats[excludeUser]++;
     }
-  });
+  } else {
+    Object.keys(unreadMessages).forEach(user => {
+      if (user !== excludeUser) {
+        unreadMessages[user].total++;
+      }
+    });
+  }
 }
 
 function getComprasContent(userId, isAdmin) {
@@ -1548,14 +1559,14 @@ function getMensajesContent(userId, isAdmin) {
             <div style="background: white; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #dc2626;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <h4 style="font-size: 16px; font-weight: bold; color: #dc2626; margin: 0;">${userNames[targetUser]}</h4>
-                <button onclick="toggleChat('${targetUser}')" id="toggle-${targetUser}" style="padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Abrir</button>
+                <span style="padding: 4px 8px; background: #f3f4f6; border-radius: 4px; font-size: 12px; color: #6b7280;" id="unread-${targetUser}">${unreadMessages[userId] && unreadMessages[userId].chats[targetUser] ? unreadMessages[userId].chats[targetUser] + ' nuevos' : ''}</span>
               </div>
               ${lastMessage ? `
                 <div style="background: #f3f4f6; border-radius: 6px; padding: 8px; margin-bottom: 8px;">
                   <small style="color: #6b7280; font-size: 11px;">${lastMessage.from === userId ? 'Tú' : userNames[lastMessage.from]}: ${lastMessage.message.length > 30 ? lastMessage.message.substring(0, 30) + '...' : lastMessage.message}</small>
                 </div>
               ` : '<p style="color: #9ca3af; font-size: 12px; margin: 0;">No hay mensajes</p>'}
-              <div id="chat-${targetUser}" style="display: none; margin-top: 12px;">
+              <div id="chat-${targetUser}" style="margin-top: 12px;">
                 <div id="messages-${targetUser}" style="max-height: 200px; overflow-y: auto; margin-bottom: 12px; background: #f9fafb; border-radius: 6px; padding: 8px;">
                   ${messages.length > 0 ? messages.map(msg => `
                     <div style="margin-bottom: 8px; text-align: ${msg.from === userId ? 'right' : 'left'};">
@@ -1671,24 +1682,21 @@ function getMensajesContent(userId, isAdmin) {
         }
       }
       
-      function toggleChat(targetUser) {
-        const chatDiv = document.getElementById('chat-' + targetUser);
-        const toggleBtn = document.getElementById('toggle-' + targetUser);
-        
-        if (chatDiv.style.display === 'none') {
-          chatDiv.style.display = 'block';
-          toggleBtn.textContent = 'Cerrar';
-          toggleBtn.style.background = '#6b7280';
-          
-          // Scroll al final del chat
-          const messagesDiv = document.getElementById('messages-' + targetUser);
-          messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        } else {
-          chatDiv.style.display = 'none';
-          toggleBtn.textContent = 'Abrir';
-          toggleBtn.style.background = '#3b82f6';
-        }
-      }
+      // Auto-scroll y marcar como leído al hacer scroll
+      document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('[id^="messages-"]').forEach(container => {
+          container.scrollTop = container.scrollHeight;
+          container.addEventListener('focus', function() {
+            const targetUser = this.id.replace('messages-', '');
+            const unreadSpan = document.getElementById('unread-' + targetUser);
+            if (unreadSpan && unreadSpan.textContent) {
+              unreadSpan.textContent = '';
+              unreadSpan.style.background = '#f3f4f6';
+              unreadSpan.style.color = '#6b7280';
+            }
+          });
+        });
+      });
       
       function sendPrivateMessage(targetUser) {
         const input = document.getElementById('input-' + targetUser);
@@ -1860,11 +1868,28 @@ function getMensajesContent(userId, isAdmin) {
               newMessages.forEach(msg => {
                 if (msg.from !== currentUser) {
                   addReceivedPrivateMessage(targetUser, msg);
+                  // Actualizar contador
+                  const unreadSpan = document.getElementById('unread-' + targetUser);
+                  if (unreadSpan) {
+                    const current = parseInt(unreadSpan.textContent) || 0;
+                    unreadSpan.textContent = (current + 1) + ' nuevos';
+                    unreadSpan.style.background = '#fef3c7';
+                    unreadSpan.style.color = '#92400e';
+                  }
                 }
               });
             }
           }
         });
+        
+        // Actualizar notificaciones globales
+        if (data.unreadMessages && data.unreadMessages[currentUser]) {
+          const totalUnread = data.unreadMessages[currentUser].total;
+          const badge = document.querySelector('a[href*="mensajes"] span');
+          if (badge && totalUnread > 0) {
+            badge.textContent = totalUnread;
+          }
+        }
       }
       
       function addReceivedPrivateMessage(fromUser, message) {
@@ -1938,7 +1963,7 @@ function getNavigation(userId, currentSection, userToken) {
   };
   
   const userSections = permissions[userId] || [];
-  const userUnread = unreadMessages[userId] || 0;
+  const userUnread = unreadMessages[userId] ? unreadMessages[userId].total : 0;
   const userType = userId === 'javi_administrador' ? 'admin' : userId;
   const baseUrl = `/${userType}/${userToken.split('_')[1]}`;
   
