@@ -41,7 +41,10 @@ const server = http.createServer((req, res) => {
         addNotification(from, null, 'general');
       } else if (type === 'admin') {
         adminMessages.push(newMessage);
-        addNotification(from, null, 'general');
+        // Solo notificar al administrador
+        if (unreadMessages['javi_administrador']) {
+          unreadMessages['javi_administrador'].total++;
+        }
       } else if (type === 'private') {
         const chatKey = [from, to].sort().join('-');
         if (!privateChats[chatKey]) privateChats[chatKey] = [];
@@ -1398,7 +1401,8 @@ const unreadMessages = {
   javier: { total: 0, chats: {} },
   raquel: { total: 0, chats: {} },
   mario: { total: 0, chats: {} },
-  alba: { total: 0, chats: {} }
+  alba: { total: 0, chats: {} },
+  javi_administrador: { total: 0, chats: {} }
 };
 
 let messageIdCounter = 1;
