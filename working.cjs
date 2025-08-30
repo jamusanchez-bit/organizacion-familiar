@@ -340,8 +340,18 @@ function getActivitiesContent(userId, isAdmin) {
       </div>
       
       <div id="calendar-view" style="display: none;">
-        <h3>Vista Calendario - Disponible para administrador</h3>
-        <p>Aquí podrás ver el calendario completo de actividades de todos los usuarios.</p>
+        <h3 style="margin-bottom: 16px;">Calendario de Actividades</h3>
+        ${['javier', 'raquel', 'mario', 'alba'].map(user => `
+          <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 16px;">
+            <h4 style="font-size: 18px; font-weight: bold; margin-bottom: 16px; text-transform: capitalize; color: #374151;">${user}</h4>
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 16px;">
+              ${['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(day => `<div style="text-align: center; font-weight: bold; padding: 8px; background: #f3f4f6; border-radius: 4px;">${day}</div>`).join('')}
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;">
+              ${Array.from({length: 7}, (_, i) => `<div style="padding: 8px; border: 1px solid #e5e7eb; border-radius: 4px; min-height: 60px; background: white;"><div style="font-weight: bold; font-size: 12px; margin-bottom: 4px;">${i + 1}</div></div>`).join('')}
+            </div>
+          </div>
+        `).join('')}
       </div>
       
       <script>
@@ -388,10 +398,16 @@ function getActivitiesContent(userId, isAdmin) {
           .then(response => response.json())
           .then(data => {
             if (data.success) {
+              alert('Actividad creada correctamente');
+              hideAddActivity();
               location.reload();
             } else {
               alert('Error al crear la actividad');
             }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('Error de conexión');
           });
         }
       </script>
