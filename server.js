@@ -1487,7 +1487,7 @@ function getActivitiesContent(userId, isAdmin) {
       <div style="margin-bottom: 24px; display: flex; gap: 12px;">
         <button onclick="showView('daily')" id="daily-btn" class="view-btn" style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer;">Vista Diaria</button>
         <button onclick="showView('weekly')" id="weekly-btn" class="view-btn" style="padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer;">Vista Semanal</button>
-        ${isAdmin ? '<button onclick="showView(\'calendar\')" id="calendar-btn" class="view-btn" style="padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer;">Vista Calendario</button>' : ''}
+        <button onclick="showView('calendar')" id="calendar-btn" class="view-btn" style="padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer;">Vista Calendario</button>
       </div>
       <div id="daily-view">
         <h3 style="margin-bottom: 16px;">Hoy - ${getTodayDate()}</h3>
@@ -1561,7 +1561,6 @@ function getActivitiesContent(userId, isAdmin) {
         </div>
       </div>
       
-      ${isAdmin ? `
       <div id="calendar-view" style="display: none;">
         <h3 style="margin-bottom: 16px;">Calendario de Actividades</h3>
         ${['javier', 'raquel', 'mario', 'alba'].map(user => `
@@ -1574,15 +1573,14 @@ function getActivitiesContent(userId, isAdmin) {
           </div>
         `).join('')}
       </div>
-      ` : ''}
       <script>
         function showView(view) {
           document.getElementById('daily-view').style.display = view === 'daily' ? 'block' : 'none';
           document.getElementById('weekly-view').style.display = view === 'weekly' ? 'block' : 'none';
-          ${isAdmin ? "document.getElementById('calendar-view').style.display = view === 'calendar' ? 'block' : 'none';" : ''}
+          document.getElementById('calendar-view').style.display = view === 'calendar' ? 'block' : 'none';
           document.getElementById('daily-btn').style.background = view === 'daily' ? '#10b981' : '#6b7280';
           document.getElementById('weekly-btn').style.background = view === 'weekly' ? '#10b981' : '#6b7280';
-          ${isAdmin ? "if (document.getElementById('calendar-btn')) document.getElementById('calendar-btn').style.background = view === 'calendar' ? '#10b981' : '#6b7280';" : ''}
+          document.getElementById('calendar-btn').style.background = view === 'calendar' ? '#10b981' : '#6b7280';
           
           if (view === 'calendar') {
             loadCalendarView();
