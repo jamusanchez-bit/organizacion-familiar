@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Organización Familiar</title>
+  <style>
+    * { font-family: Verdana, Geneva, sans-serif; margin: 0; padding: 0; }
+    body { background: #f9fafb; }
+    .container { display: flex; min-height: 100vh; }
+    .sidebar { width: 256px; background: #f9fafb; border-right: 1px solid #e5e7eb; position: fixed; height: 100vh; z-index: 10; }
+    .header { height: 48px; padding: 0 16px; display: flex; align-items: center; }
+    .icon { width: 28px; height: 28px; background: linear-gradient(135deg, #10b981, #3b82f6); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; }
+    .nav { margin-top: 16px; padding: 0 8px; }
+    .btn { width: 100%; display: flex; align-items: center; padding: 12px 12px; margin-bottom: 8px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; text-decoration: none; }
+    .btn.active { background: #10b981; color: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .btn:not(.active) { background: transparent; color: #374151; }
+    .btn:hover:not(.active) { background: #f3f4f6; }
+    .main { flex: 1; margin-left: 256px; }
+    .top { min-height: 100px; padding: 16px 32px; border-bottom: 1px solid #f3f4f6; background: white; display: flex; align-items: center; }
+    .content { padding: 32px; }
+    .user { position: absolute; bottom: 0; left: 0; right: 0; padding: 12px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+    .logout { padding: 4px; border: none; background: none; cursor: pointer; border-radius: 4px; }
+    .logout:hover { background: #f3f4f6; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <div class="header">
+        <div class="icon">🏠</div>
+      </div>
+      <div class="nav">
+        <a href="/admin/cde789fgh012ijl345?section=actividades" class="btn active" >📅 Actividades</a><a href="/admin/cde789fgh012ijl345?section=comidas" class="btn " >🍽️ Comidas</a><a href="/admin/cde789fgh012ijl345?section=mensajes" class="btn " onclick="markMessagesAsRead()">💬 Mensajes</a><a href="/admin/cde789fgh012ijl345?section=compras" class="btn " >🛒 Lista de la compra</a><a href="/admin/cde789fgh012ijl345?section=inventario" class="btn " >📦 Inventario</a><a href="/admin/cde789fgh012ijl345?section=recetas" class="btn " >👨🍳 Recetas</a>
+      </div>
+      <div class="user">
+        <span style="font-size: 12px; font-weight: 500;">Administrador</span>
+        <a href="/logout" class="logout">🚪</a>
+      </div>
+    </div>
+    <div class="main">
+      <div class="top">
+        <h1 style="font-size: 28px; font-weight: bold;">¡Hola, Administrador!  👋<br><small style="font-size: 14px; color: #6b7280; font-weight: normal;">Sábado, 30 de agosto de 2025</small><br><small style="font-size: 12px; color: #9ca3af; font-weight: normal; font-style: italic;">"Tu mente es la semilla, tu vida es la cosecha. (Joe Dispenza)"</small></h1>
+      </div>
+      <div class="content">
+        
+      <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 24px; background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Actividades - Administración</h2>
+      <div style="margin-bottom: 24px;">
+        <button onclick="showAddActivity()" style="padding: 12px 24px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">+ Añadir Actividad</button>
+      </div>
+      <div id="add-activity" style="display: none; background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px;">
+        <h3 style="margin-bottom: 16px;">Nueva Actividad</h3>
+        <form onsubmit="addActivity(event)">
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Usuarios:</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="users" value="javier"> Javier</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="users" value="raquel"> Raquel</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="users" value="mario"> Mario</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="users" value="alba"> Alba</label>
+            </div>
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Título:</label>
+            <input type="text" name="title" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Hora:</label>
+            <input type="time" name="time" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Duración (minutos):</label>
+            <input type="number" name="duration" required min="1" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Fecha de inicio:</label>
+            <input type="date" name="startDate" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Fecha de fin:</label>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <input type="date" id="endDate" name="endDate" style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="noEndDate" onchange="toggleEndDate()"> Sin fecha de fin</label>
+            </div>
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Repetir:</label>
+            <select name="repeat" onchange="toggleCustomDays()" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+              <option value="none">No repetir</option>
+              <option value="daily">Todos los días</option>
+              <option value="weekdays">Días laborables</option>
+              <option value="weekly">Semanalmente</option>
+              <option value="custom">Personalizar días</option>
+            </select>
+          </div>
+          <div id="customDays" style="display: none; margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Días de la semana:</label>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="weekdays" value="1"> Lunes</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="weekdays" value="2"> Martes</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="weekdays" value="3"> Miércoles</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="weekdays" value="4"> Jueves</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="weekdays" value="5"> Viernes</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="weekdays" value="6"> Sábado</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="weekdays" value="0"> Domingo</label>
+            </div>
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <button type="submit" style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer;">Guardar</button>
+            <button type="button" onclick="hideAddActivity()" style="padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancelar</button>
+          </div>
+        </form>
+      </div>
+      
+        <div style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px;">
+          <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 16px; text-transform: capitalize;">javier</h3>
+          
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 8px;">
+              <div>
+                <strong>Ejercicio matutino</strong><br>
+                <small style="color: #6b7280;">07:00 - 30 min - daily</small>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <span style="color: #ef4444;">✗ Pendiente</span>
+                <button onclick="editActivity(1)" style="padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Editar</button>
+                <button onclick="deleteActivity(1)" style="padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Eliminar</button>
+              </div>
+            </div>
+          
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 8px;">
+              <div>
+                <strong>Revisar emails</strong><br>
+                <small style="color: #6b7280;">09:00 - 15 min - weekdays</small>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <span style="color: #10b981;">✓ Hecho</span>
+                <button onclick="editActivity(2)" style="padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Editar</button>
+                <button onclick="deleteActivity(2)" style="padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Eliminar</button>
+              </div>
+            </div>
+          
+        </div>
+      
+        <div style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px;">
+          <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 16px; text-transform: capitalize;">raquel</h3>
+          
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 8px;">
+              <div>
+                <strong>Yoga</strong><br>
+                <small style="color: #6b7280;">06:30 - 45 min - daily</small>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <span style="color: #ef4444;">✗ Pendiente</span>
+                <button onclick="editActivity(3)" style="padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Editar</button>
+                <button onclick="deleteActivity(3)" style="padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Eliminar</button>
+              </div>
+            </div>
+          
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 8px;">
+              <div>
+                <strong>Planificar comidas</strong><br>
+                <small style="color: #6b7280;">19:00 - 20 min - weekly</small>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <span style="color: #ef4444;">✗ Pendiente</span>
+                <button onclick="editActivity(4)" style="padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Editar</button>
+                <button onclick="deleteActivity(4)" style="padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Eliminar</button>
+              </div>
+            </div>
+          
+        </div>
+      
+        <div style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px;">
+          <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 16px; text-transform: capitalize;">mario</h3>
+          
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 8px;">
+              <div>
+                <strong>Estudiar</strong><br>
+                <small style="color: #6b7280;">16:00 - 60 min - weekdays</small>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <span style="color: #ef4444;">✗ Pendiente</span>
+                <button onclick="editActivity(5)" style="padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Editar</button>
+                <button onclick="deleteActivity(5)" style="padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Eliminar</button>
+              </div>
+            </div>
+          
+        </div>
+      
+        <div style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px;">
+          <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 16px; text-transform: capitalize;">alba</h3>
+          
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 8px;">
+              <div>
+                <strong>Leer</strong><br>
+                <small style="color: #6b7280;">20:00 - 30 min - daily</small>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <span style="color: #10b981;">✓ Hecho</span>
+                <button onclick="editActivity(6)" style="padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Editar</button>
+                <button onclick="deleteActivity(6)" style="padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Eliminar</button>
+              </div>
+            </div>
+          
+        </div>
+      
+      <div id="edit-activity" style="display: none; background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; width: 400px; max-width: 90vw;">
+        <h3 style="margin-bottom: 16px;">Editar Actividad</h3>
+        <form onsubmit="updateActivity(event)">
+          <input type="hidden" id="edit-id" name="id">
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Usuarios:</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-user-javier" name="users" value="javier"> Javier</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-user-raquel" name="users" value="raquel"> Raquel</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-user-mario" name="users" value="mario"> Mario</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-user-alba" name="users" value="alba"> Alba</label>
+            </div>
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Título:</label>
+            <input type="text" id="edit-title" name="title" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Hora:</label>
+            <input type="time" id="edit-time" name="time" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Duración (minutos):</label>
+            <input type="number" id="edit-duration" name="duration" required min="1" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Fecha de inicio:</label>
+            <input type="date" id="edit-startDate" name="startDate" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Fecha de fin:</label>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <input type="date" id="edit-endDate" name="endDate" style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-noEndDate" onchange="toggleEditEndDate()"> Sin fecha de fin</label>
+            </div>
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Repetir:</label>
+            <select id="edit-repeat" name="repeat" onchange="toggleEditCustomDays()" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+              <option value="none">No repetir</option>
+              <option value="daily">Todos los días</option>
+              <option value="weekdays">Días laborables</option>
+              <option value="weekly">Semanalmente</option>
+              <option value="custom">Personalizar días</option>
+            </select>
+          </div>
+          <div id="edit-customDays" style="display: none; margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Días de la semana:</label>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-day-1" name="weekdays" value="1"> Lunes</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-day-2" name="weekdays" value="2"> Martes</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-day-3" name="weekdays" value="3"> Miércoles</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-day-4" name="weekdays" value="4"> Jueves</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-day-5" name="weekdays" value="5"> Viernes</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-day-6" name="weekdays" value="6"> Sábado</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-day-0" name="weekdays" value="0"> Domingo</label>
+            </div>
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <button type="submit" style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer;">Actualizar</button>
+            <button type="button" onclick="hideEditActivity()" style="padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancelar</button>
+          </div>
+        </form>
+      </div>
+      <div id="overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999;" onclick="hideEditActivity()"></div>
+      <script>
+        const activitiesData = {"javier":[{"id":1,"title":"Ejercicio matutino","time":"07:00","duration":30,"completed":false,"repeat":"daily","streak":0,"lastCompleted":null,"medals":{"bronze":false,"silver":false,"gold":false},"completedDates":[],"startDate":"2024-01-01"},{"id":2,"title":"Revisar emails","time":"09:00","duration":15,"completed":true,"repeat":"weekdays","streak":0,"lastCompleted":null,"medals":{"bronze":false,"silver":false,"gold":false},"completedDates":[],"startDate":"2024-01-01"}],"raquel":[{"id":3,"title":"Yoga","time":"06:30","duration":45,"completed":false,"repeat":"daily","streak":0,"lastCompleted":null,"medals":{"bronze":false,"silver":false,"gold":false},"completedDates":[],"startDate":"2024-01-01"},{"id":4,"title":"Planificar comidas","time":"19:00","duration":20,"completed":false,"repeat":"weekly","streak":0,"lastCompleted":null,"medals":{"bronze":false,"silver":false,"gold":false},"completedDates":[],"startDate":"2024-01-01"}],"mario":[{"id":5,"title":"Estudiar","time":"16:00","duration":60,"completed":false,"repeat":"weekdays","streak":0,"lastCompleted":null,"medals":{"bronze":false,"silver":false,"gold":false},"completedDates":[],"startDate":"2024-01-01"}],"alba":[{"id":6,"title":"Leer","time":"20:00","duration":30,"completed":true,"repeat":"daily","streak":0,"lastCompleted":null,"medals":{"bronze":false,"silver":false,"gold":false},"completedDates":[],"startDate":"2024-01-01"}]};
+        
+        function showAddActivity() { document.getElementById('add-activity').style.display = 'block'; }
+        function hideAddActivity() { document.getElementById('add-activity').style.display = 'none'; }
+        function toggleEndDate() {
+          const endDate = document.getElementById('endDate');
+          const noEndDate = document.getElementById('noEndDate');
+          endDate.disabled = noEndDate.checked;
+          if (noEndDate.checked) endDate.value = '';
+        }
+        
+        function toggleEditEndDate() {
+          const endDate = document.getElementById('edit-endDate');
+          const noEndDate = document.getElementById('edit-noEndDate');
+          endDate.disabled = noEndDate.checked;
+          if (noEndDate.checked) endDate.value = '';
+        }
+        
+        function toggleCustomDays() {
+          const repeat = document.querySelector('select[name="repeat"]').value;
+          const customDays = document.getElementById('customDays');
+          customDays.style.display = repeat === 'custom' ? 'block' : 'none';
+        }
+        
+        function toggleEditCustomDays() {
+          const repeat = document.getElementById('edit-repeat').value;
+          const customDays = document.getElementById('edit-customDays');
+          customDays.style.display = repeat === 'custom' ? 'block' : 'none';
+        }
+        
+        function addActivity(e) { 
+          e.preventDefault(); 
+          const selectedUsers = Array.from(document.querySelectorAll('input[name="users"]:checked')).map(cb => cb.value);
+          if (selectedUsers.length === 0) {
+            alert('Selecciona al menos un usuario');
+            return;
+          }
+          const repeat = document.querySelector('select[name="repeat"]').value;
+          if (repeat === 'custom') {
+            const selectedDays = Array.from(document.querySelectorAll('input[name="weekdays"]:checked')).map(cb => cb.value);
+            if (selectedDays.length === 0) {
+              alert('Selecciona al menos un día de la semana');
+              return;
+            }
+          }
+          
+          const formData = new FormData(e.target);
+          const activityData = {
+            users: selectedUsers,
+            title: formData.get('title'),
+            time: formData.get('time'),
+            duration: formData.get('duration'),
+            repeat: repeat,
+            startDate: formData.get('startDate'),
+            endDate: formData.get('endDate'),
+            customDays: repeat === 'custom' ? Array.from(document.querySelectorAll('input[name="weekdays"]:checked')).map(cb => cb.value) : null
+          };
+          
+          fetch('/api/add-activity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(activityData)
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              location.reload();
+            } else {
+              alert('Error al crear la actividad');
+            }
+          });
+        }
+        
+        function editActivity(id) {
+          // Buscar la actividad en todos los usuarios
+          let activity = null;
+          let user = null;
+          for (const [userId, userActivities] of Object.entries(activitiesData)) {
+            const found = userActivities.find(a => a.id === id);
+            if (found) {
+              activity = found;
+              user = userId;
+              break;
+            }
+          }
+          
+          if (activity) {
+            document.getElementById('edit-id').value = activity.id;
+            // Marcar el usuario actual
+            document.querySelectorAll('input[name="users"]').forEach(cb => cb.checked = false);
+            document.getElementById('edit-user-' + user).checked = true;
+            document.getElementById('edit-title').value = activity.title;
+            document.getElementById('edit-time').value = activity.time;
+            document.getElementById('edit-duration').value = activity.duration;
+            document.getElementById('edit-repeat').value = activity.repeat;
+            
+            // Cargar fechas
+            document.getElementById('edit-startDate').value = activity.startDate || '';
+            document.getElementById('edit-endDate').value = activity.endDate || '';
+            document.getElementById('edit-noEndDate').checked = !activity.endDate;
+            toggleEditEndDate();
+            
+            // Cargar días personalizados
+            if (activity.repeat === 'custom' && activity.customDays) {
+              document.querySelectorAll('#edit-activity input[name="weekdays"]').forEach(cb => {
+                cb.checked = activity.customDays.includes(cb.value);
+              });
+            }
+            toggleEditCustomDays();
+            document.getElementById('edit-activity').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+          }
+        }
+        
+        function hideEditActivity() {
+          document.getElementById('edit-activity').style.display = 'none';
+          document.getElementById('overlay').style.display = 'none';
+        }
+        
+        function updateActivity(e) {
+          e.preventDefault();
+          const selectedUsers = Array.from(document.querySelectorAll('#edit-activity input[name="users"]:checked')).map(cb => cb.value);
+          if (selectedUsers.length === 0) {
+            alert('Selecciona al menos un usuario');
+            return;
+          }
+          const repeat = document.getElementById('edit-repeat').value;
+          if (repeat === 'custom') {
+            const selectedDays = Array.from(document.querySelectorAll('#edit-activity input[name="weekdays"]:checked')).map(cb => cb.value);
+            if (selectedDays.length === 0) {
+              alert('Selecciona al menos un día de la semana');
+              return;
+            }
+          }
+          
+          const formData = new FormData(e.target);
+          const activityData = {
+            id: formData.get('id'),
+            users: selectedUsers,
+            title: formData.get('title'),
+            time: formData.get('time'),
+            duration: formData.get('duration'),
+            repeat: repeat,
+            startDate: formData.get('startDate'),
+            endDate: formData.get('endDate'),
+            customDays: repeat === 'custom' ? Array.from(document.querySelectorAll('#edit-activity input[name="weekdays"]:checked')).map(cb => cb.value) : null
+          };
+          
+          fetch('/api/update-activity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(activityData)
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              location.reload();
+            } else {
+              alert('Error al actualizar la actividad');
+            }
+          });
+        }
+        
+        function deleteActivity(id, specificDate = null) {
+          let message = '¿Cómo quieres eliminar esta actividad?';
+          let options = ['Cancelar', 'Solo este evento', 'Toda la serie'];
+          
+          if (specificDate) {
+            let choice = confirm(message + '
+
+Aceptar = Solo este evento
+Cancelar = Toda la serie');
+            if (choice === null) return;
+            
+            fetch('/api/delete-activity', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                id: id, 
+                deleteType: choice ? 'single' : 'series',
+                specificDate: specificDate 
+              })
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                location.reload();
+              } else {
+                alert('Error al eliminar la actividad');
+              }
+            });
+          } else {
+            if (confirm('¿Estás seguro de que quieres eliminar toda esta actividad?')) {
+              fetch('/api/delete-activity', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id, deleteType: 'series' })
+              })
+              .then(response => response.json())
+              .then(data => {
+                if (data.success) {
+                  location.reload();
+                } else {
+                  alert('Error al eliminar la actividad');
+                }
+              });
+            }
+          }
+        }
+      </script>
+    
+      </div>
+    </div>
+  </div>
+  <script>
+    function markMessagesAsRead() {
+      fetch('/api/mark-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: 'javi_administrador' })
+      });
+    }
+  </script>
+</body>
+</html>

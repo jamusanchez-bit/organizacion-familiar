@@ -1,0 +1,1 @@
+Recuerda que siempre trabajo con Mac. Dame por defecto los atajos para Mac y Safari
