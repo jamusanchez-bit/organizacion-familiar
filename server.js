@@ -173,7 +173,8 @@ const server = http.createServer((req, res) => {
           customDays: customDays || null,
           streak: 0,
           lastCompleted: null,
-          medals: { bronze: false, silver: false, gold: false }
+          medals: { bronze: false, silver: false, gold: false },
+          completedDates: []
         });
       });
       
@@ -211,7 +212,8 @@ const server = http.createServer((req, res) => {
           customDays: customDays || null,
           streak: 0,
           lastCompleted: null,
-          medals: { bronze: false, silver: false, gold: false }
+          medals: { bronze: false, silver: false, gold: false },
+          completedDates: []
         });
       });
       
@@ -249,6 +251,39 @@ const server = http.createServer((req, res) => {
       
       res.writeHead(200, {'Content-Type': 'application/json'});
       res.end(JSON.stringify({ success: true }));
+    });
+    return;
+  }
+  
+  // API para toggle activity por fecha
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/toggle-activity-date') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = JSON.parse(body);
+      const { activityId, userId, date } = data;
+      
+      const userActivities = activities[userId];
+      if (userActivities) {
+        const activity = userActivities.find(a => a.id == activityId);
+        if (activity) {
+          if (!activity.completedDates) activity.completedDates = [];
+          
+          const dateIndex = activity.completedDates.indexOf(date);
+          if (dateIndex > -1) {
+            activity.completedDates.splice(dateIndex, 1);
+          } else {
+            activity.completedDates.push(date);
+          }
+          
+          res.writeHead(200, {'Content-Type': 'application/json'});
+          res.end(JSON.stringify({ success: true }));
+          return;
+        }
+      }
+      
+      res.writeHead(400, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({ success: false }));
     });
     return;
   }
@@ -1498,7 +1533,45 @@ function getActivitiesContent(userId, isAdmin) {
       </div>
       <div id="weekly-view" style="display: none;">
         <h3 style="margin-bottom: 16px;">Vista Semanal</h3>
-        <p style="color: #6b7280; background: white; padding: 24px; border-radius: 8px;">Vista semanal próximamente</p>
+        <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          <div style="display: grid; grid-template-columns: 120px repeat(7, 1fr); gap: 8px; margin-bottom: 16px;">
+            <div></div>
+            ${['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((day, index) => {
+              const date = getWeekDate(index);
+              const isToday = isDateToday(date);
+              return `<div style="text-align: center; font-weight: bold; padding: 8px; background: ${isToday ? '#fef3c7' : '#f3f4f6'}; border-radius: 4px;">${day}<br><small>${date.getDate()}/${date.getMonth() + 1}</small></div>`;
+            }).join('')}
+          </div>
+          ${userActivities.map(activity => {
+            return `
+              <div style="display: grid; grid-template-columns: 120px repeat(7, 1fr); gap: 8px; margin-bottom: 8px; align-items: center;">
+                <div style="font-size: 12px; font-weight: 500; padding: 8px;">${activity.title}</div>
+                ${[0,1,2,3,4,5,6].map(dayIndex => {
+                  const date = getWeekDate(dayIndex);
+                  const canMarkToday = canMarkActivityOnDate(activity, date);
+                  const isActivityDay = isActivityScheduledOnDate(activity, date);
+                  
+                  if (!isActivityDay) {
+                    return '<div style="padding: 8px;"></div>';
+                  }
+                  
+                  const dateStr = date.toISOString().split('T')[0];
+                  const isCompleted = activity.completedDates && activity.completedDates.includes(dateStr);
+                  
+                  return `
+                    <div style="padding: 8px; text-align: center;">
+                      <button onclick="toggleActivityDate('${activity.id}', '${dateStr}')" 
+                              style="width: 32px; height: 32px; border: none; border-radius: 50%; cursor: ${canMarkToday ? 'pointer' : 'not-allowed'}; background: ${isCompleted ? '#10b981' : (canMarkToday ? '#e5e7eb' : '#f3f4f6')}; color: ${isCompleted ? 'white' : '#374151'}; font-size: 12px;"
+                              ${!canMarkToday ? 'disabled' : ''}>
+                        ${isCompleted ? '✓' : '○'}
+                      </button>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `;
+          }).join('')}
+        </div>
       </div>
       
       ${isAdmin ? `
@@ -1562,11 +1635,63 @@ function getActivitiesContent(userId, isAdmin) {
           });
         }
         
+        function getWeekDate(dayIndex) {
+          const today = new Date();
+          const monday = new Date(today);
+          monday.setDate(today.getDate() - (today.getDay() + 6) % 7);
+          const targetDate = new Date(monday);
+          targetDate.setDate(monday.getDate() + dayIndex);
+          return targetDate;
+        }
+        
+        function isDateToday(date) {
+          const today = new Date();
+          return date.toDateString() === today.toDateString();
+        }
+        
+        function canMarkActivityOnDate(activity, date) {
+          const today = new Date();
+          return date <= today;
+        }
+        
+        function isActivityScheduledOnDate(activity, date) {
+          const dayOfWeek = date.getDay();
+          
+          if (activity.repeat === 'daily') return true;
+          if (activity.repeat === 'weekdays') return dayOfWeek >= 1 && dayOfWeek <= 5;
+          if (activity.repeat === 'weekly') {
+            const startDate = new Date(activity.startDate || '2024-01-01');
+            return dayOfWeek === startDate.getDay();
+          }
+          if (activity.repeat === 'custom' && activity.customDays) {
+            return activity.customDays.includes(dayOfWeek.toString());
+          }
+          if (activity.repeat === 'none') {
+            const activityDate = new Date(activity.startDate);
+            return date.toDateString() === activityDate.toDateString();
+          }
+          return false;
+        }
+        
         function toggleActivity(id) {
           fetch('/api/toggle-activity', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ activityId: id, userId: '${userId}' })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              location.reload();
+            }
+          });
+        }
+        
+        function toggleActivityDate(activityId, date) {
+          fetch('/api/toggle-activity-date', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ activityId: activityId, userId: '${userId}', date: date })
           })
           .then(response => response.json())
           .then(data => {
