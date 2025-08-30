@@ -1006,13 +1006,37 @@ function getActivitiesContent(userId, isAdmin) {
             <input type="number" name="duration" required min="1" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
           </div>
           <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Fecha de inicio:</label>
+            <input type="date" name="startDate" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Fecha de fin:</label>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <input type="date" id="endDate" name="endDate" style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="noEndDate" onchange="toggleEndDate()"> Sin fecha de fin</label>
+            </div>
+          </div>
+          <div style="margin-bottom: 16px;">
             <label style="display: block; margin-bottom: 4px; font-weight: 500;">Repetir:</label>
-            <select name="repeat" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+            <select name="repeat" onchange="toggleCustomDays()" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
               <option value="none">No repetir</option>
               <option value="daily">Todos los días</option>
               <option value="weekdays">Días laborables</option>
               <option value="weekly">Semanalmente</option>
+              <option value="custom">Personalizar días</option>
             </select>
+          </div>
+          <div id="customDays" style="display: none; margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Días de la semana:</label>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="weekdays" value="1"> Lunes</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="weekdays" value="2"> Martes</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="weekdays" value="3"> Miércoles</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="weekdays" value="4"> Jueves</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="weekdays" value="5"> Viernes</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="weekdays" value="6"> Sábado</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="weekdays" value="0"> Domingo</label>
+            </div>
           </div>
           <div style="display: flex; gap: 12px;">
             <button type="submit" style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer;">Guardar</button>
@@ -1064,13 +1088,37 @@ function getActivitiesContent(userId, isAdmin) {
             <input type="number" id="edit-duration" name="duration" required min="1" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
           </div>
           <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Fecha de inicio:</label>
+            <input type="date" id="edit-startDate" name="startDate" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Fecha de fin:</label>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <input type="date" id="edit-endDate" name="endDate" style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-noEndDate" onchange="toggleEditEndDate()"> Sin fecha de fin</label>
+            </div>
+          </div>
+          <div style="margin-bottom: 16px;">
             <label style="display: block; margin-bottom: 4px; font-weight: 500;">Repetir:</label>
-            <select id="edit-repeat" name="repeat" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+            <select id="edit-repeat" name="repeat" onchange="toggleEditCustomDays()" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
               <option value="none">No repetir</option>
               <option value="daily">Todos los días</option>
               <option value="weekdays">Días laborables</option>
               <option value="weekly">Semanalmente</option>
+              <option value="custom">Personalizar días</option>
             </select>
+          </div>
+          <div id="edit-customDays" style="display: none; margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Días de la semana:</label>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-day-1" name="weekdays" value="1"> Lunes</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-day-2" name="weekdays" value="2"> Martes</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-day-3" name="weekdays" value="3"> Miércoles</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-day-4" name="weekdays" value="4"> Jueves</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-day-5" name="weekdays" value="5"> Viernes</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-day-6" name="weekdays" value="6"> Sábado</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-day-0" name="weekdays" value="0"> Domingo</label>
+            </div>
           </div>
           <div style="display: flex; gap: 12px;">
             <button type="submit" style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer;">Actualizar</button>
@@ -1084,12 +1132,46 @@ function getActivitiesContent(userId, isAdmin) {
         
         function showAddActivity() { document.getElementById('add-activity').style.display = 'block'; }
         function hideAddActivity() { document.getElementById('add-activity').style.display = 'none'; }
+        function toggleEndDate() {
+          const endDate = document.getElementById('endDate');
+          const noEndDate = document.getElementById('noEndDate');
+          endDate.disabled = noEndDate.checked;
+          if (noEndDate.checked) endDate.value = '';
+        }
+        
+        function toggleEditEndDate() {
+          const endDate = document.getElementById('edit-endDate');
+          const noEndDate = document.getElementById('edit-noEndDate');
+          endDate.disabled = noEndDate.checked;
+          if (noEndDate.checked) endDate.value = '';
+        }
+        
+        function toggleCustomDays() {
+          const repeat = document.querySelector('select[name="repeat"]').value;
+          const customDays = document.getElementById('customDays');
+          customDays.style.display = repeat === 'custom' ? 'block' : 'none';
+        }
+        
+        function toggleEditCustomDays() {
+          const repeat = document.getElementById('edit-repeat').value;
+          const customDays = document.getElementById('edit-customDays');
+          customDays.style.display = repeat === 'custom' ? 'block' : 'none';
+        }
+        
         function addActivity(e) { 
           e.preventDefault(); 
           const selectedUsers = Array.from(document.querySelectorAll('input[name="users"]:checked')).map(cb => cb.value);
           if (selectedUsers.length === 0) {
             alert('Selecciona al menos un usuario');
             return;
+          }
+          const repeat = document.querySelector('select[name="repeat"]').value;
+          if (repeat === 'custom') {
+            const selectedDays = Array.from(document.querySelectorAll('input[name="weekdays"]:checked')).map(cb => cb.value);
+            if (selectedDays.length === 0) {
+              alert('Selecciona al menos un día de la semana');
+              return;
+            }
           }
           alert('Funcionalidad de guardar pendiente para: ' + selectedUsers.join(', ')); 
         }
@@ -1132,6 +1214,14 @@ function getActivitiesContent(userId, isAdmin) {
           if (selectedUsers.length === 0) {
             alert('Selecciona al menos un usuario');
             return;
+          }
+          const repeat = document.getElementById('edit-repeat').value;
+          if (repeat === 'custom') {
+            const selectedDays = Array.from(document.querySelectorAll('#edit-activity input[name="weekdays"]:checked')).map(cb => cb.value);
+            if (selectedDays.length === 0) {
+              alert('Selecciona al menos un día de la semana');
+              return;
+            }
           }
           alert('Funcionalidad de actualizar pendiente para: ' + selectedUsers.join(', '));
           hideEditActivity();
