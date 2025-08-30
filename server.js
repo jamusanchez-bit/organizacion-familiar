@@ -1,6 +1,47 @@
 require('dotenv').config();
 const http = require('http');
 const url = require('url');
+const fs = require('fs');
+const path = require('path');
+
+// Sistema de persistencia
+const DATA_FILE = path.join(__dirname, 'data.json');
+
+function saveData() {
+  const data = {
+    activities,
+    groupMessages,
+    adminMessages,
+    privateChats,
+    unreadMessages,
+    mealPlan,
+    mealStatus,
+    inventoryByCategory,
+    userMedals,
+    messageIdCounter
+  };
+  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+}
+
+function loadData() {
+  if (fs.existsSync(DATA_FILE)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+      Object.assign(activities, data.activities || {});
+      groupMessages.push(...(data.groupMessages || []));
+      adminMessages.push(...(data.adminMessages || []));
+      Object.assign(privateChats, data.privateChats || {});
+      Object.assign(unreadMessages, data.unreadMessages || {});
+      Object.assign(mealPlan, data.mealPlan || {});
+      Object.assign(mealStatus, data.mealStatus || {});
+      Object.assign(inventoryByCategory, data.inventoryByCategory || {});
+      Object.assign(userMedals, data.userMedals || {});
+      messageIdCounter = data.messageIdCounter || 1;
+    } catch (e) {
+      console.log('Error cargando datos:', e.message);
+    }
+  }
+}
 
 const USERS = {
   javier: { id: 'javier', name: 'Javier', token: 'jav_abc123xyz789def456', allowedIPs: [] },
@@ -53,6 +94,7 @@ const server = http.createServer((req, res) => {
         addNotification(from, to, 'private');
       }
       
+      saveData();
       res.writeHead(200, {'Content-Type': 'application/json'});
       res.end(JSON.stringify({ success: true, message: newMessage }));
     });
@@ -134,6 +176,7 @@ const server = http.createServer((req, res) => {
         const newQuantity = Math.max(0, product.quantity + change);
         product.quantity = newQuantity;
         
+        saveData();
         res.writeHead(200, {'Content-Type': 'application/json'});
         res.end(JSON.stringify({ success: true, newQuantity }));
       } else {
@@ -178,6 +221,7 @@ const server = http.createServer((req, res) => {
         });
       });
       
+      saveData();
       res.writeHead(200, {'Content-Type': 'application/json'});
       res.end(JSON.stringify({ success: true }));
     });
@@ -2543,6 +2587,9 @@ function getTodayQuote() {
   const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
   return quotes[(dayOfYear - 1) % quotes.length];
 }
+
+// Cargar datos al iniciar
+loadData();
 
 const port = process.env.PORT || 7777;
 server.listen(port, '0.0.0.0', () => {
