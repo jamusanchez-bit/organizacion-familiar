@@ -961,18 +961,18 @@ function getInventarioContent(userId, isAdmin) {
 
 const activities = {
   javier: [
-    { id: 1, title: 'Ejercicio matutino', time: '07:00', duration: 30, completed: false, repeat: 'daily', streak: 0, lastCompleted: null, medals: { bronze: false, silver: false, gold: false } },
-    { id: 2, title: 'Revisar emails', time: '09:00', duration: 15, completed: true, repeat: 'weekdays', streak: 0, lastCompleted: null, medals: { bronze: false, silver: false, gold: false } }
+    { id: 1, title: 'Ejercicio matutino', time: '07:00', duration: 30, completed: false, repeat: 'daily', streak: 0, lastCompleted: null, medals: { bronze: false, silver: false, gold: false }, completedDates: [], startDate: '2024-01-01' },
+    { id: 2, title: 'Revisar emails', time: '09:00', duration: 15, completed: true, repeat: 'weekdays', streak: 0, lastCompleted: null, medals: { bronze: false, silver: false, gold: false }, completedDates: [], startDate: '2024-01-01' }
   ],
   raquel: [
-    { id: 3, title: 'Yoga', time: '06:30', duration: 45, completed: false, repeat: 'daily', streak: 0, lastCompleted: null, medals: { bronze: false, silver: false, gold: false } },
-    { id: 4, title: 'Planificar comidas', time: '19:00', duration: 20, completed: false, repeat: 'weekly', streak: 0, lastCompleted: null, medals: { bronze: false, silver: false, gold: false } }
+    { id: 3, title: 'Yoga', time: '06:30', duration: 45, completed: false, repeat: 'daily', streak: 0, lastCompleted: null, medals: { bronze: false, silver: false, gold: false }, completedDates: [], startDate: '2024-01-01' },
+    { id: 4, title: 'Planificar comidas', time: '19:00', duration: 20, completed: false, repeat: 'weekly', streak: 0, lastCompleted: null, medals: { bronze: false, silver: false, gold: false }, completedDates: [], startDate: '2024-01-01' }
   ],
   mario: [
-    { id: 5, title: 'Estudiar', time: '16:00', duration: 60, completed: false, repeat: 'weekdays', streak: 0, lastCompleted: null, medals: { bronze: false, silver: false, gold: false } }
+    { id: 5, title: 'Estudiar', time: '16:00', duration: 60, completed: false, repeat: 'weekdays', streak: 0, lastCompleted: null, medals: { bronze: false, silver: false, gold: false }, completedDates: [], startDate: '2024-01-01' }
   ],
   alba: [
-    { id: 6, title: 'Leer', time: '20:00', duration: 30, completed: true, repeat: 'daily', streak: 0, lastCompleted: null, medals: { bronze: false, silver: false, gold: false } }
+    { id: 6, title: 'Leer', time: '20:00', duration: 30, completed: true, repeat: 'daily', streak: 0, lastCompleted: null, medals: { bronze: false, silver: false, gold: false }, completedDates: [], startDate: '2024-01-01' }
   ]
 };
 
