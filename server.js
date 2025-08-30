@@ -157,7 +157,7 @@ const server = http.createServer((req, res) => {
         const activity = userActivities.find(a => a.id == activityId);
         if (activity && canCompleteActivity(activity)) {
           activity.completed = !activity.completed;
-          updateActivityStreak(activity, activity.completed);
+          updateActivityStreak(activity, activity.completed, userId);
           
           res.writeHead(200, {'Content-Type': 'application/json'});
           res.end(JSON.stringify({ success: true, activity }));
@@ -311,7 +311,7 @@ function getMainHTML(user, section) {
     </div>
     <div class="main">
       <div class="top">
-        <h1 style="font-size: 28px; font-weight: bold;">¡Hola, ${user.name}! 👋<br><small style="font-size: 14px; color: #6b7280; font-weight: normal;">${getTodayDate()}</small><br><small style="font-size: 12px; color: #9ca3af; font-weight: normal; font-style: italic;">"${getTodayQuote()}"</small></h1>
+        <h1 style="font-size: 28px; font-weight: bold;">¡Hola, ${user.name}! ${getUserMedalsDisplay(user.id)} 👋<br><small style="font-size: 14px; color: #6b7280; font-weight: normal;">${getTodayDate()}</small><br><small style="font-size: 12px; color: #9ca3af; font-weight: normal; font-style: italic;">"${getTodayQuote()}"</small></h1>
       </div>
       <div class="content">
         ${getContent(section, user.id)}
@@ -817,19 +817,27 @@ function getInventarioContent(userId, isAdmin) {
 
 const activities = {
   javier: [
-    { id: 1, title: 'Ejercicio matutino', time: '07:00', duration: 30, completed: false, repeat: 'daily', streak: 0, lastCompleted: null },
-    { id: 2, title: 'Revisar emails', time: '09:00', duration: 15, completed: true, repeat: 'weekdays', streak: 0, lastCompleted: null }
+    { id: 1, title: 'Ejercicio matutino', time: '07:00', duration: 30, completed: false, repeat: 'daily', streak: 0, lastCompleted: null, medals: { bronze: false, silver: false, gold: false } },
+    { id: 2, title: 'Revisar emails', time: '09:00', duration: 15, completed: true, repeat: 'weekdays', streak: 0, lastCompleted: null, medals: { bronze: false, silver: false, gold: false } }
   ],
   raquel: [
-    { id: 3, title: 'Yoga', time: '06:30', duration: 45, completed: false, repeat: 'daily', streak: 0, lastCompleted: null },
-    { id: 4, title: 'Planificar comidas', time: '19:00', duration: 20, completed: false, repeat: 'weekly', streak: 0, lastCompleted: null }
+    { id: 3, title: 'Yoga', time: '06:30', duration: 45, completed: false, repeat: 'daily', streak: 0, lastCompleted: null, medals: { bronze: false, silver: false, gold: false } },
+    { id: 4, title: 'Planificar comidas', time: '19:00', duration: 20, completed: false, repeat: 'weekly', streak: 0, lastCompleted: null, medals: { bronze: false, silver: false, gold: false } }
   ],
   mario: [
-    { id: 5, title: 'Estudiar', time: '16:00', duration: 60, completed: false, repeat: 'weekdays', streak: 0, lastCompleted: null }
+    { id: 5, title: 'Estudiar', time: '16:00', duration: 60, completed: false, repeat: 'weekdays', streak: 0, lastCompleted: null, medals: { bronze: false, silver: false, gold: false } }
   ],
   alba: [
-    { id: 6, title: 'Leer', time: '20:00', duration: 30, completed: true, repeat: 'daily', streak: 0, lastCompleted: null }
+    { id: 6, title: 'Leer', time: '20:00', duration: 30, completed: true, repeat: 'daily', streak: 0, lastCompleted: null, medals: { bronze: false, silver: false, gold: false } }
   ]
+};
+
+// Sistema de medallas de usuarios
+const userMedals = {
+  javier: [],
+  raquel: [],
+  mario: [],
+  alba: []
 };
 
 function getTodayDateString() {
@@ -839,39 +847,131 @@ function getTodayDateString() {
 
 function canCompleteActivity(activity) {
   const today = getTodayDateString();
+  if (activity.repeat === 'none') return true;
+  if (activity.repeat === 'weekly') {
+    const lastWeek = activity.lastCompleted ? new Date(activity.lastCompleted) : null;
+    const thisWeek = new Date(today);
+    if (!lastWeek) return true;
+    const daysDiff = Math.floor((thisWeek - lastWeek) / (1000 * 60 * 60 * 24));
+    return daysDiff >= 7;
+  }
+  if (activity.repeat === 'weekdays') {
+    const dayOfWeek = new Date(today).getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) return false; // Domingo o sábado
+  }
   return !activity.lastCompleted || activity.lastCompleted !== today;
 }
 
-function updateActivityStreak(activity, completed) {
+function updateActivityStreak(activity, completed, userId) {
   const today = getTodayDateString();
   
   if (completed) {
     if (activity.lastCompleted) {
       const lastDate = new Date(activity.lastCompleted);
       const todayDate = new Date(today);
-      const diffTime = todayDate - lastDate;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       
-      if (diffDays === 1) {
+      // Calcular días válidos según el tipo de actividad
+      let expectedDaysDiff = 1;
+      if (activity.repeat === 'weekly') expectedDaysDiff = 7;
+      else if (activity.repeat === 'weekdays') {
+        // Contar solo días laborables
+        let daysBetween = 0;
+        let currentDate = new Date(lastDate);
+        currentDate.setDate(currentDate.getDate() + 1);
+        
+        while (currentDate <= todayDate) {
+          const dayOfWeek = currentDate.getDay();
+          if (dayOfWeek !== 0 && dayOfWeek !== 6) daysBetween++;
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+        expectedDaysDiff = daysBetween;
+      }
+      
+      const actualDays = Math.ceil((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+      
+      if ((activity.repeat === 'weekdays' && expectedDaysDiff === 1) || 
+          (activity.repeat !== 'weekdays' && actualDays === expectedDaysDiff)) {
         activity.streak++;
-      } else if (diffDays > 1) {
-        activity.streak = 1;
+      } else {
+        // Romper racha: resetear contadores según medallas conseguidas
+        if (activity.medals.gold) {
+          // Si ya tiene oro, mantener oro y plata, resetear solo el contador actual
+          activity.streak = 1;
+        } else if (activity.medals.silver) {
+          // Si tiene plata, mantener plata y bronce, resetear contador de oro
+          activity.streak = 1;
+        } else if (activity.medals.bronze) {
+          // Si tiene bronce, mantener bronce, resetear contador de plata
+          activity.streak = 1;
+        } else {
+          activity.streak = 1;
+        }
       }
     } else {
       activity.streak = 1;
     }
+    
+    // Verificar y otorgar medallas
+    checkAndAwardMedals(activity, userId);
     activity.lastCompleted = today;
   } else {
-    activity.streak = 0;
+    // Al desmarcar, resetear según medallas conseguidas
+    if (activity.medals.gold) {
+      activity.streak = Math.max(100, activity.streak - 1);
+    } else if (activity.medals.silver) {
+      activity.streak = Math.max(50, activity.streak - 1);
+    } else if (activity.medals.bronze) {
+      activity.streak = Math.max(21, activity.streak - 1);
+    } else {
+      activity.streak = Math.max(0, activity.streak - 1);
+    }
     activity.lastCompleted = null;
   }
 }
 
-function getStreakBadge(streak) {
-  if (streak >= 100) return { text: 'Conseguido: Eres una leyenda', medal: '🥇' };
-  if (streak >= 50) return { text: 'Conseguido: Eres un hacha', medal: '🥈' };
-  if (streak >= 21) return { text: 'Conseguido: Has cogido el hábito', medal: '🥉' };
+function checkAndAwardMedals(activity, userId) {
+  // Medalla de bronce (21 días)
+  if (activity.streak >= 21 && !activity.medals.bronze) {
+    activity.medals.bronze = true;
+    addUserMedal(userId, 'bronze', activity.title);
+  }
+  
+  // Medalla de plata (50 días)
+  if (activity.streak >= 50 && !activity.medals.silver) {
+    activity.medals.silver = true;
+    addUserMedal(userId, 'silver', activity.title);
+  }
+  
+  // Medalla de oro (100 días)
+  if (activity.streak >= 100 && !activity.medals.gold) {
+    activity.medals.gold = true;
+    addUserMedal(userId, 'gold', activity.title);
+  }
+}
+
+function addUserMedal(userId, type, activityTitle) {
+  if (!userMedals[userId]) userMedals[userId] = [];
+  const medal = {
+    type: type,
+    activity: activityTitle,
+    date: getTodayDateString(),
+    emoji: type === 'gold' ? '🥇' : type === 'silver' ? '🥈' : '🥉'
+  };
+  userMedals[userId].push(medal);
+}
+
+function getStreakBadge(activity, level) {
+  if (level === 100 && activity.medals.gold) return { text: 'Conseguido: Eres una leyenda', medal: '🥇' };
+  if (level === 50 && activity.medals.silver) return { text: 'Conseguido: Eres un hacha', medal: '🥈' };
+  if (level === 21 && activity.medals.bronze) return { text: 'Conseguido: Has cogido el hábito', medal: '🥉' };
   return null;
+}
+
+function getUserMedalsDisplay(userId) {
+  const medals = userMedals[userId] || [];
+  if (medals.length === 0) return '';
+  
+  return medals.map(medal => `${medal.emoji} ${medal.activity}`).join(' ');
 }
 
 function getActivitiesContent(userId, isAdmin) {
@@ -1041,9 +1141,9 @@ function getActivitiesContent(userId, isAdmin) {
         <h3 style="margin-bottom: 16px;">Hoy - ${getTodayDate()}</h3>
         ${userActivities.length > 0 ? userActivities.map(activity => {
           const canComplete = canCompleteActivity(activity);
-          const badge21 = getStreakBadge(21);
-          const badge50 = getStreakBadge(50);
-          const badge100 = getStreakBadge(100);
+          const badge21 = getStreakBadge(activity, 21);
+          const badge50 = getStreakBadge(activity, 50);
+          const badge100 = getStreakBadge(activity, 100);
           
           return `
             <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 16px; border-left: 4px solid ${activity.completed ? '#10b981' : '#6b7280'};">
@@ -1056,15 +1156,15 @@ function getActivitiesContent(userId, isAdmin) {
                     <div style="display: grid; grid-template-columns: 1fr; gap: 6px; font-size: 14px;">
                       <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span>Reto 21 días:</span>
-                        ${activity.streak >= 21 ? `<span style="color: #10b981; font-weight: bold;">${badge21.text} ${badge21.medal}</span>` : `<span style="color: #6b7280;">${Math.max(0, 21 - activity.streak)} días restantes</span>`}
+                        ${badge21 ? `<span style="color: #10b981; font-weight: bold;">${badge21.text} ${badge21.medal}</span>` : `<span style="color: #6b7280;">${Math.max(0, 21 - activity.streak)} días restantes</span>`}
                       </div>
                       <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span>Reto 50 días:</span>
-                        ${activity.streak >= 50 ? `<span style="color: #10b981; font-weight: bold;">${badge50.text} ${badge50.medal}</span>` : `<span style="color: #6b7280;">${Math.max(0, 50 - activity.streak)} días restantes</span>`}
+                        ${badge50 ? `<span style="color: #10b981; font-weight: bold;">${badge50.text} ${badge50.medal}</span>` : `<span style="color: #6b7280;">${Math.max(0, 50 - Math.max(activity.streak, activity.medals.bronze ? 21 : 0))} días restantes</span>`}
                       </div>
                       <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span>Reto 100 días:</span>
-                        ${activity.streak >= 100 ? `<span style="color: #10b981; font-weight: bold;">${badge100.text} ${badge100.medal}</span>` : `<span style="color: #6b7280;">${Math.max(0, 100 - activity.streak)} días restantes</span>`}
+                        ${badge100 ? `<span style="color: #10b981; font-weight: bold;">${badge100.text} ${badge100.medal}</span>` : `<span style="color: #6b7280;">${Math.max(0, 100 - Math.max(activity.streak, activity.medals.silver ? 50 : activity.medals.bronze ? 21 : 0))} días restantes</span>`}
                       </div>
                     </div>
                   </div>
