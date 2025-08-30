@@ -10,7 +10,7 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.end(`<!DOCTYPE html>
 <html><head><title>Admin</title></head><body>
-<h1>Administrador</h1>
+<h1>ADMINISTRADOR - NUEVA VERSION</h1>
 <button onclick="show('add')">+ Añadir Actividad</button>
 <button onclick="show('calendar')">Vista Calendario</button>
 
