@@ -191,7 +191,7 @@ const server = http.createServer((req, res) => {
   }
   
   // Acceso directo por token
-  const pathMatch = parsedUrl.pathname.match(/^\\/(javier|raquel|mario|alba|admin)\\/([a-zA-Z0-9_]+)$/);
+  const pathMatch = parsedUrl.pathname.match(/^\/(javier|raquel|mario|alba|admin)\/([a-zA-Z0-9_]+)$/);
   if (pathMatch) {
     const [, userType, token] = pathMatch;
     
