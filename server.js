@@ -144,6 +144,102 @@ const server = http.createServer((req, res) => {
     return;
   }
   
+  // API para añadir actividad
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/add-activity') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = JSON.parse(body);
+      const { users, title, time, duration, repeat, startDate, endDate, customDays } = data;
+      
+      let maxId = 0;
+      Object.values(activities).forEach(userActivities => {
+        userActivities.forEach(activity => {
+          if (activity.id > maxId) maxId = activity.id;
+        });
+      });
+      
+      users.forEach(userId => {
+        if (!activities[userId]) activities[userId] = [];
+        activities[userId].push({
+          id: ++maxId,
+          title,
+          time,
+          duration: parseInt(duration),
+          completed: false,
+          repeat,
+          startDate,
+          endDate: endDate || null,
+          customDays: customDays || null,
+          streak: 0,
+          lastCompleted: null,
+          medals: { bronze: false, silver: false, gold: false }
+        });
+      });
+      
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({ success: true }));
+    });
+    return;
+  }
+  
+  // API para actualizar actividad
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/update-activity') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = JSON.parse(body);
+      const { id, users, title, time, duration, repeat, startDate, endDate, customDays } = data;
+      
+      // Eliminar actividad de todos los usuarios
+      Object.keys(activities).forEach(userId => {
+        activities[userId] = activities[userId].filter(a => a.id != id);
+      });
+      
+      // Añadir actividad actualizada a los usuarios seleccionados
+      users.forEach(userId => {
+        if (!activities[userId]) activities[userId] = [];
+        activities[userId].push({
+          id: parseInt(id),
+          title,
+          time,
+          duration: parseInt(duration),
+          completed: false,
+          repeat,
+          startDate,
+          endDate: endDate || null,
+          customDays: customDays || null,
+          streak: 0,
+          lastCompleted: null,
+          medals: { bronze: false, silver: false, gold: false }
+        });
+      });
+      
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({ success: true }));
+    });
+    return;
+  }
+  
+  // API para eliminar actividad
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/delete-activity') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = JSON.parse(body);
+      const { id } = data;
+      
+      // Eliminar actividad de todos los usuarios
+      Object.keys(activities).forEach(userId => {
+        activities[userId] = activities[userId].filter(a => a.id != id);
+      });
+      
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({ success: true }));
+    });
+    return;
+  }
+  
   // API para toggle activity
   if (req.method === 'POST' && parsedUrl.pathname === '/api/toggle-activity') {
     let body = '';
@@ -1173,7 +1269,32 @@ function getActivitiesContent(userId, isAdmin) {
               return;
             }
           }
-          alert('Funcionalidad de guardar pendiente para: ' + selectedUsers.join(', ')); 
+          
+          const formData = new FormData(e.target);
+          const activityData = {
+            users: selectedUsers,
+            title: formData.get('title'),
+            time: formData.get('time'),
+            duration: formData.get('duration'),
+            repeat: repeat,
+            startDate: formData.get('startDate'),
+            endDate: formData.get('endDate'),
+            customDays: repeat === 'custom' ? Array.from(document.querySelectorAll('input[name="weekdays"]:checked')).map(cb => cb.value) : null
+          };
+          
+          fetch('/api/add-activity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(activityData)
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              location.reload();
+            } else {
+              alert('Error al crear la actividad');
+            }
+          });
         }
         
         function editActivity(id) {
@@ -1223,13 +1344,50 @@ function getActivitiesContent(userId, isAdmin) {
               return;
             }
           }
-          alert('Funcionalidad de actualizar pendiente para: ' + selectedUsers.join(', '));
-          hideEditActivity();
+          
+          const formData = new FormData(e.target);
+          const activityData = {
+            id: formData.get('id'),
+            users: selectedUsers,
+            title: formData.get('title'),
+            time: formData.get('time'),
+            duration: formData.get('duration'),
+            repeat: repeat,
+            startDate: formData.get('startDate'),
+            endDate: formData.get('endDate'),
+            customDays: repeat === 'custom' ? Array.from(document.querySelectorAll('#edit-activity input[name="weekdays"]:checked')).map(cb => cb.value) : null
+          };
+          
+          fetch('/api/update-activity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(activityData)
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              location.reload();
+            } else {
+              alert('Error al actualizar la actividad');
+            }
+          });
         }
         
         function deleteActivity(id) {
           if (confirm('¿Estás seguro de que quieres eliminar esta actividad?')) {
-            alert('Funcionalidad de eliminar pendiente');
+            fetch('/api/delete-activity', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: id })
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                location.reload();
+              } else {
+                alert('Error al eliminar la actividad');
+              }
+            });
           }
         }
       </script>
