@@ -544,13 +544,5 @@ function getNavigation(userId, currentSection, userToken) {
 loadData();
 
 server.listen(7777, '0.0.0.0', () => {
-  console.log('App funcionando en:');
-  console.log('- Local: http://localhost:7777');
-  console.log('- Red: http://192.168.100.122:7777');
-  console.log('\\nEnlaces de acceso directo:');
-  console.log('- Javier: http://192.168.100.122:7777/javier/abc123xyz789def456');
-  console.log('- Raquel: http://192.168.100.122:7777/raquel/uvw012rst345ghi678');
-  console.log('- Mario: http://192.168.100.122:7777/mario/jkl901mno234pqr567');
-  console.log('- Alba: http://192.168.100.122:7777/alba/stu890vwx123yzb456');
-  console.log('- Administrador: http://192.168.100.122:7777/admin/cde789fgh012ijl345');
+  console.log('Servidor funcionando en puerto 7777');
 });
