@@ -985,13 +985,13 @@ function getActivitiesContent(userId, isAdmin) {
         <h3 style="margin-bottom: 16px;">Nueva Actividad</h3>
         <form onsubmit="addActivity(event)">
           <div style="margin-bottom: 16px;">
-            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Usuario:</label>
-            <select name="user" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
-              <option value="javier">Javier</option>
-              <option value="raquel">Raquel</option>
-              <option value="mario">Mario</option>
-              <option value="alba">Alba</option>
-            </select>
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Usuarios:</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="users" value="javier"> Javier</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="users" value="raquel"> Raquel</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="users" value="mario"> Mario</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" name="users" value="alba"> Alba</label>
+            </div>
           </div>
           <div style="margin-bottom: 16px;">
             <label style="display: block; margin-bottom: 4px; font-weight: 500;">Título:</label>
@@ -1043,13 +1043,13 @@ function getActivitiesContent(userId, isAdmin) {
         <form onsubmit="updateActivity(event)">
           <input type="hidden" id="edit-id" name="id">
           <div style="margin-bottom: 16px;">
-            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Usuario:</label>
-            <select id="edit-user" name="user" required style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
-              <option value="javier">Javier</option>
-              <option value="raquel">Raquel</option>
-              <option value="mario">Mario</option>
-              <option value="alba">Alba</option>
-            </select>
+            <label style="display: block; margin-bottom: 4px; font-weight: 500;">Usuarios:</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-user-javier" name="users" value="javier"> Javier</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-user-raquel" name="users" value="raquel"> Raquel</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-user-mario" name="users" value="mario"> Mario</label>
+              <label style="display: flex; align-items: center; gap: 4px;"><input type="checkbox" id="edit-user-alba" name="users" value="alba"> Alba</label>
+            </div>
           </div>
           <div style="margin-bottom: 16px;">
             <label style="display: block; margin-bottom: 4px; font-weight: 500;">Título:</label>
@@ -1084,7 +1084,15 @@ function getActivitiesContent(userId, isAdmin) {
         
         function showAddActivity() { document.getElementById('add-activity').style.display = 'block'; }
         function hideAddActivity() { document.getElementById('add-activity').style.display = 'none'; }
-        function addActivity(e) { e.preventDefault(); alert('Funcionalidad de guardar pendiente'); }
+        function addActivity(e) { 
+          e.preventDefault(); 
+          const selectedUsers = Array.from(document.querySelectorAll('input[name="users"]:checked')).map(cb => cb.value);
+          if (selectedUsers.length === 0) {
+            alert('Selecciona al menos un usuario');
+            return;
+          }
+          alert('Funcionalidad de guardar pendiente para: ' + selectedUsers.join(', ')); 
+        }
         
         function editActivity(id) {
           // Buscar la actividad en todos los usuarios
@@ -1101,7 +1109,9 @@ function getActivitiesContent(userId, isAdmin) {
           
           if (activity) {
             document.getElementById('edit-id').value = activity.id;
-            document.getElementById('edit-user').value = user;
+            // Marcar el usuario actual
+            document.querySelectorAll('input[name="users"]').forEach(cb => cb.checked = false);
+            document.getElementById('edit-user-' + user).checked = true;
             document.getElementById('edit-title').value = activity.title;
             document.getElementById('edit-time').value = activity.time;
             document.getElementById('edit-duration').value = activity.duration;
@@ -1118,7 +1128,12 @@ function getActivitiesContent(userId, isAdmin) {
         
         function updateActivity(e) {
           e.preventDefault();
-          alert('Funcionalidad de actualizar pendiente');
+          const selectedUsers = Array.from(document.querySelectorAll('#edit-activity input[name="users"]:checked')).map(cb => cb.value);
+          if (selectedUsers.length === 0) {
+            alert('Selecciona al menos un usuario');
+            return;
+          }
+          alert('Funcionalidad de actualizar pendiente para: ' + selectedUsers.join(', '));
           hideEditActivity();
         }
         
