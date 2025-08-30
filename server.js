@@ -227,12 +227,25 @@ const server = http.createServer((req, res) => {
     req.on('data', chunk => body += chunk);
     req.on('end', () => {
       const data = JSON.parse(body);
-      const { id } = data;
+      const { id, deleteType, specificDate } = data;
       
-      // Eliminar actividad de todos los usuarios
-      Object.keys(activities).forEach(userId => {
-        activities[userId] = activities[userId].filter(a => a.id != id);
-      });
+      if (deleteType === 'single' && specificDate) {
+        // Eliminar solo una instancia específica
+        Object.keys(activities).forEach(userId => {
+          const activity = activities[userId].find(a => a.id == id);
+          if (activity) {
+            if (!activity.excludedDates) activity.excludedDates = [];
+            if (!activity.excludedDates.includes(specificDate)) {
+              activity.excludedDates.push(specificDate);
+            }
+          }
+        });
+      } else {
+        // Eliminar toda la serie
+        Object.keys(activities).forEach(userId => {
+          activities[userId] = activities[userId].filter(a => a.id != id);
+        });
+      }
       
       res.writeHead(200, {'Content-Type': 'application/json'});
       res.end(JSON.stringify({ success: true }));
@@ -1319,6 +1332,20 @@ function getActivitiesContent(userId, isAdmin) {
             document.getElementById('edit-time').value = activity.time;
             document.getElementById('edit-duration').value = activity.duration;
             document.getElementById('edit-repeat').value = activity.repeat;
+            
+            // Cargar fechas
+            document.getElementById('edit-startDate').value = activity.startDate || '';
+            document.getElementById('edit-endDate').value = activity.endDate || '';
+            document.getElementById('edit-noEndDate').checked = !activity.endDate;
+            toggleEditEndDate();
+            
+            // Cargar días personalizados
+            if (activity.repeat === 'custom' && activity.customDays) {
+              document.querySelectorAll('#edit-activity input[name="weekdays"]').forEach(cb => {
+                cb.checked = activity.customDays.includes(cb.value);
+              });
+            }
+            toggleEditCustomDays();
             document.getElementById('edit-activity').style.display = 'block';
             document.getElementById('overlay').style.display = 'block';
           }
@@ -1373,12 +1400,22 @@ function getActivitiesContent(userId, isAdmin) {
           });
         }
         
-        function deleteActivity(id) {
-          if (confirm('¿Estás seguro de que quieres eliminar esta actividad?')) {
+        function deleteActivity(id, specificDate = null) {
+          let message = '¿Cómo quieres eliminar esta actividad?';
+          let options = ['Cancelar', 'Solo este evento', 'Toda la serie'];
+          
+          if (specificDate) {
+            let choice = confirm(message + '\n\nAceptar = Solo este evento\nCancelar = Toda la serie');
+            if (choice === null) return;
+            
             fetch('/api/delete-activity', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ id: id })
+              body: JSON.stringify({ 
+                id: id, 
+                deleteType: choice ? 'single' : 'series',
+                specificDate: specificDate 
+              })
             })
             .then(response => response.json())
             .then(data => {
@@ -1388,6 +1425,22 @@ function getActivitiesContent(userId, isAdmin) {
                 alert('Error al eliminar la actividad');
               }
             });
+          } else {
+            if (confirm('¿Estás seguro de que quieres eliminar toda esta actividad?')) {
+              fetch('/api/delete-activity', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id, deleteType: 'series' })
+              })
+              .then(response => response.json())
+              .then(data => {
+                if (data.success) {
+                  location.reload();
+                } else {
+                  alert('Error al eliminar la actividad');
+                }
+              });
+            }
           }
         }
       </script>
@@ -1399,6 +1452,7 @@ function getActivitiesContent(userId, isAdmin) {
       <div style="margin-bottom: 24px; display: flex; gap: 12px;">
         <button onclick="showView('daily')" id="daily-btn" class="view-btn" style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer;">Vista Diaria</button>
         <button onclick="showView('weekly')" id="weekly-btn" class="view-btn" style="padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer;">Vista Semanal</button>
+        ${isAdmin ? '<button onclick="showView(\'calendar\')" id="calendar-btn" class="view-btn" style="padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer;">Vista Calendario</button>' : ''}
       </div>
       <div id="daily-view">
         <h3 style="margin-bottom: 16px;">Hoy - ${getTodayDate()}</h3>
@@ -1446,12 +1500,66 @@ function getActivitiesContent(userId, isAdmin) {
         <h3 style="margin-bottom: 16px;">Vista Semanal</h3>
         <p style="color: #6b7280; background: white; padding: 24px; border-radius: 8px;">Vista semanal próximamente</p>
       </div>
+      
+      ${isAdmin ? `
+      <div id="calendar-view" style="display: none;">
+        <h3 style="margin-bottom: 16px;">Calendario de Actividades</h3>
+        ${['javier', 'raquel', 'mario', 'alba'].map(user => `
+          <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 16px;">
+            <h4 style="font-size: 18px; font-weight: bold; margin-bottom: 16px; text-transform: capitalize; color: #374151;">${user}</h4>
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 16px;">
+              ${['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(day => `<div style="text-align: center; font-weight: bold; padding: 8px; background: #f3f4f6; border-radius: 4px;">${day}</div>`).join('')}
+            </div>
+            <div id="calendar-${user}" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;"></div>
+          </div>
+        `).join('')}
+      </div>
+      ` : ''}
       <script>
         function showView(view) {
           document.getElementById('daily-view').style.display = view === 'daily' ? 'block' : 'none';
           document.getElementById('weekly-view').style.display = view === 'weekly' ? 'block' : 'none';
+          ${isAdmin ? "document.getElementById('calendar-view').style.display = view === 'calendar' ? 'block' : 'none';" : ''}
           document.getElementById('daily-btn').style.background = view === 'daily' ? '#10b981' : '#6b7280';
           document.getElementById('weekly-btn').style.background = view === 'weekly' ? '#10b981' : '#6b7280';
+          ${isAdmin ? "if (document.getElementById('calendar-btn')) document.getElementById('calendar-btn').style.background = view === 'calendar' ? '#10b981' : '#6b7280';" : ''}
+          
+          if (view === 'calendar') {
+            loadCalendarView();
+          }
+        }
+        
+        function loadCalendarView() {
+          // Generar calendario simple para cada usuario
+          const today = new Date();
+          const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+          const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+          
+          ['javier', 'raquel', 'mario', 'alba'].forEach(user => {
+            const calendar = document.getElementById('calendar-' + user);
+            if (!calendar) return;
+            
+            calendar.innerHTML = '';
+            
+            // Días vacíos al inicio
+            const startDay = (firstDay.getDay() + 6) % 7; // Lunes = 0
+            for (let i = 0; i < startDay; i++) {
+              calendar.innerHTML += '<div></div>';
+            }
+            
+            // Días del mes
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+              const date = new Date(today.getFullYear(), today.getMonth(), day);
+              const isToday = day === today.getDate();
+              
+              calendar.innerHTML += \`
+                <div style="padding: 8px; border: 1px solid #e5e7eb; border-radius: 4px; min-height: 60px; background: \${isToday ? '#fef3c7' : 'white'}; position: relative;">
+                  <div style="font-weight: bold; font-size: 12px; margin-bottom: 4px;">\${day}</div>
+                  <div id="activities-\${user}-\${day}" style="font-size: 10px;"></div>
+                </div>
+              \`;
+            }
+          });
         }
         
         function toggleActivity(id) {
