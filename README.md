@@ -4,11 +4,11 @@ Sistema completo de organización familiar con mensajes, actividades, inventario
 
 ## 🔗 Enlaces de Acceso
 
-- **Javier**: https://organizacion-familiar.vercel.app/javier/abc123xyz789def456
-- **Raquel**: https://organizacion-familiar.vercel.app/raquel/uvw012rst345ghi678
-- **Mario**: https://organizacion-familiar.vercel.app/mario/jkl901mno234pqr567
-- **Alba**: https://organizacion-familiar.vercel.app/alba/stu890vwx123yzb456
-- **Administrador**: https://organizacion-familiar.vercel.app/admin/cde789fgh012ijl345
+- **Javier**: https://organizacion-familiar-javi.onrender.com/javier/abc123xyz789def456
+- **Raquel**: https://organizacion-familiar-javi.onrender.com/raquel/uvw012rst345ghi678
+- **Mario**: https://organizacion-familiar-javi.onrender.com/mario/jkl901mno234pqr567
+- **Alba**: https://organizacion-familiar-javi.onrender.com/alba/stu890vwx123yzb456
+- **Administrador**: https://organizacion-familiar-javi.onrender.com/admin/cde789fgh012ijl345
 
 ## 🛠️ Comandos de Mantenimiento
 
@@ -32,8 +32,8 @@ node health-check.js
 - **Frontend**: HTML/CSS/JavaScript vanilla
 - **Backend**: Node.js
 - **Base de Datos**: PostgreSQL (Neon)
-- **Hosting**: Vercel
-- **Dominio**: organizacion-familiar.vercel.app
+- **Hosting**: Render
+- **Dominio**: organizacion-familiar-javi.onrender.com
 
 ## 🛡️ Sistema de Protección
 
