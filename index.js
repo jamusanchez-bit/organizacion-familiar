@@ -15,7 +15,7 @@ const server = http.createServer((req, res) => {
   </style>
 </head>
 <body>
-  <h1>Panel de Administrador</h1>
+  <h1>ADMINISTRADOR ACTUALIZADO</h1>
   
   <div>
     <button onclick="showSection('activities')">+ Añadir Actividad</button>
