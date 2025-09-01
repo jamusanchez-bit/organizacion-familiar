@@ -24,7 +24,9 @@ let recipes = [
   { id: '2', name: 'Salmón en papillote', category: 'comidas', ingredients: [{'Salmón fresco': 1}, {'Ajo': 1}], time: 0.75, servings: 4 }
 ];
 
-let messages = [];
+let forumMessages = [];
+let adminSuggestions = [];
+let privateMessages = {};
 
 const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url, true);
@@ -178,6 +180,36 @@ const server = http.createServer((req, res) => {
     return;
   }
   
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/message') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = JSON.parse(body);
+      const message = {
+        id: Date.now(),
+        user: data.user,
+        text: data.text,
+        time: new Date().toLocaleString('es-ES'),
+        timestamp: Date.now()
+      };
+      
+      if (data.type === 'forum') {
+        forumMessages.push(message);
+      } else if (data.type === 'admin') {
+        adminSuggestions.push(message);
+      } else if (data.type === 'private') {
+        const key = [data.user, data.to].sort().join('-');
+        if (!privateMessages[key]) privateMessages[key] = [];
+        message.to = data.to;
+        privateMessages[key].push(message);
+      }
+      
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({success: true}));
+    });
+    return;
+  }
+  
   if (parsedUrl.pathname === '/api/data') {
     res.writeHead(200, {'Content-Type': 'application/json'});
     res.end(JSON.stringify({
@@ -185,7 +217,9 @@ const server = http.createServer((req, res) => {
       inventory: inventory,
       recipes: recipes,
       mealPlan: mealPlan,
-      messages: messages
+      forumMessages: forumMessages,
+      adminSuggestions: adminSuggestions,
+      privateMessages: privateMessages
     }));
     return;
   }
@@ -380,6 +414,7 @@ function getUserPage(username) {
           loadInventory(data.inventory);
           loadShoppingList(data.inventory);
           loadMealPlan(data.mealPlan);
+          loadMessages(data);
         });
     }
     
