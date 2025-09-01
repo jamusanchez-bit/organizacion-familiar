@@ -12,6 +12,9 @@ const server = http.createServer((req, res) => {
     body { background: #f9fafb; }
     .container { display: flex; min-height: 100vh; }
     .sidebar { width: 256px; background: #f9fafb; border-right: 1px solid #e5e7eb; position: fixed; height: 100vh; }
+    .header { height: 48px; padding: 0 16px; display: flex; align-items: center; }
+    .icon { width: 28px; height: 28px; background: linear-gradient(135deg, #10b981, #3b82f6); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; }
+    .user { position: absolute; bottom: 0; left: 0; right: 0; padding: 12px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
     .nav { margin-top: 16px; padding: 0 12px; }
     .btn { width: 100%; display: flex; align-items: center; padding: 12px 16px; margin-bottom: 8px; border: none; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 500; }
     .btn.active { background: #10b981; color: white; }
@@ -31,24 +34,31 @@ const server = http.createServer((req, res) => {
 <body>
   <div class="container">
     <div class="sidebar">
+      <div class="header">
+        <div class="icon">🏠</div>
+      </div>
       <div class="nav">
-        <button class="btn active" onclick="showSection('actividades')">Actividades</button>
-        <button class="btn" onclick="showSection('comidas')">Comidas</button>
-        <button class="btn" onclick="showSection('mensajes')">Mensajes</button>
-        <button class="btn" onclick="showSection('compras')">Lista de Compra</button>
-        <button class="btn" onclick="showSection('inventario')">Inventario</button>
-        <button class="btn" onclick="showSection('recetas')">Recetas</button>
+        <button class="btn active" onclick="showSection('actividades')">📅 Actividades</button>
+        <button class="btn" onclick="showSection('comidas')">🍽️ Comidas</button>
+        <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
+        <button class="btn" onclick="showSection('compras')">🛍️ Lista de la compra</button>
+        <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
+        <button class="btn" onclick="showSection('recetas')">👨‍🍳 Recetas</button>
+      </div>
+      <div class="user">
+        <span style="font-size: 12px; font-weight: 500;">Administrador</span>
+        <span>🔧</span>
       </div>
     </div>
     
     <div class="main">
       <div class="top">
-        <h1>ADMINISTRADOR FUNCIONANDO</h1>
+        <h1 style="font-size: 28px; font-weight: bold;">¡Hola, Administrador! 👋<br><small style="font-size: 14px; color: #6b7280; font-weight: normal;">Domingo, 1 de septiembre de 2025</small><br><small style="font-size: 12px; color: #9ca3af; font-weight: normal; font-style: italic;">"Tu mente es la semilla, tu vida es la cosecha. (Joe Dispenza)"</small></h1>
       </div>
       
       <div class="content">
         <div id="actividades" class="section active">
-          <h2>Actividades</h2>
+          <h2 style="background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 24px; font-weight: bold; margin-bottom: 24px;">Gestion de Actividades</h2>
           <div class="card">
             <button onclick="showForm()">Crear Actividad</button>
             <button onclick="showCalendar()">Ver Calendario</button>
@@ -107,17 +117,17 @@ const server = http.createServer((req, res) => {
         </div>
         
         <div id="recetas" class="section">
-          <h2>Recetas</h2>
+          <h2 style="background: linear-gradient(to right, #dc2626, #ea580c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 24px; font-weight: bold; margin-bottom: 24px;">Recetas</h2>
           <div class="grid" id="recipes-list"></div>
         </div>
         
         <div id="inventario" class="section">
-          <h2>Inventario</h2>
+          <h2 style="background: linear-gradient(to right, #9333ea, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 24px; font-weight: bold; margin-bottom: 24px;">Inventario</h2>
           <div class="grid" id="inventory-list"></div>
         </div>
         
         <div id="comidas" class="section">
-          <h2>Calendario de Comidas</h2>
+          <h2 style="background: linear-gradient(to right, #f59e0b, #d97706); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 24px; font-weight: bold; margin-bottom: 24px;">Calendario de Comidas</h2>
           <div class="grid">
             <div class="card">
               <h3>Desayunos</h3>
@@ -135,7 +145,7 @@ const server = http.createServer((req, res) => {
         </div>
         
         <div id="mensajes" class="section">
-          <h2>Mensajes</h2>
+          <h2 style="background: linear-gradient(to right, #8b5cf6, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 24px; font-weight: bold; margin-bottom: 24px;">Mensajes</h2>
           <div class="card">
             <h3>Chat Familiar</h3>
             <div id="chat-messages" style="background:#f9fafb; padding:16px; border-radius:8px; margin:16px 0; height:200px; overflow-y:auto">
@@ -149,7 +159,7 @@ const server = http.createServer((req, res) => {
         </div>
         
         <div id="compras" class="section">
-          <h2>Lista de Compra</h2>
+          <h2 style="background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 24px; font-weight: bold; margin-bottom: 24px;">Lista de Compra</h2>
           <div class="card">
             <h3>Productos con stock bajo:</h3>
             <div id="shopping-list">Cargando...</div>
