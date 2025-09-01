@@ -128,32 +128,59 @@ const server = http.createServer((req, res) => {
         
         <div id="comidas" class="section">
           <h2 style="background: linear-gradient(to right, #f59e0b, #d97706); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 24px; font-weight: bold; margin-bottom: 24px;">Calendario de Comidas</h2>
-          <div class="grid">
-            <div class="card">
-              <h3>Desayunos</h3>
-              <p>• Crema de almendras con frutos rojos<br>• Tostadas keto con salmon<br>• Huevos con jamon y aguacate</p>
+          <div class="card">
+            <h3>Planificacion Semanal</h3>
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin: 16px 0;">
+              <div style="text-align: center; font-weight: bold; padding: 8px; background: #f3f4f6; border-radius: 4px;">Lun</div>
+              <div style="text-align: center; font-weight: bold; padding: 8px; background: #f3f4f6; border-radius: 4px;">Mar</div>
+              <div style="text-align: center; font-weight: bold; padding: 8px; background: #f3f4f6; border-radius: 4px;">Mie</div>
+              <div style="text-align: center; font-weight: bold; padding: 8px; background: #f3f4f6; border-radius: 4px;">Jue</div>
+              <div style="text-align: center; font-weight: bold; padding: 8px; background: #f3f4f6; border-radius: 4px;">Vie</div>
+              <div style="text-align: center; font-weight: bold; padding: 8px; background: #f3f4f6; border-radius: 4px;">Sab</div>
+              <div style="text-align: center; font-weight: bold; padding: 8px; background: #f3f4f6; border-radius: 4px;">Dom</div>
             </div>
-            <div class="card">
-              <h3>Comidas</h3>
-              <p>• Lubina sobre verduras<br>• Pollo con pimientos<br>• Salmon en papillote</p>
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;" id="meal-calendar">
+              <div style="padding: 8px; background: #fef3c7; border-radius: 4px; min-height: 80px;"><small>Desayuno:</small><br>Tostadas keto</div>
+              <div style="padding: 8px; background: #fef3c7; border-radius: 4px; min-height: 80px;"><small>Desayuno:</small><br>Huevos con jamon</div>
+              <div style="padding: 8px; background: #fef3c7; border-radius: 4px; min-height: 80px;"><small>Desayuno:</small><br>Crema almendras</div>
+              <div style="padding: 8px; background: #fef3c7; border-radius: 4px; min-height: 80px;"><small>Desayuno:</small><br>Kefir frutos rojos</div>
+              <div style="padding: 8px; background: #fef3c7; border-radius: 4px; min-height: 80px;"><small>Desayuno:</small><br>Bizcocho almendra</div>
+              <div style="padding: 8px; background: #fef3c7; border-radius: 4px; min-height: 80px;"><small>Desayuno:</small><br>Tostadas ghee</div>
+              <div style="padding: 8px; background: #fef3c7; border-radius: 4px; min-height: 80px;"><small>Desayuno:</small><br>Zanahorias nueces</div>
             </div>
-            <div class="card">
-              <h3>Cenas</h3>
-              <p>• Aguacate con salmon ahumado<br>• Crema de calabacin<br>• Espinacas con gambas</p>
-            </div>
+            <button onclick="alert('Planificar comidas')" style="margin-top: 16px;">Planificar Semana</button>
           </div>
         </div>
         
         <div id="mensajes" class="section">
           <h2 style="background: linear-gradient(to right, #8b5cf6, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 24px; font-weight: bold; margin-bottom: 24px;">Mensajes</h2>
-          <div class="card">
-            <h3>Chat Familiar</h3>
-            <div id="chat-messages" style="background:#f9fafb; padding:16px; border-radius:8px; margin:16px 0; height:200px; overflow-y:auto">
-              <p style="color:#6b7280">No hay mensajes aun</p>
+          <div class="grid">
+            <div class="card">
+              <h3>Chat Grupal</h3>
+              <div id="chat-messages" style="background:#f9fafb; padding:16px; border-radius:8px; margin:16px 0; height:150px; overflow-y:auto">
+                <p style="color:#6b7280">No hay mensajes aun</p>
+              </div>
+              <div style="display:flex; gap:8px">
+                <input type="text" id="message-input" placeholder="Escribe un mensaje..." style="flex:1">
+                <button onclick="sendMessage()">Enviar</button>
+              </div>
             </div>
-            <div style="display:flex; gap:8px">
-              <input type="text" id="message-input" placeholder="Escribe un mensaje..." style="flex:1">
-              <button onclick="sendMessage()">Enviar</button>
+            <div class="card">
+              <h3>Mensajes Privados</h3>
+              <div style="margin: 16px 0;">
+                <button onclick="alert('Chat con Javier')" style="display: block; width: 100%; margin: 4px 0; text-align: left;">Javier</button>
+                <button onclick="alert('Chat con Raquel')" style="display: block; width: 100%; margin: 4px 0; text-align: left;">Raquel</button>
+                <button onclick="alert('Chat con Mario')" style="display: block; width: 100%; margin: 4px 0; text-align: left;">Mario</button>
+                <button onclick="alert('Chat con Alba')" style="display: block; width: 100%; margin: 4px 0; text-align: left;">Alba</button>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Notificaciones</h3>
+              <div style="color: #6b7280; margin: 16px 0;">
+                <div style="padding: 8px; background: #f0f9ff; border-radius: 4px; margin: 4px 0;">Nueva actividad creada</div>
+                <div style="padding: 8px; background: #fef2f2; border-radius: 4px; margin: 4px 0;">Stock bajo: Salmon fresco</div>
+                <div style="padding: 8px; background: #f0fdf4; border-radius: 4px; margin: 4px 0;">Receta guardada</div>
+              </div>
             </div>
           </div>
         </div>
