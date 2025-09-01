@@ -96,17 +96,16 @@ const server = http.createServer((req, res) => {
         '<div class="card"><h3>' + r.name + '</h3><p>' + r.desc + '</p></div>'
       ).join('');
       
-      document.getElementById('inventory-list').innerHTML = inventory.map(item => 
+      document.getElementById('inventory-list').innerHTML = inventory.map((item, index) => 
         '<div class="card"><h3>' + item.name + '</h3><p>' + item.qty + ' ' + item.unit + '</p>' +
-        '<button onclick="changeQty(\'' + item.name + '\', 1)">+</button> ' +
-        '<button onclick="changeQty(\'' + item.name + '\', -1)">-</button></div>'
+        '<button onclick="changeQty(' + index + ', 1)">+</button> ' +
+        '<button onclick="changeQty(' + index + ', -1)">-</button></div>'
       ).join('');
     }
     
-    function changeQty(name, change) {
-      const item = inventory.find(i => i.name === name);
-      if (item) {
-        item.qty = Math.max(0, item.qty + change);
+    function changeQty(index, change) {
+      if (inventory[index]) {
+        inventory[index].qty = Math.max(0, inventory[index].qty + change);
         loadData();
       }
     }
