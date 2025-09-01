@@ -65,7 +65,7 @@ const server = http.createServer((req, res) => {
     
     <div class="main">
       <div class="top">
-        <h1 style="font-size: 28px; font-weight: bold;">¡Hola, Administrador! 👋<br><small style="font-size: 14px; color: #6b7280; font-weight: normal;">Sábado, 31 de agosto de 2025</small><br><small style="font-size: 12px; color: #9ca3af; font-weight: normal; font-style: italic;">"Tu mente es la semilla, tu vida es la cosecha. (Joe Dispenza)"</small></h1>
+        <h1 style="font-size: 28px; font-weight: bold; color: red;">🔥 NUEVA VERSION FUNCIONANDO 🔥<br><small style="font-size: 14px; color: #6b7280; font-weight: normal;">Sábado, 31 de agosto de 2025</small><br><small style="font-size: 12px; color: #9ca3af; font-weight: normal; font-style: italic;">"Tu mente es la semilla, tu vida es la cosecha. (Joe Dispenza)"</small></h1>
       </div>
       
       <div class="content">
