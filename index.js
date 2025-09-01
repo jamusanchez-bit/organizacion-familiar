@@ -117,9 +117,14 @@ const server = http.createServer((req, res) => {
         <div id="mensajes" class="section">
           <h2>Mensajes</h2>
           <div class="card">
-            <p>Chat familiar funcionando</p>
-            <input type="text" placeholder="Escribe mensaje">
-            <button onclick="alert('Mensaje enviado')">Enviar</button>
+            <h3>Chat Familiar</h3>
+            <div id="chat-messages" style="background:#f9fafb; padding:16px; border-radius:8px; margin:16px 0; height:200px; overflow-y:auto">
+              <p style="color:#6b7280">No hay mensajes aun</p>
+            </div>
+            <div style="display:flex; gap:8px">
+              <input type="text" id="message-input" placeholder="Escribe un mensaje..." style="flex:1">
+              <button onclick="sendMessage()">Enviar</button>
+            </div>
           </div>
         </div>
       </div>
@@ -205,6 +210,44 @@ const server = http.createServer((req, res) => {
       showCalendar();
     }
     
+    const messages = [];
+    
+    function sendMessage() {
+      const input = document.getElementById('message-input');
+      const message = input.value.trim();
+      
+      if (message) {
+        const now = new Date();
+        const time = now.toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'});
+        
+        messages.push({
+          text: message,
+          time: time,
+          user: 'Administrador'
+        });
+        
+        input.value = '';
+        updateChat();
+      }
+    }
+    
+    function updateChat() {
+      const chatDiv = document.getElementById('chat-messages');
+      
+      if (messages.length === 0) {
+        chatDiv.innerHTML = '<p style="color:#6b7280">No hay mensajes aun</p>';
+      } else {
+        chatDiv.innerHTML = messages.map(msg => 
+          '<div style="margin-bottom:12px; padding:8px; background:white; border-radius:8px">' +
+          '<div style="font-weight:500; color:#374151">' + msg.user + ' <span style="font-size:12px; color:#6b7280; font-weight:normal">' + msg.time + '</span></div>' +
+          '<div style="margin-top:4px">' + msg.text + '</div>' +
+          '</div>'
+        ).join('');
+        
+        chatDiv.scrollTop = chatDiv.scrollHeight;
+      }
+    }
+    
     loadData();
     
     function showSection(section) {
@@ -212,6 +255,19 @@ const server = http.createServer((req, res) => {
       document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
       document.getElementById(section).classList.add('active');
       event.target.classList.add('active');
+      
+      if (section === 'mensajes') {
+        setTimeout(() => {
+          const input = document.getElementById('message-input');
+          if (input) {
+            input.addEventListener('keypress', function(e) {
+              if (e.key === 'Enter') {
+                sendMessage();
+              }
+            });
+          }
+        }, 100);
+      }
     }
   </script>
 </body>
