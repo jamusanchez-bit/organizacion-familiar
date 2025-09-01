@@ -283,6 +283,7 @@ function getUserPage(username) {
         <button class="btn" onclick="showSection('recetas')">👨🍳 Recetas</button>
         <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
         <button class="btn" onclick="showSection('compras')">🛒 Lista de la compra</button>
+        <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
       </div>
       <div class="user">
         <span style="font-size: 12px; font-weight: 500;">${user.name}</span>
@@ -395,6 +396,44 @@ function getUserPage(username) {
           <h2 class="title" style="background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Lista de la Compra</h2>
           <div id="shopping-lists"></div>
         </div>
+        
+        <div id="mensajes" class="section">
+          <h2 class="title" style="background: linear-gradient(to right, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Mensajes</h2>
+          
+          <div class="card">
+            <h3>Esta semana quiero que hablemos de:</h3>
+            <div id="forum-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" id="forum-input" placeholder="Escribe tu mensaje..." style="flex: 1;">
+              <button onclick="sendMessage('forum')">Enviar</button>
+            </div>
+          </div>
+          
+          <div class="card">
+            <h3>Sugerencias para el administrador</h3>
+            <div id="admin-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" id="admin-input" placeholder="Escribe tu sugerencia..." style="flex: 1;">
+              <button onclick="sendMessage('admin')">Enviar</button>
+            </div>
+          </div>
+          
+          <div class="card">
+            <h3>Mensaje privado a:</h3>
+            <select id="private-to" style="margin-bottom: 10px;">
+              <option value="">Seleccionar destinatario</option>
+              <option value="javier">Javier</option>
+              <option value="raquel">Raquel</option>
+              <option value="mario">Mario</option>
+              <option value="alba">Alba</option>
+            </select>
+            <div id="private-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" id="private-input" placeholder="Escribe tu mensaje privado..." style="flex: 1;">
+              <button onclick="sendMessage('private')">Enviar</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -414,7 +453,7 @@ function getUserPage(username) {
           loadInventory(data.inventory);
           loadShoppingList(data.inventory);
           loadMealPlan(data.mealPlan);
-          loadMessages(data);
+          loadMessagesData(data);
         });
     }
     
@@ -494,6 +533,53 @@ function getUserPage(username) {
       // Cargar plan de comidas en la tabla
     }
     
+    function loadMessagesData(data) {
+      document.getElementById('forum-messages').innerHTML = data.forumMessages.map(msg => 
+        '<div style="padding: 8px; margin: 5px 0; background: #f0f9ff; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
+      ).join('') || '<p style="color: #6b7280;">No hay mensajes aún</p>';
+      
+      document.getElementById('admin-messages').innerHTML = data.adminSuggestions.map(msg => 
+        '<div style="padding: 8px; margin: 5px 0; background: #fef3c7; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
+      ).join('') || '<p style="color: #6b7280;">No hay sugerencias aún</p>';
+      
+      const selectedUser = document.getElementById('private-to').value;
+      if (selectedUser) {
+        const key = [username, selectedUser].sort().join('-');
+        const privateMessages = data.privateMessages[key] || [];
+        document.getElementById('private-messages').innerHTML = privateMessages.map(msg => 
+          '<div style="padding: 8px; margin: 5px 0; background: ' + (msg.user === username ? '#e0f2fe' : '#f0fdf4') + '; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
+        ).join('') || '<p style="color: #6b7280;">No hay mensajes privados aún</p>';
+      }
+    }
+    
+    function sendMessage(type) {
+      let text, to;
+      
+      if (type === 'forum') {
+        text = document.getElementById('forum-input').value.trim();
+        document.getElementById('forum-input').value = '';
+      } else if (type === 'admin') {
+        text = document.getElementById('admin-input').value.trim();
+        document.getElementById('admin-input').value = '';
+      } else if (type === 'private') {
+        text = document.getElementById('private-input').value.trim();
+        to = document.getElementById('private-to').value;
+        if (!to) {
+          alert('Selecciona un destinatario');
+          return;
+        }
+        document.getElementById('private-input').value = '';
+      }
+      
+      if (!text) return;
+      
+      fetch('/api/message', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({type, user: username, text, to})
+      }).then(() => loadData());
+    }
+    
     function toggleActivity(id, completed) {
       fetch('/api/complete-activity', {
         method: 'POST',
@@ -548,6 +634,14 @@ function getUserPage(username) {
       event.target.classList.add('active');
     }
     
+    document.addEventListener('DOMContentLoaded', function() {
+      if (document.getElementById('private-to')) {
+        document.getElementById('private-to').addEventListener('change', function() {
+          loadData();
+        });
+      }
+    });
+    
     loadData();
     setInterval(loadData, 10000);
   </script>
@@ -582,17 +676,9 @@ function getAdminPage() {
     .section { display: none; }
     .section.active { display: block; }
     .form-group { margin: 15px 0; }
-    .checkbox-group { display: flex; gap: 15px; flex-wrap: wrap; }
-    input, button, select, textarea { padding: 8px 12px; margin: 4px; border: 1px solid #ddd; border-radius: 4px; }
+    input, button, select { padding: 8px 12px; margin: 4px; border: 1px solid #ddd; border-radius: 4px; }
     button { background: #10b981; color: white; border: none; cursor: pointer; }
     button:hover { background: #059669; }
-    .hidden { display: none; }
-    .meal-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-    .meal-table th, .meal-table td { border: 1px solid #ddd; padding: 12px; text-align: center; }
-    .meal-table th { background: #f9fafb; font-weight: bold; }
-    .meal-table td { min-height: 60px; vertical-align: top; cursor: pointer; }
-    .meal-table td:hover { background: #f0f9ff; }
-    .meal-table .meal-label { background: #e5e7eb; font-weight: bold; text-align: left; }
   </style>
 </head>
 <body>
@@ -603,10 +689,7 @@ function getAdminPage() {
       </div>
       <div class="nav">
         <button class="btn active" onclick="showSection('actividades')">📅 Actividades</button>
-        <button class="btn" onclick="showSection('comidas')">🍽️ Comidas</button>
-        <button class="btn" onclick="showSection('recetas')">👨🍳 Recetas</button>
-        <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
-        <button class="btn" onclick="showSection('compras')">🛒 Lista de la compra</button>
+        <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
       </div>
       <div class="user">
         <span style="font-size: 12px; font-weight: 500;">Administrador</span>
@@ -619,339 +702,112 @@ function getAdminPage() {
       </div>
       <div class="content">
         <div id="actividades" class="section active">
-          <h2 class="title" style="background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Gestión de Actividades</h2>
-          
+          <h2 class="title">📅 Actividades</h2>
           <div class="card">
             <h3>Crear Nueva Actividad</h3>
             <div class="form-group">
-              <label>Usuario:</label>
               <select id="activity-user">
                 <option value="javier">Javier</option>
                 <option value="raquel">Raquel</option>
                 <option value="mario">Mario</option>
                 <option value="alba">Alba</option>
               </select>
-            </div>
-            <div class="form-group">
-              <label>Actividad:</label>
-              <input type="text" id="activity-title" placeholder="Ej: Gimnasio, Leer, Violín">
-            </div>
-            <div class="form-group">
-              <label>Hora:</label>
+              <input type="text" id="activity-title" placeholder="Actividad">
               <input type="time" id="activity-time">
-            </div>
-            <div class="form-group">
-              <label>Duración (minutos):</label>
               <input type="number" id="activity-duration" value="30" min="1">
-            </div>
-            <div class="form-group">
-              <label>Repetir:</label>
-              <select id="activity-repeat">
-                <option value="none">No repetir</option>
-                <option value="daily">Todos los días</option>
-                <option value="custom">Días específicos</option>
-              </select>
-            </div>
-            <div class="form-group" id="repeat-days" style="display: none;">
-              <label>Días de la semana:</label>
-              <div class="checkbox-group">
-                <label><input type="checkbox" value="1"> Lunes</label>
-                <label><input type="checkbox" value="2"> Martes</label>
-                <label><input type="checkbox" value="3"> Miércoles</label>
-                <label><input type="checkbox" value="4"> Jueves</label>
-                <label><input type="checkbox" value="5"> Viernes</label>
-                <label><input type="checkbox" value="6"> Sábado</label>
-                <label><input type="checkbox" value="0"> Domingo</label>
-              </div>
-            </div>
-            <button onclick="saveActivity()">💾 Crear Actividad</button>
-          </div>
-          
-          <div class="grid" id="activities-overview">
-            <div class="card">
-              <h3>👨 Javier</h3>
-              <div id="javier-activities">Cargando...</div>
-            </div>
-            <div class="card">
-              <h3>👩 Raquel</h3>
-              <div id="raquel-activities">Cargando...</div>
-            </div>
-            <div class="card">
-              <h3>👦 Mario</h3>
-              <div id="mario-activities">Cargando...</div>
-            </div>
-            <div class="card">
-              <h3>👧 Alba</h3>
-              <div id="alba-activities">Cargando...</div>
+              <button onclick="saveActivity()">💾 Crear</button>
             </div>
           </div>
         </div>
         
-        <div id="comidas" class="section">
-          <h2 class="title" style="background: linear-gradient(to right, #f59e0b, #d97706); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Planificación de Comidas</h2>
-          
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <button onclick="changeWeek(-1)">← Semana Anterior</button>
-            <h3 id="current-week">Semana del 1 al 7 de Septiembre 2025</h3>
-            <button onclick="changeWeek(1)">Semana Siguiente →</button>
-          </div>
-          
-          <table class="meal-table" id="admin-meal-table">
-            <thead>
-              <tr>
-                <th></th>
-                <th>Lunes</th>
-                <th>Martes</th>
-                <th>Miércoles</th>
-                <th>Jueves</th>
-                <th>Viernes</th>
-                <th>Sábado</th>
-                <th>Domingo</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="meal-label">Desayuno Alba y Mario</td>
-                <td onclick="editMeal('desayuno-alba-mario', 'lunes')"></td>
-                <td onclick="editMeal('desayuno-alba-mario', 'martes')"></td>
-                <td onclick="editMeal('desayuno-alba-mario', 'miercoles')"></td>
-                <td onclick="editMeal('desayuno-alba-mario', 'jueves')"></td>
-                <td onclick="editMeal('desayuno-alba-mario', 'viernes')"></td>
-                <td onclick="editMeal('desayuno-alba-mario', 'sabado')"></td>
-                <td onclick="editMeal('desayuno-alba-mario', 'domingo')"></td>
-              </tr>
-              <tr>
-                <td class="meal-label">Desayuno Raquel y Javier</td>
-                <td onclick="editMeal('desayuno-raquel-javier', 'lunes')"></td>
-                <td onclick="editMeal('desayuno-raquel-javier', 'martes')"></td>
-                <td onclick="editMeal('desayuno-raquel-javier', 'miercoles')"></td>
-                <td onclick="editMeal('desayuno-raquel-javier', 'jueves')"></td>
-                <td onclick="editMeal('desayuno-raquel-javier', 'viernes')"></td>
-                <td onclick="editMeal('desayuno-raquel-javier', 'sabado')"></td>
-                <td onclick="editMeal('desayuno-raquel-javier', 'domingo')"></td>
-              </tr>
-              <tr>
-                <td class="meal-label">Comida</td>
-                <td onclick="editMeal('comida', 'lunes')"></td>
-                <td onclick="editMeal('comida', 'martes')"></td>
-                <td onclick="editMeal('comida', 'miercoles')"></td>
-                <td onclick="editMeal('comida', 'jueves')"></td>
-                <td onclick="editMeal('comida', 'viernes')"></td>
-                <td onclick="editMeal('comida', 'sabado')"></td>
-                <td onclick="editMeal('comida', 'domingo')"></td>
-              </tr>
-              <tr>
-                <td class="meal-label">Cena</td>
-                <td onclick="editMeal('cena', 'lunes')"></td>
-                <td onclick="editMeal('cena', 'martes')"></td>
-                <td onclick="editMeal('cena', 'miercoles')"></td>
-                <td onclick="editMeal('cena', 'jueves')"></td>
-                <td onclick="editMeal('cena', 'viernes')"></td>
-                <td onclick="editMeal('cena', 'sabado')"></td>
-                <td onclick="editMeal('cena', 'domingo')"></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        
-        <div id="recetas" class="section">
-          <h2 class="title" style="background: linear-gradient(to right, #dc2626, #ea580c); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Gestión de Recetas</h2>
+        <div id="mensajes" class="section">
+          <h2 class="title">💬 Mensajes</h2>
           
           <div class="card">
-            <h3>Añadir Nueva Receta</h3>
-            <div class="form-group">
-              <label>Nombre:</label>
-              <input type="text" id="recipe-name" placeholder="Nombre de la receta">
+            <h3>Esta semana quiero que hablemos de:</h3>
+            <div id="forum-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" id="forum-input" placeholder="Escribe tu mensaje..." style="flex: 1;">
+              <button onclick="sendMessage('forum')">Enviar</button>
             </div>
-            <div class="form-group">
-              <label>Categoría:</label>
-              <select id="recipe-category">
-                <option value="comidas">Comidas</option>
-                <option value="cenas">Cenas</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Tiempo (horas):</label>
-              <input type="number" id="recipe-time" step="0.25" value="0.5">
-            </div>
-            <div class="form-group">
-              <label>Porciones:</label>
-              <input type="number" id="recipe-servings" value="4">
-            </div>
-            <div class="form-group">
-              <label>Ingredientes:</label>
-              <div id="ingredients-list">
-                <div style="display: flex; gap: 10px; margin: 5px 0;">
-                  <select id="ingredient-0">
-                    <option value="">Seleccionar ingrediente</option>
-                  </select>
-                  <input type="number" id="quantity-0" placeholder="Cantidad" min="1" value="1">
-                  <button onclick="addIngredient()" style="background: #059669;">+</button>
-                </div>
-              </div>
-            </div>
-            <button onclick="saveRecipe()">💾 Guardar Receta</button>
           </div>
-          
-          <div style="margin-top: 20px;">
-            <button class="active" onclick="showRecipeCategory('comidas')">Comidas</button>
-            <button onclick="showRecipeCategory('cenas')">Cenas</button>
-          </div>
-          
-          <div id="recipes-grid" class="grid"></div>
-        </div>
-        
-        <div id="inventario" class="section">
-          <h2 class="title" style="background: linear-gradient(to right, #9333ea, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Gestión de Inventario</h2>
           
           <div class="card">
-            <h3>Añadir Nuevo Producto</h3>
-            <div class="form-group">
-              <label>Nombre:</label>
-              <input type="text" id="product-name" placeholder="Nombre del producto">
-            </div>
-            <div class="form-group">
-              <label>Categoría:</label>
-              <select id="product-category">
-                <option value="carne">Carne</option>
-                <option value="pescado">Pescado</option>
-                <option value="verdura">Verdura</option>
-                <option value="fruta">Fruta</option>
-                <option value="frutos secos">Frutos secos</option>
-                <option value="productos de limpieza/hogar">Productos de limpieza/hogar</option>
-                <option value="otros">Otros</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Se compra en:</label>
-              <select id="product-shop">
-                <option value="Carne internet">Carne internet</option>
-                <option value="Pescadería">Pescadería</option>
-                <option value="Del bancal a casa">Del bancal a casa</option>
-                <option value="Alcampo">Alcampo</option>
-                <option value="Internet">Internet</option>
-                <option value="Otros">Otros</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Medida:</label>
-              <select id="product-unit">
-                <option value="unidades">Unidades</option>
-                <option value="litros">Litros</option>
-                <option value="botes">Botes</option>
-                <option value="tarros">Tarros</option>
-                <option value="cartones">Cartones</option>
-                <option value="latas">Latas</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Cantidad inicial:</label>
-              <input type="number" id="product-quantity" value="0" min="0">
-            </div>
-            <button onclick="addProduct()">💾 Añadir Producto</button>
+            <h3>Sugerencias para el administrador</h3>
+            <div id="admin-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
           </div>
           
-          <div id="inventory-grid" class="grid"></div>
-        </div>
-        
-        <div id="compras" class="section">
-          <h2 class="title" style="background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Lista de la Compra</h2>
-          <div id="shopping-lists"></div>
+          <div class="card">
+            <h3>Mensaje privado a:</h3>
+            <select id="private-to" style="margin-bottom: 10px;">
+              <option value="">Seleccionar destinatario</option>
+              <option value="javier">Javier</option>
+              <option value="raquel">Raquel</option>
+              <option value="mario">Mario</option>
+              <option value="alba">Alba</option>
+            </select>
+            <div id="private-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" id="private-input" placeholder="Escribe tu mensaje privado..." style="flex: 1;">
+              <button onclick="sendMessage('private')">Enviar</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    let currentWeek = 1;
-    let currentRecipeCategory = 'comidas';
-    let ingredientCount = 1;
-    
     function loadData() {
       fetch('/api/data')
         .then(r => r.json())
         .then(data => {
-          loadActivitiesOverview(data.activities);
-          loadRecipes(data.recipes);
-          loadInventory(data.inventory);
-          loadShoppingList(data.inventory);
-          loadIngredientOptions(data.inventory);
+          loadAdminMessages(data);
         });
     }
     
-    function loadActivitiesOverview(activities) {
-      const today = new Date().toDateString();
-      ['javier', 'raquel', 'mario', 'alba'].forEach(user => {
-        const userActivities = activities.filter(a => a.user === user && a.date === today);
-        document.getElementById(user + '-activities').innerHTML = userActivities.length > 0 
-          ? userActivities.map(a => '<div style="margin: 5px 0; padding: 8px; background: ' + (a.completed ? '#f0fdf4' : '#f0f9ff') + '; border-radius: 4px;"><strong>' + a.title + '</strong><br>' + a.time + ' (' + a.duration + ' min) ' + (a.completed ? '✓' : '') + '</div>').join('')
-          : 'Sin actividades para hoy';
-      });
-    }
-    
-    function loadRecipes(recipes) {
-      const filteredRecipes = recipes.filter(r => r.category === currentRecipeCategory);
-      document.getElementById('recipes-grid').innerHTML = filteredRecipes.map(recipe => 
-        '<div class="card">' +
-        '<h3>' + recipe.name + '</h3>' +
-        '<p><strong>Ingredientes:</strong> ' + recipe.ingredients.map(ing => Object.keys(ing)[0] + ' (' + Object.values(ing)[0] + ')').join(', ') + '</p>' +
-        '<p><strong>Tiempo:</strong> ' + recipe.time + ' horas</p>' +
-        '<p><strong>Porciones:</strong> ' + recipe.servings + '</p>' +
-        '</div>'
-      ).join('');
-    }
-    
-    function loadInventory(inventory) {
-      document.getElementById('inventory-grid').innerHTML = inventory.map(item => 
-        '<div class="card">' +
-        '<h3>' + item.name + '</h3>' +
-        '<p><strong>Categoría:</strong> ' + item.category + '</p>' +
-        '<p><strong>Se compra en:</strong> ' + item.shop + '</p>' +
-        '<p style="font-size: 18px; font-weight: bold;">' + item.quantity + ' ' + item.unit + '</p>' +
-        '<div style="margin-top: 12px;">' +
-        '<button onclick="changeInventory(\\''+item.id+'\\', -1)" style="background: #dc2626;">-</button>' +
-        '<button onclick="changeInventory(\\''+item.id+'\\', 1)" style="background: #059669;">+</button>' +
-        '</div></div>'
-      ).join('');
-    }
-    
-    function loadShoppingList(inventory) {
-      const shops = ['Carne internet', 'Pescadería', 'Del bancal a casa', 'Alcampo', 'Internet', 'Otros'];
-      const outOfStock = inventory.filter(item => item.quantity === 0);
-      const lowStock = inventory.filter(item => item.quantity === 1);
+    function loadAdminMessages(data) {
+      document.getElementById('forum-messages').innerHTML = data.forumMessages.map(msg => 
+        '<div style="padding: 8px; margin: 5px 0; background: #f0f9ff; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
+      ).join('') || '<p style="color: #6b7280;">No hay mensajes aún</p>';
       
-      let html = '';
-      shops.forEach(shop => {
-        const shopItems = outOfStock.filter(item => item.shop === shop);
-        const shopSuggestions = lowStock.filter(item => item.shop === shop);
-        
-        if (shopItems.length > 0 || shopSuggestions.length > 0) {
-          html += '<div class="card"><h3>' + shop + '</h3>';
-          
-          if (shopItems.length > 0) {
-            html += '<h4>Necesarios:</h4>';
-            shopItems.forEach(item => {
-              html += '<div style="padding: 4px; background: #fef2f2; margin: 2px 0; border-radius: 4px;">' + item.name + '</div>';
-            });
-          }
-          
-          if (shopSuggestions.length > 0) {
-            html += '<h4>Sugerencias:</h4>';
-            shopSuggestions.forEach(item => {
-              html += '<div style="padding: 4px; background: #fef3c7; margin: 2px 0; border-radius: 4px;">' + item.name + '</div>';
-            });
-          }
-          
-          html += '</div>';
+      document.getElementById('admin-messages').innerHTML = data.adminSuggestions.map(msg => 
+        '<div style="padding: 8px; margin: 5px 0; background: #fef3c7; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
+      ).join('') || '<p style="color: #6b7280;">No hay sugerencias aún</p>';
+      
+      const selectedUser = document.getElementById('private-to').value;
+      if (selectedUser) {
+        const key = ['javi_administrador', selectedUser].sort().join('-');
+        const privateMessages = data.privateMessages[key] || [];
+        document.getElementById('private-messages').innerHTML = privateMessages.map(msg => 
+          '<div style="padding: 8px; margin: 5px 0; background: ' + (msg.user === 'javi_administrador' ? '#e0f2fe' : '#f0fdf4') + '; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
+        ).join('') || '<p style="color: #6b7280;">No hay mensajes privados aún</p>';
+      }
+    }
+    
+    function sendMessage(type) {
+      let text, to;
+      
+      if (type === 'forum') {
+        text = document.getElementById('forum-input').value.trim();
+        document.getElementById('forum-input').value = '';
+      } else if (type === 'private') {
+        text = document.getElementById('private-input').value.trim();
+        to = document.getElementById('private-to').value;
+        if (!to) {
+          alert('Selecciona un destinatario');
+          return;
         }
-      });
+        document.getElementById('private-input').value = '';
+      }
       
-      document.getElementById('shopping-lists').innerHTML = html || '<div class="card"><p>No hay productos en la lista de compra</p></div>';
-    }
-    
-    function loadIngredientOptions(inventory) {
-      const options = inventory.map(item => '<option value="' + item.name + '">' + item.name + '</option>').join('');
-      document.getElementById('ingredient-0').innerHTML = '<option value="">Seleccionar ingrediente</option>' + options;
+      if (!text) return;
+      
+      fetch('/api/message', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({type, user: 'javi_administrador', text, to})
+      }).then(() => loadData());
     }
     
     function saveActivity() {
@@ -959,8 +815,6 @@ function getAdminPage() {
       const title = document.getElementById('activity-title').value.trim();
       const time = document.getElementById('activity-time').value;
       const duration = document.getElementById('activity-duration').value;
-      const repeat = document.getElementById('activity-repeat').value;
-      const repeatDays = repeat === 'custom' ? Array.from(document.querySelectorAll('#repeat-days input:checked')).map(cb => cb.value) : [];
       
       if (!title || !time) {
         alert('❌ Completa todos los campos');
@@ -970,127 +824,13 @@ function getAdminPage() {
       fetch('/api/activity', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({user, title, time, duration, repeat, repeatDays, date: new Date().toDateString()})
+        body: JSON.stringify({user, title, time, duration, repeat: 'none', repeatDays: [], date: new Date().toDateString()})
       }).then(() => {
         alert('✅ Actividad creada para ' + user);
         document.getElementById('activity-title').value = '';
         document.getElementById('activity-time').value = '';
         document.getElementById('activity-duration').value = '30';
-        document.getElementById('activity-repeat').value = 'none';
-        loadData();
       });
-    }
-    
-    function addProduct() {
-      const name = document.getElementById('product-name').value.trim();
-      const category = document.getElementById('product-category').value;
-      const shop = document.getElementById('product-shop').value;
-      const unit = document.getElementById('product-unit').value;
-      const quantity = parseInt(document.getElementById('product-quantity').value);
-      
-      if (!name) {
-        alert('❌ Introduce el nombre del producto');
-        return;
-      }
-      
-      fetch('/api/inventory', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({action: 'add', name, category, shop, unit, quantity})
-      }).then(() => {
-        alert('✅ Producto añadido');
-        document.getElementById('product-name').value = '';
-        document.getElementById('product-quantity').value = '0';
-        loadData();
-      });
-    }
-    
-    function saveRecipe() {
-      const name = document.getElementById('recipe-name').value.trim();
-      const category = document.getElementById('recipe-category').value;
-      const time = parseFloat(document.getElementById('recipe-time').value);
-      const servings = parseInt(document.getElementById('recipe-servings').value);
-      
-      const ingredients = [];
-      for (let i = 0; i < ingredientCount; i++) {
-        const ingredientSelect = document.getElementById('ingredient-' + i);
-        const quantityInput = document.getElementById('quantity-' + i);
-        if (ingredientSelect && quantityInput && ingredientSelect.value && quantityInput.value) {
-          const ingredient = {};
-          ingredient[ingredientSelect.value] = parseInt(quantityInput.value);
-          ingredients.push(ingredient);
-        }
-      }
-      
-      if (!name || ingredients.length === 0) {
-        alert('❌ Completa todos los campos');
-        return;
-      }
-      
-      fetch('/api/recipe', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({name, category, ingredients, time, servings})
-      }).then(() => {
-        alert('✅ Receta guardada');
-        document.getElementById('recipe-name').value = '';
-        document.getElementById('recipe-time').value = '0.5';
-        document.getElementById('recipe-servings').value = '4';
-        loadData();
-      });
-    }
-    
-    function addIngredient() {
-      const container = document.getElementById('ingredients-list');
-      const newDiv = document.createElement('div');
-      newDiv.style.cssText = 'display: flex; gap: 10px; margin: 5px 0;';
-      newDiv.innerHTML = '<select id="ingredient-' + ingredientCount + '"><option value="">Seleccionar ingrediente</option></select><input type="number" id="quantity-' + ingredientCount + '" placeholder="Cantidad" min="1" value="1"><button onclick="removeIngredient(this)" style="background: #dc2626;">-</button>';
-      container.appendChild(newDiv);
-      
-      // Cargar opciones
-      fetch('/api/data').then(r => r.json()).then(data => {
-        const options = data.inventory.map(item => '<option value="' + item.name + '">' + item.name + '</option>').join('');
-        document.getElementById('ingredient-' + ingredientCount).innerHTML = '<option value="">Seleccionar ingrediente</option>' + options;
-      });
-      
-      ingredientCount++;
-    }
-    
-    function removeIngredient(button) {
-      button.parentElement.remove();
-    }
-    
-    function changeInventory(id, change) {
-      fetch('/api/inventory', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({action: 'update', id, change})
-      }).then(() => loadData());
-    }
-    
-    function changeWeek(direction) {
-      currentWeek += direction;
-      document.getElementById('current-week').textContent = 'Semana ' + currentWeek + ' de Septiembre 2025';
-    }
-    
-    function showRecipeCategory(category) {
-      currentRecipeCategory = category;
-      document.querySelectorAll('#recetas button').forEach(b => b.classList.remove('active'));
-      event.target.classList.add('active');
-      loadData();
-    }
-    
-    function editMeal(meal, day) {
-      const content = prompt('Introduce el contenido de la comida (o nombre de receta):');
-      if (content) {
-        fetch('/api/meal-plan', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({week: currentWeek, day, meal, content})
-        }).then(() => {
-          event.target.innerHTML = content;
-        });
-      }
     }
     
     function showSection(section) {
@@ -1100,9 +840,12 @@ function getAdminPage() {
       event.target.classList.add('active');
     }
     
-    // Mostrar/ocultar días de repetición
-    document.getElementById('activity-repeat').addEventListener('change', function() {
-      document.getElementById('repeat-days').style.display = this.value === 'custom' ? 'block' : 'none';
+    document.addEventListener('DOMContentLoaded', function() {
+      if (document.getElementById('private-to')) {
+        document.getElementById('private-to').addEventListener('change', function() {
+          loadData();
+        });
+      }
     });
     
     loadData();
