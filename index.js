@@ -33,9 +33,11 @@ const server = http.createServer((req, res) => {
     <div class="sidebar">
       <div class="nav">
         <button class="btn active" onclick="showSection('actividades')">Actividades</button>
-        <button class="btn" onclick="showSection('recetas')">Recetas</button>
-        <button class="btn" onclick="showSection('inventario')">Inventario</button>
+        <button class="btn" onclick="showSection('comidas')">Comidas</button>
         <button class="btn" onclick="showSection('mensajes')">Mensajes</button>
+        <button class="btn" onclick="showSection('compras')">Lista de Compra</button>
+        <button class="btn" onclick="showSection('inventario')">Inventario</button>
+        <button class="btn" onclick="showSection('recetas')">Recetas</button>
       </div>
     </div>
     
@@ -114,6 +116,24 @@ const server = http.createServer((req, res) => {
           <div class="grid" id="inventory-list"></div>
         </div>
         
+        <div id="comidas" class="section">
+          <h2>Calendario de Comidas</h2>
+          <div class="grid">
+            <div class="card">
+              <h3>Desayunos</h3>
+              <p>• Crema de almendras con frutos rojos<br>• Tostadas keto con salmon<br>• Huevos con jamon y aguacate</p>
+            </div>
+            <div class="card">
+              <h3>Comidas</h3>
+              <p>• Lubina sobre verduras<br>• Pollo con pimientos<br>• Salmon en papillote</p>
+            </div>
+            <div class="card">
+              <h3>Cenas</h3>
+              <p>• Aguacate con salmon ahumado<br>• Crema de calabacin<br>• Espinacas con gambas</p>
+            </div>
+          </div>
+        </div>
+        
         <div id="mensajes" class="section">
           <h2>Mensajes</h2>
           <div class="card">
@@ -125,6 +145,14 @@ const server = http.createServer((req, res) => {
               <input type="text" id="message-input" placeholder="Escribe un mensaje..." style="flex:1">
               <button onclick="sendMessage()">Enviar</button>
             </div>
+          </div>
+        </div>
+        
+        <div id="compras" class="section">
+          <h2>Lista de Compra</h2>
+          <div class="card">
+            <h3>Productos con stock bajo:</h3>
+            <div id="shopping-list">Cargando...</div>
           </div>
         </div>
       </div>
@@ -166,6 +194,22 @@ const server = http.createServer((req, res) => {
       if (inventory[index]) {
         inventory[index].qty = Math.max(0, inventory[index].qty + change);
         loadData();
+        updateShoppingList();
+      }
+    }
+    
+    function updateShoppingList() {
+      const lowStock = inventory.filter(item => item.qty === 0);
+      const shoppingList = document.getElementById('shopping-list');
+      
+      if (lowStock.length === 0) {
+        shoppingList.innerHTML = '<p style="color:#059669">Todo el inventario esta bien abastecido</p>';
+      } else {
+        shoppingList.innerHTML = lowStock.map(item => 
+          '<div style="padding:8px; margin:4px 0; background:#fef2f2; border-left:4px solid #dc2626; border-radius:4px">' +
+          '<strong>' + item.name + '</strong> - Necesitas ' + item.unit +
+          '</div>'
+        ).join('');
       }
     }
     
