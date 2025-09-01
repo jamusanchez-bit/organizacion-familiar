@@ -22,6 +22,9 @@ const server = http.createServer((req, res) => {
     .section { display: none; }
     .section.active { display: block; }
     .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+    input, button { padding: 8px 12px; margin: 4px; border: 1px solid #ddd; border-radius: 4px; }
+    button { background: #10b981; color: white; border: none; cursor: pointer; }
+    button:hover { background: #059669; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
   </style>
 </head>
@@ -45,8 +48,48 @@ const server = http.createServer((req, res) => {
         <div id="actividades" class="section active">
           <h2>Actividades</h2>
           <div class="card">
-            <button onclick="alert('Crear actividad')">Crear Actividad</button>
-            <button onclick="alert('Ver calendario')">Ver Calendario</button>
+            <button onclick="showForm()">Crear Actividad</button>
+            <button onclick="showCalendar()">Ver Calendario</button>
+          </div>
+          
+          <div id="activity-form" class="card" style="display:none">
+            <h3>Nueva Actividad</h3>
+            <div>
+              <label>Usuarios:</label><br>
+              <input type="checkbox" value="javier"> Javier
+              <input type="checkbox" value="raquel"> Raquel
+              <input type="checkbox" value="mario"> Mario
+              <input type="checkbox" value="alba"> Alba
+            </div><br>
+            <div>
+              <label>Actividad:</label><br>
+              <input type="text" id="activity-title" placeholder="Ej: Gimnasio, Leer, Violin">
+            </div><br>
+            <div>
+              <label>Hora:</label><br>
+              <input type="time" id="activity-time">
+            </div><br>
+            <button onclick="saveActivity()">Guardar</button>
+            <button onclick="hideForm()">Cancelar</button>
+          </div>
+          
+          <div id="calendar-view" class="grid" style="display:none">
+            <div class="card">
+              <h3>Javier</h3>
+              <div id="javier-activities">Sin actividades</div>
+            </div>
+            <div class="card">
+              <h3>Raquel</h3>
+              <div id="raquel-activities">Sin actividades</div>
+            </div>
+            <div class="card">
+              <h3>Mario</h3>
+              <div id="mario-activities">Sin actividades</div>
+            </div>
+            <div class="card">
+              <h3>Alba</h3>
+              <div id="alba-activities">Sin actividades</div>
+            </div>
           </div>
         </div>
         
@@ -108,6 +151,45 @@ const server = http.createServer((req, res) => {
         inventory[index].qty = Math.max(0, inventory[index].qty + change);
         loadData();
       }
+    }
+    
+    function showForm() {
+      document.getElementById('activity-form').style.display = 'block';
+      document.getElementById('calendar-view').style.display = 'none';
+    }
+    
+    function hideForm() {
+      document.getElementById('activity-form').style.display = 'none';
+    }
+    
+    function showCalendar() {
+      document.getElementById('activity-form').style.display = 'none';
+      document.getElementById('calendar-view').style.display = 'grid';
+    }
+    
+    function saveActivity() {
+      const users = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+      const title = document.getElementById('activity-title').value;
+      const time = document.getElementById('activity-time').value;
+      
+      if (users.length === 0 || !title || !time) {
+        alert('Completa todos los campos');
+        return;
+      }
+      
+      users.forEach(user => {
+        const div = document.getElementById(user + '-activities');
+        if (div.textContent === 'Sin actividades') div.innerHTML = '';
+        div.innerHTML += '<div style="margin:5px 0; padding:8px; background:#f0f9ff; border-radius:4px"><strong>' + title + '</strong><br>' + time + '</div>';
+      });
+      
+      document.getElementById('activity-title').value = '';
+      document.getElementById('activity-time').value = '';
+      document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+      
+      alert('Actividad creada para: ' + users.join(', '));
+      hideForm();
+      showCalendar();
     }
     
     loadData();
