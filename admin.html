@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Administrador</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    button { padding: 12px 24px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+    button:hover { background: #0056b3; }
+    .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; }
+    .hidden { display: none; }
+    input, select { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 4px; }
+    .user-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 20px; }
+    .user-card { background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd; }
+    .activity-item { background: #e3f2fd; padding: 8px; margin: 5px 0; border-radius: 4px; border-left: 4px solid #2196f3; }
+  </style>
+</head>
+<body>
+  <h1>🏠 Panel de Administrador</h1>
+  
+  <div>
+    <button onclick="mostrar('crear')">➕ Crear Actividad</button>
+    <button onclick="mostrar('calendario')">📅 Ver Calendario</button>
+  </div>
+  
+  <div id="crear" class="section hidden">
+    <h2>Nueva Actividad</h2>
+    
+    <div style="margin: 15px 0;">
+      <label><strong>Usuarios:</strong></label><br>
+      <label><input type="checkbox" value="javier"> Javier</label>
+      <label><input type="checkbox" value="raquel"> Raquel</label>
+      <label><input type="checkbox" value="mario"> Mario</label>
+      <label><input type="checkbox" value="alba"> Alba</label>
+    </div>
+    
+    <div style="margin: 15px 0;">
+      <label><strong>Actividad:</strong></label><br>
+      <input type="text" id="titulo" placeholder="Ej: Gimnasio, Leer, Violín" style="width: 300px;">
+    </div>
+    
+    <div style="margin: 15px 0;">
+      <label><strong>Hora:</strong></label><br>
+      <input type="time" id="hora">
+    </div>
+    
+    <div style="margin: 15px 0;">
+      <label><strong>Duración:</strong></label><br>
+      <select id="duracion">
+        <option value="15">15 minutos</option>
+        <option value="30" selected>30 minutos</option>
+        <option value="45">45 minutos</option>
+        <option value="60">1 hora</option>
+        <option value="90">1.5 horas</option>
+        <option value="120">2 horas</option>
+      </select>
+    </div>
+    
+    <button onclick="guardarActividad()" style="background: #28a745;">💾 Guardar Actividad</button>
+  </div>
+  
+  <div id="calendario" class="section hidden">
+    <h2>📅 Calendario de Actividades</h2>
+    <div class="user-grid">
+      <div class="user-card">
+        <h3>👨 Javier</h3>
+        <div id="javier-actividades">Sin actividades programadas</div>
+      </div>
+      <div class="user-card">
+        <h3>👩 Raquel</h3>
+        <div id="raquel-actividades">Sin actividades programadas</div>
+      </div>
+      <div class="user-card">
+        <h3>👦 Mario</h3>
+        <div id="mario-actividades">Sin actividades programadas</div>
+      </div>
+      <div class="user-card">
+        <h3>👧 Alba</h3>
+        <div id="alba-actividades">Sin actividades programadas</div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    function mostrar(seccion) {
+      document.getElementById('crear').classList.add('hidden');
+      document.getElementById('calendario').classList.add('hidden');
+      document.getElementById(seccion).classList.remove('hidden');
+    }
+    
+    function guardarActividad() {
+      const usuarios = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+      const titulo = document.getElementById('titulo').value.trim();
+      const hora = document.getElementById('hora').value;
+      const duracion = document.getElementById('duracion').value;
+      
+      if (usuarios.length === 0) {
+        alert('❌ Selecciona al menos un usuario');
+        return;
+      }
+      
+      if (!titulo) {
+        alert('❌ Escribe el nombre de la actividad');
+        return;
+      }
+      
+      if (!hora) {
+        alert('❌ Selecciona una hora');
+        return;
+      }
+      
+      // Guardar actividad
+      usuarios.forEach(usuario => {
+        const contenedor = document.getElementById(usuario + '-actividades');
+        if (contenedor.textContent.includes('Sin actividades')) {
+          contenedor.innerHTML = '';
+        }
+        
+        const actividadHTML = `
+          <div class="activity-item">
+            <strong>${titulo}</strong><br>
+            🕐 ${hora} (${duracion} min)
+          </div>
+        `;
+        contenedor.innerHTML += actividadHTML;
+      });
+      
+      // Limpiar formulario
+      document.getElementById('titulo').value = '';
+      document.getElementById('hora').value = '';
+      document.getElementById('duracion').value = '30';
+      document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+      
+      // Mostrar confirmación
+      alert(`✅ Actividad "${titulo}" creada para: ${usuarios.join(', ')}`);
+      
+      // Mostrar calendario
+      mostrar('calendario');
+    }
+  </script>
+</body>
+</html>
