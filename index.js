@@ -171,26 +171,48 @@ const server = http.createServer((req, res) => {
 
   <script>
     const recipes = [
-      {name: 'Lubina sobre cama de verduras', desc: 'Vino blanco, tomillo, aceite, sal'},
-      {name: 'Pollo con pimientos', desc: 'Ajo, tomillo, comino, pimienta, vinagre'},
-      {name: 'Salmon en papillote', desc: 'Ajo en polvo, aceite y sal'},
-      {name: 'Merluza con pimientos', desc: 'Aceite, sal, eneldo y vino blanco'},
-      {name: 'Dorada sobre verduras', desc: 'Vino blanco, tomillo, aceite, sal'}
+      {name: 'Lubina sobre cama de verduras', desc: 'Vino blanco, tomillo, aceite, sal y agua', time: 30, people: 4},
+      {name: 'Pollo con pimientos', desc: 'Ajo, tomillo, comino, pimienta, vinagre de Jerez', time: 30, people: 4},
+      {name: 'Marmitako de salmon', desc: 'Lleva 4 dientes de ajo', time: 30, people: 4},
+      {name: 'Crema de almendras con frutos rojos', desc: 'Crema de almendras, macadamias y chocolate', time: 30, people: 4},
+      {name: 'Aguacate con salmon ahumado', desc: 'Aceitunas, cebolla, salsa tamari, aceite', time: 30, people: 4},
+      {name: 'Dorada sobre verduras', desc: 'Vino blanco, tomillo, aceite, sal y agua', time: 30, people: 4},
+      {name: 'Alitas de pollo', desc: '4 dientes de ajo, ajo en polvo, tomillo, aceite y sal', time: 30, people: 4},
+      {name: 'Pechugas rellenas de jamon', desc: 'Ajo en polvo, aceite y sal', time: 30, people: 4},
+      {name: 'Salmon en papillote', desc: 'Ajo en polvo, aceite y sal', time: 30, people: 4},
+      {name: 'Merluza con pimientos', desc: 'Aceite, sal, eneldo y vino blanco', time: 30, people: 4},
+      {name: 'Costillas de cordero', desc: 'Lleva 4 dientes de ajo', time: 30, people: 4},
+      {name: 'Paletillas de cordero', desc: '4 dientes de ajo, romero, aceite y sal', time: 30, people: 4}
     ];
     
     const inventory = [
+      {name: 'Infusion tomillo', qty: 0, unit: 'paquetes'},
+      {name: 'Infusion roiboos', qty: 0, unit: 'paquetes'},
       {name: 'Jamon', qty: 0, unit: 'paquetes'},
       {name: 'Salmon fresco', qty: 0, unit: 'filetes'},
       {name: 'Doradas', qty: 0, unit: 'unidades'},
       {name: 'Lubina', qty: 0, unit: 'unidades'},
+      {name: 'Merluza', qty: 0, unit: 'lomos'},
+      {name: 'Pulpo', qty: 0, unit: 'unidades'},
       {name: 'Ajo', qty: 0, unit: 'unidades'},
+      {name: 'Cebollas', qty: 0, unit: 'unidades'},
+      {name: 'Coliflor', qty: 0, unit: 'unidades'},
+      {name: 'Brocoli', qty: 0, unit: 'unidades'},
       {name: 'Pimientos', qty: 0, unit: 'unidades'},
-      {name: 'Sal', qty: 0, unit: 'paquetes'}
+      {name: 'Alcachofas lata', qty: 0, unit: 'latas'},
+      {name: 'Sal', qty: 0, unit: 'paquetes'},
+      {name: 'Ajo en polvo', qty: 0, unit: 'tarros'},
+      {name: 'Champinones', qty: 0, unit: 'bandejas'}
     ];
     
     function loadData() {
       document.getElementById('recipes-list').innerHTML = recipes.map(r => 
-        '<div class="card"><h3>' + r.name + '</h3><p>' + r.desc + '</p></div>'
+        '<div class="card"><h3 style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">' + r.name + '</h3>' +
+        '<p style="color: #6b7280; margin-bottom: 16px;">' + r.desc + '</p>' +
+        '<div style="display: flex; gap: 16px; font-size: 14px; color: #6b7280;">' +
+        '<span>⏱️ ' + r.time + ' min</span>' +
+        '<span>👥 ' + r.people + ' personas</span>' +
+        '</div></div>'
       ).join('');
       
       document.getElementById('inventory-list').innerHTML = inventory.map((item, index) => 
