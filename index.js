@@ -1,7 +1,7 @@
 const http = require('http');
 const url = require('url');
 
-// Datos exactos del archivo original
+// Base de datos en memoria
 const USERS = {
   javier: { id: 'javier', name: 'Javier', password: 'password123' },
   raquel: { id: 'raquel', name: 'Raquel', password: 'password456' },
@@ -10,65 +10,26 @@ const USERS = {
   javi_administrador: { id: 'javi_administrador', name: 'Javi (Admin)', password: 'admin123' }
 };
 
-const recipes = [
-  { id: '048b6745-b709-4ff5-bdd9-c3f2e1a14635', name: 'Lubina sobre cama de verduras', category: 'comidas', instructions: 'Lleva vino blanco, tomillo, aceite, sal y un poco de agua', preparationTime: 30, servings: 4 },
-  { id: '16c802f4-c646-4196-acd4-72eb80ec52d9', name: 'Muslo y contra muslo de pollo con pimientos', category: 'comidas', instructions: 'Lleva 1 diente de ajo, tomillo, comino, pimienta, vinagre de Jerez, aceite y sal.', preparationTime: 30, servings: 4 },
-  { id: '17b61b42-fda5-4f00-8002-0a54773e2e74', name: 'Marmitako de salmón', category: 'comidas', instructions: 'Lleva 4 dientes de ajo', preparationTime: 30, servings: 4 },
-  { id: '1bb492e1-270b-433e-ab25-07ea9bb6c7b1', name: 'Crema de almendras con frutos rojos', category: 'desayunos', instructions: 'Lleva crema de almendras, macadamias y chocolate.', preparationTime: 30, servings: 4 },
-  { id: '27d5a68c-84cb-4dac-bb6a-61fdca3abd92', name: 'Aguacate con salmón ahumado', category: 'cenas', instructions: 'Lleva aceitunas, un poco de cebolla, salsa tamari, aceite.', preparationTime: 30, servings: 4 },
-  { id: '285aa1c6-ef84-485a-8b40-42d1c42d1180', name: 'Tostadas pan keto con aceite, lechuga, pepino, salmón marinado', category: 'desayunos', instructions: 'Sin instrucciones', preparationTime: 30, servings: 4 },
-  { id: '2dcf433e-db93-4e41-94ef-47e9069b73f2', name: 'Zanahorias, olivas y nueces', category: 'desayunos', instructions: 'Sin instrucciones', preparationTime: 30, servings: 4 },
-  { id: '2dff8318-2a5d-4ce1-806c-0b723f1bb078', name: 'Dorada sobre cama de verduras', category: 'comidas', instructions: 'Lleva vino blanco, tomillo, aceite, sal y un poco de agua', preparationTime: 30, servings: 4 },
-  { id: '3442b6f0-85ec-4321-bb3b-6fa4c4591c1a', name: 'Alitas de pollo', category: 'comidas', instructions: 'Lleva 4 dientes de ajo, ajo en polvo, tomillo, aceite y sal', preparationTime: 30, servings: 4 },
-  { id: '382fd115-1405-4551-992b-2f5ae732577e', name: 'Pechugas de pollo rellenas de jamón', category: 'comidas', instructions: 'Lleva ajo en polvo, aceite y sal.', preparationTime: 30, servings: 4 },
-  { id: '3c2aa76d-91cf-480e-a489-9e66ddd04555', name: 'Bizcocho almendra', category: 'desayunos', instructions: 'Sin instrucciones', preparationTime: 30, servings: 4 },
-  { id: '55397886-bea6-4f09-880e-ea56d96c25a3', name: 'Huevos a la plancha con jamón y aguacate', category: 'desayunos', instructions: 'Sin instrucciones', preparationTime: 30, servings: 4 },
-  { id: '5c370221-b608-417f-a088-a6aa4d1771c8', name: 'Crema de calabacín con salchichas', category: 'cenas', instructions: 'Lleva aceite y sal', preparationTime: 30, servings: 4 },
-  { id: '634a467a-4c17-4b07-a2c3-e985507e431d', name: 'Tortilla con crema de calabaza', category: 'cenas', instructions: 'Sin instrucciones', preparationTime: 30, servings: 4 },
-  { id: '69184600-ddaf-4032-b80a-fd943d6fa7a4', name: 'Tostadas keto de ghee y erititrol', category: 'desayunos', instructions: 'Sin instrucciones', preparationTime: 30, servings: 4 },
-  { id: '781a4874-58a7-40f0-825c-1a4cb3a73155', name: 'Bizcocho cacahuete', category: 'desayunos', instructions: 'Sin instrucciones', preparationTime: 30, servings: 4 },
-  { id: '9c46ea6f-13d5-40dc-a5a5-059a4f1d15c7', name: 'Salmón en papillote', category: 'comidas', instructions: 'Lleva ajo en polvo, aceite y sal.', preparationTime: 30, servings: 4 },
-  { id: '9f124919-1d5f-4bc2-afd8-7d93dc35ab05', name: 'Merluza con pimientos', category: 'comidas', instructions: 'Lleva aceite, sal, eneldo y vino blanco', preparationTime: 30, servings: 4 },
-  { id: 'b1f8b0bc-798d-4686-b97b-4ea8432a9d0d', name: 'Kéfir con frutos rojos', category: 'desayunos', instructions: 'Lleva chocolate y macadamias', preparationTime: 30, servings: 4 },
-  { id: 'b2372066-c3b4-4a74-82e5-45ee02a5b8f3', name: 'Muslo y contra muslo de pollo con setas', category: 'comidas', instructions: 'Lleva 4 dientes de ajo, tomillo, aceite y sal.', preparationTime: 30, servings: 4 },
-  { id: 'ba979034-7786-4e58-8bf0-9e96b56b12c2', name: 'Caballa con mayonesa y brócoli al horno', category: 'cenas', instructions: 'Lleva aceite, 1 diente de ajo, limón y sal para la mayonesa', preparationTime: 30, servings: 4 },
-  { id: 'bf483209-7d3d-4707-95c2-22f27babe3ac', name: 'Costillas de cordero', category: 'comidas', instructions: 'Lleva 4 dientes de ajo', preparationTime: 30, servings: 4 },
-  { id: 'c7256abe-91b3-4cd8-83bc-0a4b57a09a1d', name: 'Bocadillo de pan keto con caballa', category: 'almuerzos', instructions: 'Sin instrucciones', preparationTime: 30, servings: 4 },
-  { id: 'dd2c5a9b-25e6-4fd0-abb0-6d81b84e100e', name: 'Espinacas salteadas con gambas', category: 'cenas', instructions: 'Sin instrucciones', preparationTime: 30, servings: 4 },
-  { id: 'fb36a8c7-8871-4717-9dd9-d2c44d3942ac', name: 'Paletillas de cordero', category: 'comidas', instructions: 'Lleva 4 dientes de ajo, romero, aceite y sal.', preparationTime: 30, servings: 4 }
-];
-
-const inventory = [
-  { id: '1', name: 'Infusión tomillo', currentQuantity: '0', minimumQuantity: '1', unit: 'paquetes', category: 'bebidas' },
-  { id: '2', name: 'Infusión roiboos', currentQuantity: '0', minimumQuantity: '1', unit: 'paquetes', category: 'bebidas' },
-  { id: '3', name: 'Jamón', currentQuantity: '0', minimumQuantity: '1', unit: 'paquetes', category: 'carnes' },
-  { id: '4', name: 'Salmón fresco (filetes)', currentQuantity: '0', minimumQuantity: '1', unit: 'unidades', category: 'pescado' },
-  { id: '5', name: 'Doradas', currentQuantity: '0', minimumQuantity: '1', unit: 'unidades', category: 'pescado' },
-  { id: '6', name: 'Lubina', currentQuantity: '0', minimumQuantity: '1', unit: 'unidades', category: 'pescado' },
-  { id: '7', name: 'Merluza (lomos)', currentQuantity: '0', minimumQuantity: '1', unit: 'unidades', category: 'pescado' },
-  { id: '8', name: 'Pulpo', currentQuantity: '0', minimumQuantity: '1', unit: 'unidades', category: 'pescado' },
-  { id: '9', name: 'Ajo', currentQuantity: '0', minimumQuantity: '1', unit: 'unidades', category: 'verduras' },
-  { id: '10', name: 'Cebollas', currentQuantity: '0', minimumQuantity: '1', unit: 'unidades', category: 'verduras' },
-  { id: '11', name: 'Coliflor', currentQuantity: '0', minimumQuantity: '1', unit: 'unidades', category: 'verduras' },
-  { id: '12', name: 'Brócoli', currentQuantity: '0', minimumQuantity: '1', unit: 'unidades', category: 'verduras' },
-  { id: '13', name: 'Pimientos', currentQuantity: '0', minimumQuantity: '1', unit: 'unidades', category: 'verduras' },
-  { id: '14', name: 'Pimiento italiano', currentQuantity: '0', minimumQuantity: '1', unit: 'unidades', category: 'verduras' },
-  { id: '15', name: 'Alcachofas (lata)', currentQuantity: '0', minimumQuantity: '1', unit: 'latas', category: 'verduras' },
-  { id: '16', name: 'Alcachofas (frescas)', currentQuantity: '0', minimumQuantity: '1', unit: 'unidades', category: 'verduras' },
-  { id: '17', name: 'Sal', currentQuantity: '0', minimumQuantity: '1', unit: 'unidades', category: 'condimentos' },
-  { id: '18', name: 'Sal gorda', currentQuantity: '0', minimumQuantity: '1', unit: 'paquetes', category: 'condimentos' },
-  { id: '19', name: 'Ajo en polvo', currentQuantity: '0', minimumQuantity: '1', unit: 'tarros', category: 'condimentos' },
-  { id: '20', name: 'Champiñones (bandeja)', currentQuantity: '0', minimumQuantity: '1', unit: 'paquetes', category: 'verduras' }
-];
-
-let sessions = {};
 let activities = [];
+let mealPlan = {};
+let inventory = [
+  { id: '1', name: 'Jamón', category: 'carne', shop: 'Carne internet', unit: 'paquetes', quantity: 0 },
+  { id: '2', name: 'Salmón fresco', category: 'pescado', shop: 'Pescadería', unit: 'unidades', quantity: 0 },
+  { id: '3', name: 'Ajo', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 0 },
+  { id: '4', name: 'Aceite oliva', category: 'otros', shop: 'Alcampo', unit: 'litros', quantity: 0 }
+];
+
+let recipes = [
+  { id: '1', name: 'Lubina sobre cama de verduras', category: 'comidas', ingredients: [{'Lubina': 1}, {'Ajo': 2}], time: 0.5, servings: 4 },
+  { id: '2', name: 'Salmón en papillote', category: 'comidas', ingredients: [{'Salmón fresco': 1}, {'Ajo': 1}], time: 0.75, servings: 4 }
+];
+
 let messages = [];
 
 const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url, true);
   
-  // Rutas de usuarios individuales
+  // Rutas de usuarios
   if (parsedUrl.pathname === '/javier/abc123xyz789def456') {
     res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
     res.end(getUserPage('javier'));
@@ -89,8 +50,6 @@ const server = http.createServer((req, res) => {
     res.end(getUserPage('alba'));
     return;
   }
-  
-  // Administrador
   if (parsedUrl.pathname === '/admin/cde789fgh012ijl345') {
     res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
     res.end(getAdminPage());
@@ -103,14 +62,33 @@ const server = http.createServer((req, res) => {
     req.on('data', chunk => body += chunk);
     req.on('end', () => {
       const data = JSON.parse(body);
-      activities.push({
+      const activity = {
         id: Date.now(),
-        users: data.users,
+        user: data.user,
         title: data.title,
         time: data.time,
         duration: data.duration,
-        date: new Date().toDateString()
-      });
+        repeat: data.repeat,
+        repeatDays: data.repeatDays || [],
+        date: data.date,
+        completed: false
+      };
+      activities.push(activity);
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({success: true}));
+    });
+    return;
+  }
+  
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/complete-activity') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = JSON.parse(body);
+      const activity = activities.find(a => a.id === data.id);
+      if (activity) {
+        activity.completed = data.completed;
+      }
       res.writeHead(200, {'Content-Type': 'application/json'});
       res.end(JSON.stringify({success: true}));
     });
@@ -122,9 +100,20 @@ const server = http.createServer((req, res) => {
     req.on('data', chunk => body += chunk);
     req.on('end', () => {
       const data = JSON.parse(body);
-      const item = inventory.find(i => i.id === data.id);
-      if (item) {
-        item.currentQuantity = Math.max(0, parseInt(item.currentQuantity) + data.change).toString();
+      if (data.action === 'update') {
+        const item = inventory.find(i => i.id === data.id);
+        if (item) {
+          item.quantity = Math.max(0, item.quantity + data.change);
+        }
+      } else if (data.action === 'add') {
+        inventory.push({
+          id: Date.now().toString(),
+          name: data.name,
+          category: data.category,
+          shop: data.shop,
+          unit: data.unit,
+          quantity: data.quantity
+        });
       }
       res.writeHead(200, {'Content-Type': 'application/json'});
       res.end(JSON.stringify({success: true}));
@@ -132,17 +121,57 @@ const server = http.createServer((req, res) => {
     return;
   }
   
-  if (req.method === 'POST' && parsedUrl.pathname === '/api/message') {
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/recipe') {
     let body = '';
     req.on('data', chunk => body += chunk);
     req.on('end', () => {
       const data = JSON.parse(body);
-      messages.push({
-        id: Date.now(),
-        user: data.user,
-        text: data.text,
-        time: new Date().toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})
+      recipes.push({
+        id: Date.now().toString(),
+        name: data.name,
+        category: data.category,
+        ingredients: data.ingredients,
+        time: data.time,
+        servings: data.servings || 4
       });
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({success: true}));
+    });
+    return;
+  }
+  
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/meal-plan') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = JSON.parse(body);
+      const key = `${data.week}-${data.day}-${data.meal}`;
+      mealPlan[key] = data.content;
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({success: true}));
+    });
+    return;
+  }
+  
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/complete-meal') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = JSON.parse(body);
+      // Si es una receta, descontar ingredientes
+      if (data.recipeId) {
+        const recipe = recipes.find(r => r.id === data.recipeId);
+        if (recipe) {
+          recipe.ingredients.forEach(ing => {
+            const ingredientName = Object.keys(ing)[0];
+            const quantity = ing[ingredientName];
+            const inventoryItem = inventory.find(i => i.name === ingredientName);
+            if (inventoryItem) {
+              inventoryItem.quantity = Math.max(0, inventoryItem.quantity - quantity);
+            }
+          });
+        }
+      }
       res.writeHead(200, {'Content-Type': 'application/json'});
       res.end(JSON.stringify({success: true}));
     });
@@ -155,12 +184,12 @@ const server = http.createServer((req, res) => {
       activities: activities,
       inventory: inventory,
       recipes: recipes,
+      mealPlan: mealPlan,
       messages: messages
     }));
     return;
   }
   
-  // Página principal
   res.writeHead(200, {'Content-Type': 'text/html'});
   res.end('<h1>Organización Familiar</h1><p>Accede con tu enlace personal</p>');
 });
@@ -188,10 +217,24 @@ function getUserPage(username) {
     .content { padding: 32px; }
     .title { font-size: 24px; font-weight: bold; margin-bottom: 24px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
-    .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
     .user { position: absolute; bottom: 0; left: 0; right: 0; padding: 12px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
     .section { display: none; }
     .section.active { display: block; }
+    .activity-item { background: #f0f9ff; padding: 12px; margin: 8px 0; border-radius: 8px; border-left: 4px solid #0ea5e9; display: flex; justify-content: space-between; align-items: center; }
+    .activity-item.completed { background: #f0fdf4; border-left-color: #22c55e; }
+    .calendar-view { display: flex; gap: 10px; margin: 20px 0; }
+    .calendar-view button { padding: 8px 16px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 4px; }
+    .calendar-view button.active { background: #10b981; color: white; }
+    .meal-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    .meal-table th, .meal-table td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+    .meal-table th { background: #f9fafb; font-weight: bold; }
+    .meal-table td { min-height: 60px; vertical-align: top; cursor: pointer; }
+    .meal-table td:hover { background: #f0f9ff; }
+    .meal-table .meal-label { background: #e5e7eb; font-weight: bold; text-align: left; }
+    input, button, select { padding: 8px 12px; margin: 4px; border: 1px solid #ddd; border-radius: 4px; }
+    button { background: #10b981; color: white; border: none; cursor: pointer; }
+    button:hover { background: #059669; }
   </style>
 </head>
 <body>
@@ -203,10 +246,9 @@ function getUserPage(username) {
       <div class="nav">
         <button class="btn active" onclick="showSection('actividades')">📅 Actividades</button>
         <button class="btn" onclick="showSection('comidas')">🍽️ Comidas</button>
-        <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
-        <button class="btn" onclick="showSection('compras')">🛒 Lista de la compra</button>
-        <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
         <button class="btn" onclick="showSection('recetas')">👨🍳 Recetas</button>
+        <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
+        <button class="btn" onclick="showSection('compras')">🛒 Lista de la compra</button>
       </div>
       <div class="user">
         <span style="font-size: 12px; font-weight: 500;">${user.name}</span>
@@ -215,49 +257,109 @@ function getUserPage(username) {
     </div>
     <div class="main">
       <div class="top">
-        <h1 style="font-size: 28px; font-weight: bold;">¡Hola, ${user.name}! 👋<br><small style="font-size: 14px; color: #6b7280; font-weight: normal;">Domingo, 1 de septiembre de 2025</small><br><small style="font-size: 12px; color: #9ca3af; font-weight: normal; font-style: italic;">"Tu mente es la semilla, tu vida es la cosecha. (Joe Dispenza)"</small></h1>
+        <h1 style="font-size: 28px; font-weight: bold;">¡Hola, ${user.name}! 👋</h1>
       </div>
       <div class="content">
         <div id="actividades" class="section active">
-          <h2 class="title" style="background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Actividades</h2>
+          <h2 class="title" style="background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Mis Actividades</h2>
+          
+          <div class="calendar-view">
+            <button class="active" onclick="setView('daily')">Vista Diaria</button>
+            <button onclick="setView('weekly')">Vista Semanal</button>
+          </div>
+          
           <div class="card">
-            <h3>Mis Actividades de Hoy</h3>
+            <h3>Actividades de Hoy</h3>
             <div id="my-activities">Cargando...</div>
           </div>
         </div>
+        
+        <div id="comidas" class="section">
+          <h2 class="title" style="background: linear-gradient(to right, #f59e0b, #d97706); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Planificación de Comidas</h2>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <button onclick="changeWeek(-1)">← Semana Anterior</button>
+            <h3 id="current-week">Semana del 1 al 7 de Septiembre 2025</h3>
+            <button onclick="changeWeek(1)">Semana Siguiente →</button>
+          </div>
+          
+          <table class="meal-table" id="meal-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Lunes</th>
+                <th>Martes</th>
+                <th>Miércoles</th>
+                <th>Jueves</th>
+                <th>Viernes</th>
+                <th>Sábado</th>
+                <th>Domingo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="meal-label">Desayuno Alba y Mario</td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'lunes')"></td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'martes')"></td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'miercoles')"></td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'jueves')"></td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'viernes')"></td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'sabado')"></td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'domingo')"></td>
+              </tr>
+              <tr>
+                <td class="meal-label">Desayuno Raquel y Javier</td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'lunes')"></td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'martes')"></td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'miercoles')"></td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'jueves')"></td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'viernes')"></td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'sabado')"></td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'domingo')"></td>
+              </tr>
+              <tr>
+                <td class="meal-label">Comida</td>
+                <td onclick="markMealDone('comida', 'lunes')"></td>
+                <td onclick="markMealDone('comida', 'martes')"></td>
+                <td onclick="markMealDone('comida', 'miercoles')"></td>
+                <td onclick="markMealDone('comida', 'jueves')"></td>
+                <td onclick="markMealDone('comida', 'viernes')"></td>
+                <td onclick="markMealDone('comida', 'sabado')"></td>
+                <td onclick="markMealDone('comida', 'domingo')"></td>
+              </tr>
+              <tr>
+                <td class="meal-label">Cena</td>
+                <td onclick="markMealDone('cena', 'lunes')"></td>
+                <td onclick="markMealDone('cena', 'martes')"></td>
+                <td onclick="markMealDone('cena', 'miercoles')"></td>
+                <td onclick="markMealDone('cena', 'jueves')"></td>
+                <td onclick="markMealDone('cena', 'viernes')"></td>
+                <td onclick="markMealDone('cena', 'sabado')"></td>
+                <td onclick="markMealDone('cena', 'domingo')"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
         <div id="recetas" class="section">
           <h2 class="title" style="background: linear-gradient(to right, #dc2626, #ea580c); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Recetas</h2>
+          
+          <div style="margin-bottom: 20px;">
+            <button class="active" onclick="showRecipeCategory('comidas')">Comidas</button>
+            <button onclick="showRecipeCategory('cenas')">Cenas</button>
+          </div>
+          
           <div id="recipes-grid" class="grid"></div>
         </div>
+        
         <div id="inventario" class="section">
           <h2 class="title" style="background: linear-gradient(to right, #9333ea, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Inventario</h2>
           <div id="inventory-grid" class="grid"></div>
         </div>
-        <div id="comidas" class="section">
-          <h2 class="title" style="background: linear-gradient(to right, #f59e0b, #d97706); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Calendario de Comidas</h2>
-          <div class="card">
-            <p>Próximamente - Planificación semanal de comidas</p>
-          </div>
-        </div>
+        
         <div id="compras" class="section">
-          <h2 class="title" style="background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Lista de Compra</h2>
-          <div class="card">
-            <h3>Productos con stock bajo:</h3>
-            <div id="shopping-list">Cargando...</div>
-          </div>
-        </div>
-        <div id="mensajes" class="section">
-          <h2 class="title" style="background: linear-gradient(to right, #8b5cf6, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Mensajes</h2>
-          <div class="card">
-            <h3>Chat Familiar</h3>
-            <div id="chat-messages" style="background:#f9fafb; padding:16px; border-radius:8px; margin:16px 0; height:200px; overflow-y:auto">
-              <p style="color:#6b7280">Cargando mensajes...</p>
-            </div>
-            <div style="display:flex; gap:8px">
-              <input type="text" id="message-input" placeholder="Escribe un mensaje..." style="flex:1; padding:8px; border:1px solid #ddd; border-radius:4px">
-              <button onclick="sendMessage()" style="padding:8px 16px; background:#10b981; color:white; border:none; border-radius:4px; cursor:pointer">Enviar</button>
-            </div>
-          </div>
+          <h2 class="title" style="background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Lista de la Compra</h2>
+          <div id="shopping-lists"></div>
         </div>
       </div>
     </div>
@@ -265,63 +367,141 @@ function getUserPage(username) {
 
   <script>
     const username = '${username}';
+    let currentWeek = 1;
+    let currentView = 'daily';
+    let currentRecipeCategory = 'comidas';
     
     function loadData() {
       fetch('/api/data')
         .then(r => r.json())
         .then(data => {
-          // Cargar mis actividades
-          const myActivities = data.activities.filter(a => a.users.includes(username) && a.date === new Date().toDateString());
-          document.getElementById('my-activities').innerHTML = myActivities.length > 0 
-            ? myActivities.map(a => '<div style="margin:8px 0; padding:12px; background:#f0f9ff; border-radius:8px; border-left:4px solid #0ea5e9"><strong>' + a.title + '</strong><br>' + a.time + ' (' + a.duration + ' min)</div>').join('')
-            : '<p style="color:#6b7280">No tienes actividades para hoy</p>';
-          
-          // Cargar recetas
-          document.getElementById('recipes-grid').innerHTML = data.recipes.map(recipe => 
-            '<div class="card"><h3 style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">' + recipe.name + '</h3><p style="color: #6b7280; margin-bottom: 16px;">' + recipe.instructions + '</p><div style="display: flex; gap: 16px; font-size: 14px; color: #6b7280;"><span>⏱️ ' + recipe.preparationTime + ' min</span><span>👥 ' + recipe.servings + ' personas</span></div></div>'
-          ).join('');
-          
-          // Cargar inventario
-          document.getElementById('inventory-grid').innerHTML = data.inventory.map(item => {
-            const isLow = parseInt(item.currentQuantity) <= parseInt(item.minimumQuantity);
-            const color = parseInt(item.currentQuantity) === 0 ? '#dc2626' : isLow ? '#ea580c' : '#059669';
-            return '<div class="card"><h3 style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">' + item.name + '</h3><p style="font-size: 18px; font-weight: bold; color: ' + color + '; margin-bottom: 8px;">' + item.currentQuantity + ' ' + item.unit + '</p><p style="font-size: 14px; color: #6b7280;">Mínimo: ' + item.minimumQuantity + ' ' + item.unit + '</p></div>';
-          }).join('');
-          
-          // Lista de compra
-          const lowStock = data.inventory.filter(item => parseInt(item.currentQuantity) <= parseInt(item.minimumQuantity));
-          document.getElementById('shopping-list').innerHTML = lowStock.length === 0 
-            ? '<p style="color: #059669;">✅ Todo el inventario está bien abastecido</p>'
-            : lowStock.map(item => '<div style="padding: 8px; margin: 4px 0; background: #fef2f2; border-left: 4px solid #dc2626; border-radius: 4px;"><strong>' + item.name + '</strong> - Necesitas ' + item.minimumQuantity + ' ' + item.unit + '</div>').join('');
-          
-          // Mensajes
-          updateChat(data.messages);
+          loadActivities(data.activities);
+          loadRecipes(data.recipes);
+          loadInventory(data.inventory);
+          loadShoppingList(data.inventory);
+          loadMealPlan(data.mealPlan);
         });
     }
     
-    function updateChat(messages) {
-      const chatDiv = document.getElementById('chat-messages');
-      if (messages.length === 0) {
-        chatDiv.innerHTML = '<p style="color:#6b7280">No hay mensajes aún</p>';
-      } else {
-        chatDiv.innerHTML = messages.map(msg => 
-          '<div style="margin-bottom:12px; padding:8px; background:white; border-radius:8px"><div style="font-weight:500; color:#374151">' + msg.user + ' <span style="font-size:12px; color:#6b7280; font-weight:normal">' + msg.time + '</span></div><div style="margin-top:4px">' + msg.text + '</div></div>'
-        ).join('');
-        chatDiv.scrollTop = chatDiv.scrollHeight;
-      }
+    function loadActivities(activities) {
+      const today = new Date().toDateString();
+      const myActivities = activities.filter(a => a.user === username && a.date === today);
+      
+      document.getElementById('my-activities').innerHTML = myActivities.length > 0 
+        ? myActivities.map(a => 
+            '<div class="activity-item' + (a.completed ? ' completed' : '') + '">' +
+            '<div><strong>' + a.title + '</strong><br>' + a.time + ' (' + a.duration + ' min)</div>' +
+            '<button onclick="toggleActivity(' + a.id + ', ' + !a.completed + ')">' + (a.completed ? '✓ Hecho' : 'Marcar') + '</button>' +
+            '</div>'
+          ).join('')
+        : '<p style="color:#6b7280">No tienes actividades para hoy</p>';
     }
     
-    function sendMessage() {
-      const input = document.getElementById('message-input');
-      const message = input.value.trim();
-      if (message) {
-        fetch('/api/message', {
+    function loadRecipes(recipes) {
+      const filteredRecipes = recipes.filter(r => r.category === currentRecipeCategory);
+      document.getElementById('recipes-grid').innerHTML = filteredRecipes.map(recipe => 
+        '<div class="card">' +
+        '<h3>' + recipe.name + '</h3>' +
+        '<p><strong>Ingredientes:</strong> ' + recipe.ingredients.map(ing => Object.keys(ing)[0] + ' (' + Object.values(ing)[0] + ')').join(', ') + '</p>' +
+        '<p><strong>Tiempo:</strong> ' + recipe.time + ' horas</p>' +
+        '<p><strong>Porciones:</strong> ' + recipe.servings + '</p>' +
+        '</div>'
+      ).join('');
+    }
+    
+    function loadInventory(inventory) {
+      document.getElementById('inventory-grid').innerHTML = inventory.map(item => 
+        '<div class="card">' +
+        '<h3>' + item.name + '</h3>' +
+        '<p style="font-size: 18px; font-weight: bold;">' + item.quantity + ' ' + item.unit + '</p>' +
+        '<div style="margin-top: 12px;">' +
+        '<button onclick="changeInventory(\\''+item.id+'\\', -1)" style="background: #dc2626;">-</button>' +
+        '<button onclick="changeInventory(\\''+item.id+'\\', 1)" style="background: #059669;">+</button>' +
+        '</div></div>'
+      ).join('');
+    }
+    
+    function loadShoppingList(inventory) {
+      const shops = ['Carne internet', 'Pescadería', 'Del bancal a casa', 'Alcampo', 'Internet', 'Otros'];
+      const outOfStock = inventory.filter(item => item.quantity === 0);
+      const lowStock = inventory.filter(item => item.quantity === 1);
+      
+      let html = '';
+      shops.forEach(shop => {
+        const shopItems = outOfStock.filter(item => item.shop === shop);
+        const shopSuggestions = lowStock.filter(item => item.shop === shop);
+        
+        if (shopItems.length > 0 || shopSuggestions.length > 0) {
+          html += '<div class="card"><h3>' + shop + '</h3>';
+          
+          if (shopItems.length > 0) {
+            html += '<h4>Necesarios:</h4>';
+            shopItems.forEach(item => {
+              html += '<div style="padding: 4px; background: #fef2f2; margin: 2px 0; border-radius: 4px;">' + item.name + '</div>';
+            });
+          }
+          
+          if (shopSuggestions.length > 0) {
+            html += '<h4>Sugerencias:</h4>';
+            shopSuggestions.forEach(item => {
+              html += '<div style="padding: 4px; background: #fef3c7; margin: 2px 0; border-radius: 4px;">' + item.name + '</div>';
+            });
+          }
+          
+          html += '</div>';
+        }
+      });
+      
+      document.getElementById('shopping-lists').innerHTML = html || '<div class="card"><p>No hay productos en la lista de compra</p></div>';
+    }
+    
+    function loadMealPlan(mealPlan) {
+      // Cargar plan de comidas en la tabla
+    }
+    
+    function toggleActivity(id, completed) {
+      fetch('/api/complete-activity', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id, completed})
+      }).then(() => loadData());
+    }
+    
+    function changeInventory(id, change) {
+      fetch('/api/inventory', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'update', id, change})
+      }).then(() => loadData());
+    }
+    
+    function setView(view) {
+      currentView = view;
+      document.querySelectorAll('.calendar-view button').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+    
+    function changeWeek(direction) {
+      currentWeek += direction;
+      document.getElementById('current-week').textContent = 'Semana ' + currentWeek + ' de Septiembre 2025';
+    }
+    
+    function showRecipeCategory(category) {
+      currentRecipeCategory = category;
+      document.querySelectorAll('#recetas button').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      loadData();
+    }
+    
+    function markMealDone(meal, day) {
+      if (confirm('¿Marcar como hecho?')) {
+        fetch('/api/complete-meal', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({text: message, user: username})
+          body: JSON.stringify({meal, day, week: currentWeek})
         }).then(() => {
-          input.value = '';
-          loadData();
+          event.target.style.background = '#f0fdf4';
+          event.target.innerHTML = '✓ Hecho';
         });
       }
     }
@@ -334,7 +514,7 @@ function getUserPage(username) {
     }
     
     loadData();
-    setInterval(loadData, 5000);
+    setInterval(loadData, 10000);
   </script>
 </body>
 </html>`;
@@ -362,16 +542,22 @@ function getAdminPage() {
     .content { padding: 32px; }
     .title { font-size: 24px; font-weight: bold; margin-bottom: 24px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
-    .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
     .user { position: absolute; bottom: 0; left: 0; right: 0; padding: 12px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
     .section { display: none; }
     .section.active { display: block; }
     .form-group { margin: 15px 0; }
     .checkbox-group { display: flex; gap: 15px; flex-wrap: wrap; }
-    input, button, select { padding: 8px 12px; margin: 4px; border: 1px solid #ddd; border-radius: 4px; }
+    input, button, select, textarea { padding: 8px 12px; margin: 4px; border: 1px solid #ddd; border-radius: 4px; }
     button { background: #10b981; color: white; border: none; cursor: pointer; }
     button:hover { background: #059669; }
     .hidden { display: none; }
+    .meal-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    .meal-table th, .meal-table td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+    .meal-table th { background: #f9fafb; font-weight: bold; }
+    .meal-table td { min-height: 60px; vertical-align: top; cursor: pointer; }
+    .meal-table td:hover { background: #f0f9ff; }
+    .meal-table .meal-label { background: #e5e7eb; font-weight: bold; text-align: left; }
   </style>
 </head>
 <body>
@@ -383,10 +569,9 @@ function getAdminPage() {
       <div class="nav">
         <button class="btn active" onclick="showSection('actividades')">📅 Actividades</button>
         <button class="btn" onclick="showSection('comidas')">🍽️ Comidas</button>
-        <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
-        <button class="btn" onclick="showSection('compras')">🛒 Lista de la compra</button>
-        <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
         <button class="btn" onclick="showSection('recetas')">👨🍳 Recetas</button>
+        <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
+        <button class="btn" onclick="showSection('compras')">🛒 Lista de la compra</button>
       </div>
       <div class="user">
         <span style="font-size: 12px; font-weight: 500;">Administrador</span>
@@ -395,174 +580,354 @@ function getAdminPage() {
     </div>
     <div class="main">
       <div class="top">
-        <h1 style="font-size: 28px; font-weight: bold;">¡Hola, Administrador! 👋<br><small style="font-size: 14px; color: #6b7280; font-weight: normal;">Domingo, 1 de septiembre de 2025</small><br><small style="font-size: 12px; color: #9ca3af; font-weight: normal; font-style: italic;">"Tu mente es la semilla, tu vida es la cosecha. (Joe Dispenza)"</small></h1>
+        <h1 style="font-size: 28px; font-weight: bold;">¡Hola, Administrador! 👋</h1>
       </div>
       <div class="content">
         <div id="actividades" class="section active">
           <h2 class="title" style="background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Gestión de Actividades</h2>
           
-          <div style="margin-bottom: 24px;">
-            <button onclick="toggleForm()" style="background: #10b981;">➕ Crear Nueva Actividad</button>
-            <button onclick="showCalendar()" style="background: #6b7280; margin-left: 10px;">📅 Ver Calendario</button>
-          </div>
-          
-          <div id="activity-form" class="card hidden">
-            <h3>Nueva Actividad</h3>
+          <div class="card">
+            <h3>Crear Nueva Actividad</h3>
             <div class="form-group">
-              <label>Usuarios:</label><br>
-              <div class="checkbox-group">
-                <label><input type="checkbox" value="javier"> Javier</label>
-                <label><input type="checkbox" value="raquel"> Raquel</label>
-                <label><input type="checkbox" value="mario"> Mario</label>
-                <label><input type="checkbox" value="alba"> Alba</label>
-              </div>
+              <label>Usuario:</label>
+              <select id="activity-user">
+                <option value="javier">Javier</option>
+                <option value="raquel">Raquel</option>
+                <option value="mario">Mario</option>
+                <option value="alba">Alba</option>
+              </select>
             </div>
             <div class="form-group">
-              <label>Actividad:</label><br>
-              <input type="text" id="activity-title" placeholder="Ej: Gimnasio, Leer, Violín" style="width: 300px;">
+              <label>Actividad:</label>
+              <input type="text" id="activity-title" placeholder="Ej: Gimnasio, Leer, Violín">
             </div>
             <div class="form-group">
-              <label>Hora:</label><br>
+              <label>Hora:</label>
               <input type="time" id="activity-time">
             </div>
             <div class="form-group">
-              <label>Duración:</label><br>
-              <select id="activity-duration">
-                <option value="15">15 minutos</option>
-                <option value="30" selected>30 minutos</option>
-                <option value="45">45 minutos</option>
-                <option value="60">1 hora</option>
-                <option value="90">1.5 horas</option>
-                <option value="120">2 horas</option>
+              <label>Duración (minutos):</label>
+              <input type="number" id="activity-duration" value="30" min="1">
+            </div>
+            <div class="form-group">
+              <label>Repetir:</label>
+              <select id="activity-repeat">
+                <option value="none">No repetir</option>
+                <option value="daily">Todos los días</option>
+                <option value="custom">Días específicos</option>
               </select>
             </div>
-            <button onclick="saveActivity()">💾 Guardar Actividad</button>
-            <button onclick="toggleForm()" style="background: #6b7280;">Cancelar</button>
+            <div class="form-group" id="repeat-days" style="display: none;">
+              <label>Días de la semana:</label>
+              <div class="checkbox-group">
+                <label><input type="checkbox" value="1"> Lunes</label>
+                <label><input type="checkbox" value="2"> Martes</label>
+                <label><input type="checkbox" value="3"> Miércoles</label>
+                <label><input type="checkbox" value="4"> Jueves</label>
+                <label><input type="checkbox" value="5"> Viernes</label>
+                <label><input type="checkbox" value="6"> Sábado</label>
+                <label><input type="checkbox" value="0"> Domingo</label>
+              </div>
+            </div>
+            <button onclick="saveActivity()">💾 Crear Actividad</button>
           </div>
           
-          <div id="calendar-view" class="grid hidden">
+          <div class="grid" id="activities-overview">
             <div class="card">
               <h3>👨 Javier</h3>
-              <div id="javier-activities">Sin actividades programadas</div>
+              <div id="javier-activities">Cargando...</div>
             </div>
             <div class="card">
               <h3>👩 Raquel</h3>
-              <div id="raquel-activities">Sin actividades programadas</div>
+              <div id="raquel-activities">Cargando...</div>
             </div>
             <div class="card">
               <h3>👦 Mario</h3>
-              <div id="mario-activities">Sin actividades programadas</div>
+              <div id="mario-activities">Cargando...</div>
             </div>
             <div class="card">
               <h3>👧 Alba</h3>
-              <div id="alba-activities">Sin actividades programadas</div>
+              <div id="alba-activities">Cargando...</div>
             </div>
           </div>
         </div>
         
+        <div id="comidas" class="section">
+          <h2 class="title" style="background: linear-gradient(to right, #f59e0b, #d97706); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Planificación de Comidas</h2>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <button onclick="changeWeek(-1)">← Semana Anterior</button>
+            <h3 id="current-week">Semana del 1 al 7 de Septiembre 2025</h3>
+            <button onclick="changeWeek(1)">Semana Siguiente →</button>
+          </div>
+          
+          <table class="meal-table" id="admin-meal-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Lunes</th>
+                <th>Martes</th>
+                <th>Miércoles</th>
+                <th>Jueves</th>
+                <th>Viernes</th>
+                <th>Sábado</th>
+                <th>Domingo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="meal-label">Desayuno Alba y Mario</td>
+                <td onclick="editMeal('desayuno-alba-mario', 'lunes')"></td>
+                <td onclick="editMeal('desayuno-alba-mario', 'martes')"></td>
+                <td onclick="editMeal('desayuno-alba-mario', 'miercoles')"></td>
+                <td onclick="editMeal('desayuno-alba-mario', 'jueves')"></td>
+                <td onclick="editMeal('desayuno-alba-mario', 'viernes')"></td>
+                <td onclick="editMeal('desayuno-alba-mario', 'sabado')"></td>
+                <td onclick="editMeal('desayuno-alba-mario', 'domingo')"></td>
+              </tr>
+              <tr>
+                <td class="meal-label">Desayuno Raquel y Javier</td>
+                <td onclick="editMeal('desayuno-raquel-javier', 'lunes')"></td>
+                <td onclick="editMeal('desayuno-raquel-javier', 'martes')"></td>
+                <td onclick="editMeal('desayuno-raquel-javier', 'miercoles')"></td>
+                <td onclick="editMeal('desayuno-raquel-javier', 'jueves')"></td>
+                <td onclick="editMeal('desayuno-raquel-javier', 'viernes')"></td>
+                <td onclick="editMeal('desayuno-raquel-javier', 'sabado')"></td>
+                <td onclick="editMeal('desayuno-raquel-javier', 'domingo')"></td>
+              </tr>
+              <tr>
+                <td class="meal-label">Comida</td>
+                <td onclick="editMeal('comida', 'lunes')"></td>
+                <td onclick="editMeal('comida', 'martes')"></td>
+                <td onclick="editMeal('comida', 'miercoles')"></td>
+                <td onclick="editMeal('comida', 'jueves')"></td>
+                <td onclick="editMeal('comida', 'viernes')"></td>
+                <td onclick="editMeal('comida', 'sabado')"></td>
+                <td onclick="editMeal('comida', 'domingo')"></td>
+              </tr>
+              <tr>
+                <td class="meal-label">Cena</td>
+                <td onclick="editMeal('cena', 'lunes')"></td>
+                <td onclick="editMeal('cena', 'martes')"></td>
+                <td onclick="editMeal('cena', 'miercoles')"></td>
+                <td onclick="editMeal('cena', 'jueves')"></td>
+                <td onclick="editMeal('cena', 'viernes')"></td>
+                <td onclick="editMeal('cena', 'sabado')"></td>
+                <td onclick="editMeal('cena', 'domingo')"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
         <div id="recetas" class="section">
-          <h2 class="title" style="background: linear-gradient(to right, #dc2626, #ea580c); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Recetas</h2>
+          <h2 class="title" style="background: linear-gradient(to right, #dc2626, #ea580c); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Gestión de Recetas</h2>
+          
+          <div class="card">
+            <h3>Añadir Nueva Receta</h3>
+            <div class="form-group">
+              <label>Nombre:</label>
+              <input type="text" id="recipe-name" placeholder="Nombre de la receta">
+            </div>
+            <div class="form-group">
+              <label>Categoría:</label>
+              <select id="recipe-category">
+                <option value="comidas">Comidas</option>
+                <option value="cenas">Cenas</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Tiempo (horas):</label>
+              <input type="number" id="recipe-time" step="0.25" value="0.5">
+            </div>
+            <div class="form-group">
+              <label>Porciones:</label>
+              <input type="number" id="recipe-servings" value="4">
+            </div>
+            <div class="form-group">
+              <label>Ingredientes:</label>
+              <div id="ingredients-list">
+                <div style="display: flex; gap: 10px; margin: 5px 0;">
+                  <select id="ingredient-0">
+                    <option value="">Seleccionar ingrediente</option>
+                  </select>
+                  <input type="number" id="quantity-0" placeholder="Cantidad" min="1" value="1">
+                  <button onclick="addIngredient()" style="background: #059669;">+</button>
+                </div>
+              </div>
+            </div>
+            <button onclick="saveRecipe()">💾 Guardar Receta</button>
+          </div>
+          
+          <div style="margin-top: 20px;">
+            <button class="active" onclick="showRecipeCategory('comidas')">Comidas</button>
+            <button onclick="showRecipeCategory('cenas')">Cenas</button>
+          </div>
+          
           <div id="recipes-grid" class="grid"></div>
         </div>
         
         <div id="inventario" class="section">
-          <h2 class="title" style="background: linear-gradient(to right, #9333ea, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Inventario</h2>
+          <h2 class="title" style="background: linear-gradient(to right, #9333ea, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Gestión de Inventario</h2>
+          
+          <div class="card">
+            <h3>Añadir Nuevo Producto</h3>
+            <div class="form-group">
+              <label>Nombre:</label>
+              <input type="text" id="product-name" placeholder="Nombre del producto">
+            </div>
+            <div class="form-group">
+              <label>Categoría:</label>
+              <select id="product-category">
+                <option value="carne">Carne</option>
+                <option value="pescado">Pescado</option>
+                <option value="verdura">Verdura</option>
+                <option value="fruta">Fruta</option>
+                <option value="frutos secos">Frutos secos</option>
+                <option value="productos de limpieza/hogar">Productos de limpieza/hogar</option>
+                <option value="otros">Otros</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Se compra en:</label>
+              <select id="product-shop">
+                <option value="Carne internet">Carne internet</option>
+                <option value="Pescadería">Pescadería</option>
+                <option value="Del bancal a casa">Del bancal a casa</option>
+                <option value="Alcampo">Alcampo</option>
+                <option value="Internet">Internet</option>
+                <option value="Otros">Otros</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Medida:</label>
+              <select id="product-unit">
+                <option value="unidades">Unidades</option>
+                <option value="litros">Litros</option>
+                <option value="botes">Botes</option>
+                <option value="tarros">Tarros</option>
+                <option value="cartones">Cartones</option>
+                <option value="latas">Latas</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Cantidad inicial:</label>
+              <input type="number" id="product-quantity" value="0" min="0">
+            </div>
+            <button onclick="addProduct()">💾 Añadir Producto</button>
+          </div>
+          
           <div id="inventory-grid" class="grid"></div>
         </div>
         
-        <div id="comidas" class="section">
-          <h2 class="title" style="background: linear-gradient(to right, #f59e0b, #d97706); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Calendario de Comidas</h2>
-          <div class="card">
-            <p>Próximamente - Planificación semanal de comidas</p>
-          </div>
-        </div>
-        
         <div id="compras" class="section">
-          <h2 class="title" style="background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Lista de Compra</h2>
-          <div class="card">
-            <h3>Productos con stock bajo:</h3>
-            <div id="shopping-list">Cargando...</div>
-          </div>
-        </div>
-        
-        <div id="mensajes" class="section">
-          <h2 class="title" style="background: linear-gradient(to right, #8b5cf6, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Mensajes</h2>
-          <div class="card">
-            <h3>Chat Familiar</h3>
-            <div id="chat-messages" style="background:#f9fafb; padding:16px; border-radius:8px; margin:16px 0; height:200px; overflow-y:auto">
-              <p style="color:#6b7280">Cargando mensajes...</p>
-            </div>
-            <div style="display:flex; gap:8px">
-              <input type="text" id="message-input" placeholder="Escribe un mensaje..." style="flex:1; padding:8px; border:1px solid #ddd; border-radius:4px">
-              <button onclick="sendMessage()" style="padding:8px 16px;">Enviar</button>
-            </div>
-          </div>
+          <h2 class="title" style="background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Lista de la Compra</h2>
+          <div id="shopping-lists"></div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
+    let currentWeek = 1;
+    let currentRecipeCategory = 'comidas';
+    let ingredientCount = 1;
+    
     function loadData() {
       fetch('/api/data')
         .then(r => r.json())
         .then(data => {
-          // Cargar calendario de actividades
-          const today = new Date().toDateString();
-          const todayActivities = data.activities.filter(a => a.date === today);
-          
-          ['javier', 'raquel', 'mario', 'alba'].forEach(user => {
-            const userActivities = todayActivities.filter(a => a.users.includes(user));
-            const container = document.getElementById(user + '-activities');
-            container.innerHTML = userActivities.length > 0 
-              ? userActivities.map(a => '<div style="margin: 5px 0; padding: 8px; background: #f0f9ff; border-radius: 4px; border-left: 4px solid #0ea5e9;"><strong>' + a.title + '</strong><br>' + a.time + ' (' + a.duration + ' min)</div>').join('')
-              : 'Sin actividades programadas';
-          });
-          
-          // Cargar recetas
-          document.getElementById('recipes-grid').innerHTML = data.recipes.map(recipe => 
-            '<div class="card"><h3 style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">' + recipe.name + '</h3><p style="color: #6b7280; margin-bottom: 16px;">' + recipe.instructions + '</p><div style="display: flex; gap: 16px; font-size: 14px; color: #6b7280;"><span>⏱️ ' + recipe.preparationTime + ' min</span><span>👥 ' + recipe.servings + ' personas</span></div></div>'
-          ).join('');
-          
-          // Cargar inventario
-          document.getElementById('inventory-grid').innerHTML = data.inventory.map(item => {
-            const isLow = parseInt(item.currentQuantity) <= parseInt(item.minimumQuantity);
-            const color = parseInt(item.currentQuantity) === 0 ? '#dc2626' : isLow ? '#ea580c' : '#059669';
-            return '<div class="card"><h3 style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">' + item.name + '</h3><p style="font-size: 18px; font-weight: bold; color: ' + color + '; margin-bottom: 8px;">' + item.currentQuantity + ' ' + item.unit + '</p><p style="font-size: 14px; color: #6b7280;">Mínimo: ' + item.minimumQuantity + ' ' + item.unit + '</p><div style="margin-top: 12px;"><button onclick="changeInventory(\\''+item.id+'\\', -1)" style="background: #dc2626;">-</button><button onclick="changeInventory(\\''+item.id+'\\', 1)" style="background: #059669;">+</button></div></div>';
-          }).join('');
-          
-          // Lista de compra
-          const lowStock = data.inventory.filter(item => parseInt(item.currentQuantity) <= parseInt(item.minimumQuantity));
-          document.getElementById('shopping-list').innerHTML = lowStock.length === 0 
-            ? '<p style="color: #059669;">✅ Todo el inventario está bien abastecido</p>'
-            : lowStock.map(item => '<div style="padding: 8px; margin: 4px 0; background: #fef2f2; border-left: 4px solid #dc2626; border-radius: 4px;"><strong>' + item.name + '</strong> - Necesitas ' + item.minimumQuantity + ' ' + item.unit + '</div>').join('');
-          
-          // Mensajes
-          updateChat(data.messages);
+          loadActivitiesOverview(data.activities);
+          loadRecipes(data.recipes);
+          loadInventory(data.inventory);
+          loadShoppingList(data.inventory);
+          loadIngredientOptions(data.inventory);
         });
     }
     
-    function toggleForm() {
-      const form = document.getElementById('activity-form');
-      const calendar = document.getElementById('calendar-view');
-      form.classList.toggle('hidden');
-      calendar.classList.add('hidden');
+    function loadActivitiesOverview(activities) {
+      const today = new Date().toDateString();
+      ['javier', 'raquel', 'mario', 'alba'].forEach(user => {
+        const userActivities = activities.filter(a => a.user === user && a.date === today);
+        document.getElementById(user + '-activities').innerHTML = userActivities.length > 0 
+          ? userActivities.map(a => '<div style="margin: 5px 0; padding: 8px; background: ' + (a.completed ? '#f0fdf4' : '#f0f9ff') + '; border-radius: 4px;"><strong>' + a.title + '</strong><br>' + a.time + ' (' + a.duration + ' min) ' + (a.completed ? '✓' : '') + '</div>').join('')
+          : 'Sin actividades para hoy';
+      });
     }
     
-    function showCalendar() {
-      const form = document.getElementById('activity-form');
-      const calendar = document.getElementById('calendar-view');
-      form.classList.add('hidden');
-      calendar.classList.toggle('hidden');
+    function loadRecipes(recipes) {
+      const filteredRecipes = recipes.filter(r => r.category === currentRecipeCategory);
+      document.getElementById('recipes-grid').innerHTML = filteredRecipes.map(recipe => 
+        '<div class="card">' +
+        '<h3>' + recipe.name + '</h3>' +
+        '<p><strong>Ingredientes:</strong> ' + recipe.ingredients.map(ing => Object.keys(ing)[0] + ' (' + Object.values(ing)[0] + ')').join(', ') + '</p>' +
+        '<p><strong>Tiempo:</strong> ' + recipe.time + ' horas</p>' +
+        '<p><strong>Porciones:</strong> ' + recipe.servings + '</p>' +
+        '</div>'
+      ).join('');
+    }
+    
+    function loadInventory(inventory) {
+      document.getElementById('inventory-grid').innerHTML = inventory.map(item => 
+        '<div class="card">' +
+        '<h3>' + item.name + '</h3>' +
+        '<p><strong>Categoría:</strong> ' + item.category + '</p>' +
+        '<p><strong>Se compra en:</strong> ' + item.shop + '</p>' +
+        '<p style="font-size: 18px; font-weight: bold;">' + item.quantity + ' ' + item.unit + '</p>' +
+        '<div style="margin-top: 12px;">' +
+        '<button onclick="changeInventory(\\''+item.id+'\\', -1)" style="background: #dc2626;">-</button>' +
+        '<button onclick="changeInventory(\\''+item.id+'\\', 1)" style="background: #059669;">+</button>' +
+        '</div></div>'
+      ).join('');
+    }
+    
+    function loadShoppingList(inventory) {
+      const shops = ['Carne internet', 'Pescadería', 'Del bancal a casa', 'Alcampo', 'Internet', 'Otros'];
+      const outOfStock = inventory.filter(item => item.quantity === 0);
+      const lowStock = inventory.filter(item => item.quantity === 1);
+      
+      let html = '';
+      shops.forEach(shop => {
+        const shopItems = outOfStock.filter(item => item.shop === shop);
+        const shopSuggestions = lowStock.filter(item => item.shop === shop);
+        
+        if (shopItems.length > 0 || shopSuggestions.length > 0) {
+          html += '<div class="card"><h3>' + shop + '</h3>';
+          
+          if (shopItems.length > 0) {
+            html += '<h4>Necesarios:</h4>';
+            shopItems.forEach(item => {
+              html += '<div style="padding: 4px; background: #fef2f2; margin: 2px 0; border-radius: 4px;">' + item.name + '</div>';
+            });
+          }
+          
+          if (shopSuggestions.length > 0) {
+            html += '<h4>Sugerencias:</h4>';
+            shopSuggestions.forEach(item => {
+              html += '<div style="padding: 4px; background: #fef3c7; margin: 2px 0; border-radius: 4px;">' + item.name + '</div>';
+            });
+          }
+          
+          html += '</div>';
+        }
+      });
+      
+      document.getElementById('shopping-lists').innerHTML = html || '<div class="card"><p>No hay productos en la lista de compra</p></div>';
+    }
+    
+    function loadIngredientOptions(inventory) {
+      const options = inventory.map(item => '<option value="' + item.name + '">' + item.name + '</option>').join('');
+      document.getElementById('ingredient-0').innerHTML = '<option value="">Seleccionar ingrediente</option>' + options;
     }
     
     function saveActivity() {
-      const users = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+      const user = document.getElementById('activity-user').value;
       const title = document.getElementById('activity-title').value.trim();
       const time = document.getElementById('activity-time').value;
       const duration = document.getElementById('activity-duration').value;
+      const repeat = document.getElementById('activity-repeat').value;
+      const repeatDays = repeat === 'custom' ? Array.from(document.querySelectorAll('#repeat-days input:checked')).map(cb => cb.value) : [];
       
-      if (users.length === 0 || !title || !time) {
+      if (!title || !time) {
         alert('❌ Completa todos los campos');
         return;
       }
@@ -570,51 +935,126 @@ function getAdminPage() {
       fetch('/api/activity', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({users, title, time, duration})
+        body: JSON.stringify({user, title, time, duration, repeat, repeatDays, date: new Date().toDateString()})
       }).then(() => {
-        alert('✅ Actividad "' + title + '" creada para: ' + users.join(', '));
+        alert('✅ Actividad creada para ' + user);
         document.getElementById('activity-title').value = '';
         document.getElementById('activity-time').value = '';
         document.getElementById('activity-duration').value = '30';
-        document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-        toggleForm();
-        showCalendar();
+        document.getElementById('activity-repeat').value = 'none';
         loadData();
       });
+    }
+    
+    function addProduct() {
+      const name = document.getElementById('product-name').value.trim();
+      const category = document.getElementById('product-category').value;
+      const shop = document.getElementById('product-shop').value;
+      const unit = document.getElementById('product-unit').value;
+      const quantity = parseInt(document.getElementById('product-quantity').value);
+      
+      if (!name) {
+        alert('❌ Introduce el nombre del producto');
+        return;
+      }
+      
+      fetch('/api/inventory', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'add', name, category, shop, unit, quantity})
+      }).then(() => {
+        alert('✅ Producto añadido');
+        document.getElementById('product-name').value = '';
+        document.getElementById('product-quantity').value = '0';
+        loadData();
+      });
+    }
+    
+    function saveRecipe() {
+      const name = document.getElementById('recipe-name').value.trim();
+      const category = document.getElementById('recipe-category').value;
+      const time = parseFloat(document.getElementById('recipe-time').value);
+      const servings = parseInt(document.getElementById('recipe-servings').value);
+      
+      const ingredients = [];
+      for (let i = 0; i < ingredientCount; i++) {
+        const ingredientSelect = document.getElementById('ingredient-' + i);
+        const quantityInput = document.getElementById('quantity-' + i);
+        if (ingredientSelect && quantityInput && ingredientSelect.value && quantityInput.value) {
+          const ingredient = {};
+          ingredient[ingredientSelect.value] = parseInt(quantityInput.value);
+          ingredients.push(ingredient);
+        }
+      }
+      
+      if (!name || ingredients.length === 0) {
+        alert('❌ Completa todos los campos');
+        return;
+      }
+      
+      fetch('/api/recipe', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name, category, ingredients, time, servings})
+      }).then(() => {
+        alert('✅ Receta guardada');
+        document.getElementById('recipe-name').value = '';
+        document.getElementById('recipe-time').value = '0.5';
+        document.getElementById('recipe-servings').value = '4';
+        loadData();
+      });
+    }
+    
+    function addIngredient() {
+      const container = document.getElementById('ingredients-list');
+      const newDiv = document.createElement('div');
+      newDiv.style.cssText = 'display: flex; gap: 10px; margin: 5px 0;';
+      newDiv.innerHTML = '<select id="ingredient-' + ingredientCount + '"><option value="">Seleccionar ingrediente</option></select><input type="number" id="quantity-' + ingredientCount + '" placeholder="Cantidad" min="1" value="1"><button onclick="removeIngredient(this)" style="background: #dc2626;">-</button>';
+      container.appendChild(newDiv);
+      
+      // Cargar opciones
+      fetch('/api/data').then(r => r.json()).then(data => {
+        const options = data.inventory.map(item => '<option value="' + item.name + '">' + item.name + '</option>').join('');
+        document.getElementById('ingredient-' + ingredientCount).innerHTML = '<option value="">Seleccionar ingrediente</option>' + options;
+      });
+      
+      ingredientCount++;
+    }
+    
+    function removeIngredient(button) {
+      button.parentElement.remove();
     }
     
     function changeInventory(id, change) {
       fetch('/api/inventory', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({id, change})
+        body: JSON.stringify({action: 'update', id, change})
       }).then(() => loadData());
     }
     
-    function sendMessage() {
-      const input = document.getElementById('message-input');
-      const message = input.value.trim();
-      if (message) {
-        fetch('/api/message', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({text: message, user: 'Administrador'})
-        }).then(() => {
-          input.value = '';
-          loadData();
-        });
-      }
+    function changeWeek(direction) {
+      currentWeek += direction;
+      document.getElementById('current-week').textContent = 'Semana ' + currentWeek + ' de Septiembre 2025';
     }
     
-    function updateChat(messages) {
-      const chatDiv = document.getElementById('chat-messages');
-      if (messages.length === 0) {
-        chatDiv.innerHTML = '<p style="color:#6b7280">No hay mensajes aún</p>';
-      } else {
-        chatDiv.innerHTML = messages.map(msg => 
-          '<div style="margin-bottom:12px; padding:8px; background:white; border-radius:8px"><div style="font-weight:500; color:#374151">' + msg.user + ' <span style="font-size:12px; color:#6b7280; font-weight:normal">' + msg.time + '</span></div><div style="margin-top:4px">' + msg.text + '</div></div>'
-        ).join('');
-        chatDiv.scrollTop = chatDiv.scrollHeight;
+    function showRecipeCategory(category) {
+      currentRecipeCategory = category;
+      document.querySelectorAll('#recetas button').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      loadData();
+    }
+    
+    function editMeal(meal, day) {
+      const content = prompt('Introduce el contenido de la comida (o nombre de receta):');
+      if (content) {
+        fetch('/api/meal-plan', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({week: currentWeek, day, meal, content})
+        }).then(() => {
+          event.target.innerHTML = content;
+        });
       }
     }
     
@@ -625,8 +1065,13 @@ function getAdminPage() {
       event.target.classList.add('active');
     }
     
+    // Mostrar/ocultar días de repetición
+    document.getElementById('activity-repeat').addEventListener('change', function() {
+      document.getElementById('repeat-days').style.display = this.value === 'custom' ? 'block' : 'none';
+    });
+    
     loadData();
-    setInterval(loadData, 5000);
+    setInterval(loadData, 10000);
   </script>
 </body>
 </html>`;
