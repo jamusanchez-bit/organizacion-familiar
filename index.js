@@ -69,6 +69,17 @@ const server = http.createServer((req, res) => {
               <label>Hora:</label><br>
               <input type="time" id="activity-time">
             </div><br>
+            <div>
+              <label>Duracion:</label><br>
+              <select id="activity-duration">
+                <option value="15">15 minutos</option>
+                <option value="30" selected>30 minutos</option>
+                <option value="45">45 minutos</option>
+                <option value="60">1 hora</option>
+                <option value="90">1.5 horas</option>
+                <option value="120">2 horas</option>
+              </select>
+            </div><br>
             <button onclick="saveActivity()">Guardar</button>
             <button onclick="hideForm()">Cancelar</button>
           </div>
@@ -171,6 +182,7 @@ const server = http.createServer((req, res) => {
       const users = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
       const title = document.getElementById('activity-title').value;
       const time = document.getElementById('activity-time').value;
+      const duration = document.getElementById('activity-duration').value;
       
       if (users.length === 0 || !title || !time) {
         alert('Completa todos los campos');
@@ -180,11 +192,12 @@ const server = http.createServer((req, res) => {
       users.forEach(user => {
         const div = document.getElementById(user + '-activities');
         if (div.textContent === 'Sin actividades') div.innerHTML = '';
-        div.innerHTML += '<div style="margin:5px 0; padding:8px; background:#f0f9ff; border-radius:4px"><strong>' + title + '</strong><br>' + time + '</div>';
+        div.innerHTML += '<div style="margin:5px 0; padding:8px; background:#f0f9ff; border-radius:4px"><strong>' + title + '</strong><br>' + time + ' (' + duration + ' min)</div>';
       });
       
       document.getElementById('activity-title').value = '';
       document.getElementById('activity-time').value = '';
+      document.getElementById('activity-duration').value = '30';
       document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
       
       alert('Actividad creada para: ' + users.join(', '));
