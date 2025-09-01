@@ -52,36 +52,12 @@ const server = http.createServer((req, res) => {
         
         <div id="recetas" class="section">
           <h2>Recetas</h2>
-          <div class="grid">
-            <div class="card">
-              <h3>Lubina sobre cama de verduras</h3>
-              <p>Lleva vino blanco, tomillo, aceite, sal y un poco de agua</p>
-            </div>
-            <div class="card">
-              <h3>Pollo con pimientos</h3>
-              <p>Lleva ajo, tomillo, comino, pimienta, vinagre, aceite y sal</p>
-            </div>
-            <div class="card">
-              <h3>Salmon en papillote</h3>
-              <p>Lleva ajo en polvo, aceite y sal</p>
-            </div>
-          </div>
+          <div class="grid" id="recipes-list"></div>
         </div>
         
         <div id="inventario" class="section">
           <h2>Inventario</h2>
-          <div class="grid">
-            <div class="card">
-              <h3>Jamon</h3>
-              <p>0 paquetes</p>
-              <button onclick="alert('Funciona')">+</button>
-            </div>
-            <div class="card">
-              <h3>Salmon fresco</h3>
-              <p>0 unidades</p>
-              <button onclick="alert('Funciona')">+</button>
-            </div>
-          </div>
+          <div class="grid" id="inventory-list"></div>
         </div>
         
         <div id="mensajes" class="section">
@@ -97,6 +73,46 @@ const server = http.createServer((req, res) => {
   </div>
 
   <script>
+    const recipes = [
+      {name: 'Lubina sobre cama de verduras', desc: 'Vino blanco, tomillo, aceite, sal'},
+      {name: 'Pollo con pimientos', desc: 'Ajo, tomillo, comino, pimienta, vinagre'},
+      {name: 'Salmon en papillote', desc: 'Ajo en polvo, aceite y sal'},
+      {name: 'Merluza con pimientos', desc: 'Aceite, sal, eneldo y vino blanco'},
+      {name: 'Dorada sobre verduras', desc: 'Vino blanco, tomillo, aceite, sal'}
+    ];
+    
+    const inventory = [
+      {name: 'Jamon', qty: 0, unit: 'paquetes'},
+      {name: 'Salmon fresco', qty: 0, unit: 'filetes'},
+      {name: 'Doradas', qty: 0, unit: 'unidades'},
+      {name: 'Lubina', qty: 0, unit: 'unidades'},
+      {name: 'Ajo', qty: 0, unit: 'unidades'},
+      {name: 'Pimientos', qty: 0, unit: 'unidades'},
+      {name: 'Sal', qty: 0, unit: 'paquetes'}
+    ];
+    
+    function loadData() {
+      document.getElementById('recipes-list').innerHTML = recipes.map(r => 
+        '<div class="card"><h3>' + r.name + '</h3><p>' + r.desc + '</p></div>'
+      ).join('');
+      
+      document.getElementById('inventory-list').innerHTML = inventory.map(item => 
+        '<div class="card"><h3>' + item.name + '</h3><p>' + item.qty + ' ' + item.unit + '</p>' +
+        '<button onclick="changeQty(\'' + item.name + '\', 1)">+</button> ' +
+        '<button onclick="changeQty(\'' + item.name + '\', -1)">-</button></div>'
+      ).join('');
+    }
+    
+    function changeQty(name, change) {
+      const item = inventory.find(i => i.name === name);
+      if (item) {
+        item.qty = Math.max(0, item.qty + change);
+        loadData();
+      }
+    }
+    
+    loadData();
+    
     function showSection(section) {
       document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
       document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
