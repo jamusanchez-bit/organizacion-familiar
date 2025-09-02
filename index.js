@@ -210,6 +210,31 @@ const server = http.createServer((req, res) => {
     return;
   }
   
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/delete-message') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = JSON.parse(body);
+      
+      if (data.type === 'forum') {
+        const index = forumMessages.findIndex(m => m.id === data.messageId && m.user === data.user);
+        if (index !== -1) forumMessages.splice(index, 1);
+      } else if (data.type === 'admin') {
+        const index = adminSuggestions.findIndex(m => m.id === data.messageId && m.user === data.user);
+        if (index !== -1) adminSuggestions.splice(index, 1);
+      } else if (data.type === 'private') {
+        Object.keys(privateMessages).forEach(key => {
+          const index = privateMessages[key].findIndex(m => m.id === data.messageId && m.user === data.user);
+          if (index !== -1) privateMessages[key].splice(index, 1);
+        });
+      }
+      
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({success: true}));
+    });
+    return;
+  }
+  
   if (parsedUrl.pathname === '/api/data') {
     res.writeHead(200, {'Content-Type': 'application/json'});
     res.end(JSON.stringify({
@@ -533,22 +558,58 @@ function getUserPage(username) {
       // Cargar plan de comidas en la tabla
     }
     
+    let selectedPrivateChat = null;
+    
     function loadMessagesData(data) {
+      // Chat de grupo
       document.getElementById('forum-messages').innerHTML = data.forumMessages.map(msg => 
-        '<div style="padding: 8px; margin: 5px 0; background: #f0f9ff; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
+        '<div style="margin: 5px 0; padding: 8px 12px; border-radius: 12px; max-width: 70%; word-wrap: break-word; ' + (msg.user === username ? 'background: #dcf8c6; margin-left: auto; text-align: right;' : 'background: #f1f1f1; margin-right: auto;') + '">' +
+        '<div><strong>' + msg.user + '</strong></div>' +
+        '<div>' + msg.text + '</div>' +
+        '<div style="font-size: 11px; color: #666; margin-top: 2px;">' + msg.time + (msg.user === username ? '<span style="font-size: 12px; color: #dc2626; cursor: pointer; margin-left: 10px;" onclick="deleteMessage(\'forum\', ' + msg.id + ')"> × Eliminar</span>' : '') + '</div>' +
+        '</div>'
       ).join('') || '<p style="color: #6b7280;">No hay mensajes aún</p>';
       
+      // Sugerencias admin
       document.getElementById('admin-messages').innerHTML = data.adminSuggestions.map(msg => 
-        '<div style="padding: 8px; margin: 5px 0; background: #fef3c7; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
+        '<div style="margin: 5px 0; padding: 8px 12px; border-radius: 12px; max-width: 70%; word-wrap: break-word; ' + (msg.user === username ? 'background: #dcf8c6; margin-left: auto; text-align: right;' : 'background: #f1f1f1; margin-right: auto;') + '">' +
+        '<div><strong>' + msg.user + '</strong></div>' +
+        '<div>' + msg.text + '</div>' +
+        '<div style="font-size: 11px; color: #666; margin-top: 2px;">' + msg.time + (msg.user === username ? '<span style="font-size: 12px; color: #dc2626; cursor: pointer; margin-left: 10px;" onclick="deleteMessage(\'admin\', ' + msg.id + ')"> × Eliminar</span>' : '') + '</div>' +
+        '</div>'
       ).join('') || '<p style="color: #6b7280;">No hay sugerencias aún</p>';
       
-      const selectedUser = document.getElementById('private-to').value;
-      if (selectedUser) {
-        const key = [username, selectedUser].sort().join('-');
+      // Chat privado seleccionado
+      if (selectedPrivateChat) {
+        const key = [username, selectedPrivateChat].sort().join('-');
         const privateMessages = data.privateMessages[key] || [];
         document.getElementById('private-messages').innerHTML = privateMessages.map(msg => 
-          '<div style="padding: 8px; margin: 5px 0; background: ' + (msg.user === username ? '#e0f2fe' : '#f0fdf4') + '; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
-        ).join('') || '<p style="color: #6b7280;">No hay mensajes privados aún</p>';
+          '<div style="margin: 5px 0; padding: 8px 12px; border-radius: 12px; max-width: 70%; word-wrap: break-word; ' + (msg.user === username ? 'background: #dcf8c6; margin-left: auto; text-align: right;' : 'background: #f1f1f1; margin-right: auto;') + '">' +
+          '<div><strong>' + msg.user + '</strong></div>' +
+          '<div>' + msg.text + '</div>' +
+          '<div style="font-size: 11px; color: #666; margin-top: 2px;">' + msg.time + (msg.user === username ? '<span style="font-size: 12px; color: #dc2626; cursor: pointer; margin-left: 10px;" onclick="deleteMessage(\'private\', ' + msg.id + ')"> × Eliminar</span>' : '') + '</div>' +
+          '</div>'
+        ).join('') || '<p style="color: #6b7280;">No hay mensajes aún</p>';
+      }
+    }
+    
+    function selectPrivateChat(user) {
+      selectedPrivateChat = user;
+      document.querySelectorAll('.chat-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('chat-' + user).classList.add('active');
+      document.getElementById('private-input').disabled = false;
+      document.getElementById('private-input').placeholder = 'Escribe a ' + user + '...';
+      document.getElementById('private-send-btn').disabled = false;
+      loadData();
+    }
+    
+    function deleteMessage(type, messageId) {
+      if (confirm('¿Eliminar mensaje?')) {
+        fetch('/api/delete-message', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({type, messageId, user: username})
+        }).then(() => loadData());
       }
     }
     
@@ -563,9 +624,9 @@ function getUserPage(username) {
         document.getElementById('admin-input').value = '';
       } else if (type === 'private') {
         text = document.getElementById('private-input').value.trim();
-        to = document.getElementById('private-to').value;
+        to = selectedPrivateChat;
         if (!to) {
-          alert('Selecciona un destinatario');
+          alert('Selecciona un chat');
           return;
         }
         document.getElementById('private-input').value = '';
@@ -689,6 +750,10 @@ function getAdminPage() {
       </div>
       <div class="nav">
         <button class="btn active" onclick="showSection('actividades')">📅 Actividades</button>
+        <button class="btn" onclick="showSection('comidas')">🍽️ Comidas</button>
+        <button class="btn" onclick="showSection('recetas')">👨🍳 Recetas</button>
+        <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
+        <button class="btn" onclick="showSection('compras')">🛒 Lista de la compra</button>
         <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
       </div>
       <div class="user">
@@ -724,8 +789,8 @@ function getAdminPage() {
           <h2 class="title">💬 Mensajes</h2>
           
           <div class="card">
-            <h3>Esta semana quiero que hablemos de:</h3>
-            <div id="forum-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+            <h3>Chat de grupo</h3>
+            <div id="forum-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0; border: 1px solid #e5e7eb; padding: 10px; border-radius: 8px;"></div>
             <div style="display: flex; gap: 10px;">
               <input type="text" id="forum-input" placeholder="Escribe tu mensaje..." style="flex: 1;">
               <button onclick="sendMessage('forum')">Enviar</button>
@@ -733,23 +798,26 @@ function getAdminPage() {
           </div>
           
           <div class="card">
-            <h3>Sugerencias para el administrador</h3>
-            <div id="admin-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+            <h3>Chats privados</h3>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+              <button onclick="selectPrivateChat('javier')" id="chat-javier" class="chat-btn">Javier</button>
+              <button onclick="selectPrivateChat('raquel')" id="chat-raquel" class="chat-btn">Raquel</button>
+              <button onclick="selectPrivateChat('mario')" id="chat-mario" class="chat-btn">Mario</button>
+              <button onclick="selectPrivateChat('alba')" id="chat-alba" class="chat-btn">Alba</button>
+            </div>
+            <div id="private-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0; border: 1px solid #e5e7eb; padding: 10px; border-radius: 8px;"></div>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" id="private-input" placeholder="Selecciona un chat..." style="flex: 1;" disabled>
+              <button onclick="sendMessage('private')" disabled id="private-send-btn">Enviar</button>
+            </div>
           </div>
           
           <div class="card">
-            <h3>Mensaje privado a:</h3>
-            <select id="private-to" style="margin-bottom: 10px;">
-              <option value="">Seleccionar destinatario</option>
-              <option value="javier">Javier</option>
-              <option value="raquel">Raquel</option>
-              <option value="mario">Mario</option>
-              <option value="alba">Alba</option>
-            </select>
-            <div id="private-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+            <h3>Sugerencias para el administrador</h3>
+            <div id="admin-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0; border: 1px solid #e5e7eb; padding: 10px; border-radius: 8px;"></div>
             <div style="display: flex; gap: 10px;">
-              <input type="text" id="private-input" placeholder="Escribe tu mensaje privado..." style="flex: 1;">
-              <button onclick="sendMessage('private')">Enviar</button>
+              <input type="text" id="admin-input" placeholder="Escribe tu sugerencia..." style="flex: 1;">
+              <button onclick="sendMessage('admin')">Enviar</button>
             </div>
           </div>
         </div>
