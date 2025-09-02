@@ -194,7 +194,8 @@ function getUserPage(username) {
   <div class="container">
     <div class="sidebar">
       <h2>🏠 Organización</h2>
-      <button class="btn active" onclick="showSection('actividades')">📅 Actividades</button>
+      <button class="btn active" onclick="showSection('inicio')">🏠 Inicio</button>
+      <button class="btn" onclick="showSection('actividades')">📅 Actividades</button>
       <button class="btn" onclick="showSection('comidas')">🍽️ Comidas</button>
       <button class="btn" onclick="showSection('recetas')">👨🍳 Recetas</button>
       <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
@@ -206,7 +207,25 @@ function getUserPage(username) {
     </div>
     
     <div class="main">
-      <div id="actividades" class="section active">
+      <div id="inicio" class="section active">
+        <h1>Inicio</h1>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <h2 id="current-date" style="color: #666; font-size: 24px; margin-bottom: 20px;"></h2>
+          <div class="quote" style="max-width: 800px; margin: 0 auto;">
+            <h3 id="daily-quote-text" style="font-size: 20px; line-height: 1.6;"></h3>
+          </div>
+        </div>
+        
+        <div class="card">
+          <h3>Resumen del Día</h3>
+          <div id="daily-summary">
+            <p>Bienvenido a tu organización familiar</p>
+          </div>
+        </div>
+      </div>
+      
+      <div id="actividades" class="section">
         <div class="quote">
           <h3>"Cuando cambias la forma en que miras las cosas, las cosas que miras cambian" - Wayne Dyer</h3>
         </div>
