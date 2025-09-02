@@ -659,3 +659,50 @@ function getUserPage(username) {
 </body>
 </html>`;
 }
+
+function getAdminPage() {
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <title>Administrador - Organización Familiar</title>
+  <style>
+    * { font-family: Verdana, Geneva, sans-serif; margin: 0; padding: 0; }
+    body { background: #f9fafb; }
+    .container { display: flex; min-height: 100vh; }
+    .sidebar { width: 256px; background: #f9fafb; border-right: 1px solid #e5e7eb; position: fixed; height: 100vh; z-index: 10; }
+    .main { flex: 1; margin-left: 256px; }
+    .content { padding: 32px; }
+    .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <div style="padding: 20px;">
+        <h3>Admin Panel</h3>
+      </div>
+    </div>
+    <div class="main">
+      <div class="content">
+        <div class="card">
+          <h2>Panel de Administrador</h2>
+          <p>Funcionalidades de administración</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`🚀 Servidor iniciado en puerto ${PORT}`);
+  console.log(`📱 App disponible en: http://localhost:${PORT}`);
+  console.log(`🔗 Enlaces de usuarios:`);
+  console.log(`   Javier: /javier/abc123xyz789def456`);
+  console.log(`   Raquel: /raquel/uvw012rst345ghi678`);
+  console.log(`   Mario: /mario/jkl901mno234pqr567`);
+  console.log(`   Alba: /alba/stu890vwx123yzb456`);
+  console.log(`   Admin: /admin/cde789fgh012ijl345`);
+});
