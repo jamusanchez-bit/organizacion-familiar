@@ -123,6 +123,63 @@ const server = http.createServer((req, res) => {
     return;
   }
   
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/recipe') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = JSON.parse(body);
+      recipes.push({
+        id: Date.now().toString(),
+        name: data.name,
+        category: data.category,
+        ingredients: data.ingredients,
+        time: data.time,
+        servings: data.servings || 4
+      });
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({success: true}));
+    });
+    return;
+  }
+  
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/meal-plan') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = JSON.parse(body);
+      const key = `${data.week}-${data.day}-${data.meal}`;
+      mealPlan[key] = data.content;
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({success: true}));
+    });
+    return;
+  }
+  
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/complete-meal') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = JSON.parse(body);
+      // Si es una receta, descontar ingredientes
+      if (data.recipeId) {
+        const recipe = recipes.find(r => r.id === data.recipeId);
+        if (recipe) {
+          recipe.ingredients.forEach(ing => {
+            const ingredientName = Object.keys(ing)[0];
+            const quantity = ing[ingredientName];
+            const inventoryItem = inventory.find(i => i.name === ingredientName);
+            if (inventoryItem) {
+              inventoryItem.quantity = Math.max(0, inventoryItem.quantity - quantity);
+            }
+          });
+        }
+      }
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({success: true}));
+    });
+    return;
+  }
+  
   if (req.method === 'POST' && parsedUrl.pathname === '/api/message') {
     let body = '';
     req.on('data', chunk => body += chunk);
@@ -195,8 +252,20 @@ function getUserPage(username) {
     .title { font-size: 24px; font-weight: bold; margin-bottom: 24px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
     .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    .user { position: absolute; bottom: 0; left: 0; right: 0; padding: 12px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
     .section { display: none; }
     .section.active { display: block; }
+    .activity-item { background: #f0f9ff; padding: 12px; margin: 8px 0; border-radius: 8px; border-left: 4px solid #0ea5e9; display: flex; justify-content: space-between; align-items: center; }
+    .activity-item.completed { background: #f0fdf4; border-left-color: #22c55e; }
+    .calendar-view { display: flex; gap: 10px; margin: 20px 0; }
+    .calendar-view button { padding: 8px 16px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 4px; }
+    .calendar-view button.active { background: #10b981; color: white; }
+    .meal-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    .meal-table th, .meal-table td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+    .meal-table th { background: #f9fafb; font-weight: bold; }
+    .meal-table td { min-height: 60px; vertical-align: top; cursor: pointer; }
+    .meal-table td:hover { background: #f0f9ff; }
+    .meal-table .meal-label { background: #e5e7eb; font-weight: bold; text-align: left; }
     input, button, select { padding: 8px 12px; margin: 4px; border: 1px solid #ddd; border-radius: 4px; }
     button { background: #10b981; color: white; border: none; cursor: pointer; }
     button:hover { background: #059669; }
@@ -210,37 +279,160 @@ function getUserPage(username) {
       </div>
       <div class="nav">
         <button class="btn active" onclick="showSection('actividades')">📅 Actividades</button>
-        <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
+        <button class="btn" onclick="showSection('comidas')">🍽️ Comidas</button>
+        <button class="btn" onclick="showSection('recetas')">👨🍳 Recetas</button>
         <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
+        <button class="btn" onclick="showSection('compras')">🛒 Lista de la compra</button>
+        <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
+      </div>
+      <div class="user">
+        <span style="font-size: 12px; font-weight: 500;">${user.name}</span>
+        <span>👤</span>
       </div>
     </div>
     <div class="main">
       <div class="top">
-        <h1>¡Hola, ${user.name}! 👋</h1>
+        <h1 style="font-size: 28px; font-weight: bold;">¡Hola, ${user.name}! 👋</h1>
       </div>
       <div class="content">
         <div id="actividades" class="section active">
-          <h2 class="title">Mis Actividades</h2>
+          <h2 class="title" style="background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Mis Actividades</h2>
+          
+          <div class="calendar-view">
+            <button class="active" onclick="setView('daily')">Vista Diaria</button>
+            <button onclick="setView('weekly')">Vista Semanal</button>
+          </div>
+          
           <div class="card">
+            <h3>Actividades de Hoy</h3>
             <div id="my-activities">Cargando...</div>
           </div>
         </div>
         
+        <div id="comidas" class="section">
+          <h2 class="title" style="background: linear-gradient(to right, #f59e0b, #d97706); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Planificación de Comidas</h2>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <button onclick="changeWeek(-1)">← Semana Anterior</button>
+            <h3 id="current-week">Semana del 1 al 7 de Septiembre 2025</h3>
+            <button onclick="changeWeek(1)">Semana Siguiente →</button>
+          </div>
+          
+          <table class="meal-table" id="meal-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Lunes</th>
+                <th>Martes</th>
+                <th>Miércoles</th>
+                <th>Jueves</th>
+                <th>Viernes</th>
+                <th>Sábado</th>
+                <th>Domingo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="meal-label">Desayuno Alba y Mario</td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'lunes')"></td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'martes')"></td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'miercoles')"></td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'jueves')"></td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'viernes')"></td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'sabado')"></td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'domingo')"></td>
+              </tr>
+              <tr>
+                <td class="meal-label">Desayuno Raquel y Javier</td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'lunes')"></td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'martes')"></td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'miercoles')"></td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'jueves')"></td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'viernes')"></td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'sabado')"></td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'domingo')"></td>
+              </tr>
+              <tr>
+                <td class="meal-label">Comida</td>
+                <td onclick="markMealDone('comida', 'lunes')"></td>
+                <td onclick="markMealDone('comida', 'martes')"></td>
+                <td onclick="markMealDone('comida', 'miercoles')"></td>
+                <td onclick="markMealDone('comida', 'jueves')"></td>
+                <td onclick="markMealDone('comida', 'viernes')"></td>
+                <td onclick="markMealDone('comida', 'sabado')"></td>
+                <td onclick="markMealDone('comida', 'domingo')"></td>
+              </tr>
+              <tr>
+                <td class="meal-label">Cena</td>
+                <td onclick="markMealDone('cena', 'lunes')"></td>
+                <td onclick="markMealDone('cena', 'martes')"></td>
+                <td onclick="markMealDone('cena', 'miercoles')"></td>
+                <td onclick="markMealDone('cena', 'jueves')"></td>
+                <td onclick="markMealDone('cena', 'viernes')"></td>
+                <td onclick="markMealDone('cena', 'sabado')"></td>
+                <td onclick="markMealDone('cena', 'domingo')"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div id="recetas" class="section">
+          <h2 class="title" style="background: linear-gradient(to right, #dc2626, #ea580c); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Recetas</h2>
+          
+          <div style="margin-bottom: 20px;">
+            <button class="active" onclick="showRecipeCategory('comidas')">Comidas</button>
+            <button onclick="showRecipeCategory('cenas')">Cenas</button>
+          </div>
+          
+          <div id="recipes-grid" class="grid"></div>
+        </div>
+        
+        <div id="inventario" class="section">
+          <h2 class="title" style="background: linear-gradient(to right, #9333ea, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Inventario</h2>
+          <div id="inventory-grid" class="grid"></div>
+        </div>
+        
+        <div id="compras" class="section">
+          <h2 class="title" style="background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Lista de la Compra</h2>
+          <div id="shopping-lists"></div>
+        </div>
+        
         <div id="mensajes" class="section">
-          <h2 class="title">Mensajes</h2>
+          <h2 class="title" style="background: linear-gradient(to right, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Mensajes</h2>
+          
           <div class="card">
-            <h3>Chat de grupo</h3>
-            <div id="forum-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0; border: 1px solid #e5e7eb; padding: 10px; border-radius: 8px;"></div>
+            <h3>Esta semana quiero que hablemos de:</h3>
+            <div id="forum-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
             <div style="display: flex; gap: 10px;">
               <input type="text" id="forum-input" placeholder="Escribe tu mensaje..." style="flex: 1;">
               <button onclick="sendMessage('forum')">Enviar</button>
             </div>
           </div>
-        </div>
-        
-        <div id="inventario" class="section">
-          <h2 class="title">Inventario</h2>
-          <div id="inventory-grid" class="grid"></div>
+          
+          <div class="card">
+            <h3>Sugerencias para el administrador</h3>
+            <div id="admin-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" id="admin-input" placeholder="Escribe tu sugerencia..." style="flex: 1;">
+              <button onclick="sendMessage('admin')">Enviar</button>
+            </div>
+          </div>
+          
+          <div class="card">
+            <h3>Mensaje privado a:</h3>
+            <select id="private-to" style="margin-bottom: 10px;">
+              <option value="">Seleccionar destinatario</option>
+              <option value="javier">Javier</option>
+              <option value="raquel">Raquel</option>
+              <option value="mario">Mario</option>
+              <option value="alba">Alba</option>
+            </select>
+            <div id="private-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" id="private-input" placeholder="Escribe tu mensaje privado..." style="flex: 1;">
+              <button onclick="sendMessage('private')">Enviar</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -248,14 +440,20 @@ function getUserPage(username) {
 
   <script>
     const username = '${username}';
+    let currentWeek = 1;
+    let currentView = 'daily';
+    let currentRecipeCategory = 'comidas';
     
     function loadData() {
       fetch('/api/data')
         .then(r => r.json())
         .then(data => {
           loadActivities(data.activities);
+          loadRecipes(data.recipes);
           loadInventory(data.inventory);
-          loadMessages(data.forumMessages);
+          loadShoppingList(data.inventory);
+          loadMealPlan(data.mealPlan);
+          loadMessagesData(data);
         });
     }
     
@@ -265,11 +463,24 @@ function getUserPage(username) {
       
       document.getElementById('my-activities').innerHTML = myActivities.length > 0 
         ? myActivities.map(a => 
-            '<div style="background: #f0f9ff; padding: 12px; margin: 8px 0; border-radius: 8px;">' +
-            '<strong>' + a.title + '</strong><br>' + a.time + ' (' + a.duration + ' min)' +
+            '<div class="activity-item' + (a.completed ? ' completed' : '') + '">' +
+            '<div><strong>' + a.title + '</strong><br>' + a.time + ' (' + a.duration + ' min)</div>' +
+            '<button onclick="toggleActivity(' + a.id + ', ' + !a.completed + ')">' + (a.completed ? '✓ Hecho' : 'Marcar') + '</button>' +
             '</div>'
           ).join('')
-        : '<p>No tienes actividades para hoy</p>';
+        : '<p style="color:#6b7280">No tienes actividades para hoy</p>';
+    }
+    
+    function loadRecipes(recipes) {
+      const filteredRecipes = recipes.filter(r => r.category === currentRecipeCategory);
+      document.getElementById('recipes-grid').innerHTML = filteredRecipes.map(recipe => 
+        '<div class="card">' +
+        '<h3>' + recipe.name + '</h3>' +
+        '<p><strong>Ingredientes:</strong> ' + recipe.ingredients.map(ing => Object.keys(ing)[0] + ' (' + Object.values(ing)[0] + ')').join(', ') + '</p>' +
+        '<p><strong>Tiempo:</strong> ' + recipe.time + ' horas</p>' +
+        '<p><strong>Porciones:</strong> ' + recipe.servings + '</p>' +
+        '</div>'
+      ).join('');
     }
     
     function loadInventory(inventory) {
@@ -278,43 +489,142 @@ function getUserPage(username) {
         '<h3>' + item.name + '</h3>' +
         '<p style="font-size: 18px; font-weight: bold;">' + item.quantity + ' ' + item.unit + '</p>' +
         '<div style="margin-top: 12px;">' +
-        '<button onclick="changeInventory(\\'' + item.id + '\\', -1)" style="background: #dc2626;">-</button>' +
-        '<button onclick="changeInventory(\\'' + item.id + '\\', 1)" style="background: #059669;">+</button>' +
+        '<button onclick="changeInventory(\\''+item.id+'\\', -1)" style="background: #dc2626;">-</button>' +
+        '<button onclick="changeInventory(\\''+item.id+'\\', 1)" style="background: #059669;">+</button>' +
         '</div></div>'
       ).join('');
     }
     
-    function loadMessages(messages) {
-      document.getElementById('forum-messages').innerHTML = messages.map(msg => 
-        '<div style="margin: 5px 0; padding: 8px 12px; border-radius: 12px; max-width: 70%; word-wrap: break-word; ' + 
-        (msg.user === username ? 'background: #dcf8c6; margin-left: auto; text-align: right;' : 'background: #f1f1f1; margin-right: auto;') + '">' +
-        '<div><strong>' + msg.user + '</strong></div>' +
-        '<div>' + msg.text + '</div>' +
-        '<div style="font-size: 11px; color: #666; margin-top: 2px;">' + msg.time + '</div>' +
-        '</div>'
-      ).join('') || '<p>No hay mensajes aún</p>';
+    function loadShoppingList(inventory) {
+      const shops = ['Carne internet', 'Pescadería', 'Del bancal a casa', 'Alcampo', 'Internet', 'Otros'];
+      const outOfStock = inventory.filter(item => item.quantity === 0);
+      const lowStock = inventory.filter(item => item.quantity === 1);
+      
+      let html = '';
+      shops.forEach(shop => {
+        const shopItems = outOfStock.filter(item => item.shop === shop);
+        const shopSuggestions = lowStock.filter(item => item.shop === shop);
+        
+        if (shopItems.length > 0 || shopSuggestions.length > 0) {
+          html += '<div class="card"><h3>' + shop + '</h3>';
+          
+          if (shopItems.length > 0) {
+            html += '<h4>Necesarios:</h4>';
+            shopItems.forEach(item => {
+              html += '<div style="padding: 4px; background: #fef2f2; margin: 2px 0; border-radius: 4px;">' + item.name + '</div>';
+            });
+          }
+          
+          if (shopSuggestions.length > 0) {
+            html += '<h4>Sugerencias:</h4>';
+            shopSuggestions.forEach(item => {
+              html += '<div style="padding: 4px; background: #fef3c7; margin: 2px 0; border-radius: 4px;">' + item.name + '</div>';
+            });
+          }
+          
+          html += '</div>';
+        }
+      });
+      
+      document.getElementById('shopping-lists').innerHTML = html || '<div class="card"><p>No hay productos en la lista de compra</p></div>';
+    }
+    
+    function loadMealPlan(mealPlan) {
+      // Cargar plan de comidas en la tabla
+    }
+    
+    function loadMessagesData(data) {
+      document.getElementById('forum-messages').innerHTML = data.forumMessages.map(msg => 
+        '<div style="padding: 8px; margin: 5px 0; background: #f0f9ff; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
+      ).join('') || '<p style="color: #6b7280;">No hay mensajes aún</p>';
+      
+      document.getElementById('admin-messages').innerHTML = data.adminSuggestions.map(msg => 
+        '<div style="padding: 8px; margin: 5px 0; background: #fef3c7; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
+      ).join('') || '<p style="color: #6b7280;">No hay sugerencias aún</p>';
+      
+      const selectedUser = document.getElementById('private-to').value;
+      if (selectedUser) {
+        const key = [username, selectedUser].sort().join('-');
+        const privateMessages = data.privateMessages[key] || [];
+        document.getElementById('private-messages').innerHTML = privateMessages.map(msg => 
+          '<div style="padding: 8px; margin: 5px 0; background: ' + (msg.user === username ? '#e0f2fe' : '#f0fdf4') + '; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
+        ).join('') || '<p style="color: #6b7280;">No hay mensajes privados aún</p>';
+      }
     }
     
     function sendMessage(type) {
-      const text = document.getElementById('forum-input').value.trim();
+      let text, to;
+      
+      if (type === 'forum') {
+        text = document.getElementById('forum-input').value.trim();
+        document.getElementById('forum-input').value = '';
+      } else if (type === 'admin') {
+        text = document.getElementById('admin-input').value.trim();
+        document.getElementById('admin-input').value = '';
+      } else if (type === 'private') {
+        text = document.getElementById('private-input').value.trim();
+        to = document.getElementById('private-to').value;
+        if (!to) {
+          alert('Selecciona un destinatario');
+          return;
+        }
+        document.getElementById('private-input').value = '';
+      }
+      
       if (!text) return;
       
       fetch('/api/message', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({type: type, user: username, text: text})
-      }).then(() => {
-        document.getElementById('forum-input').value = '';
-        loadData();
-      });
+        body: JSON.stringify({type, user: username, text, to})
+      }).then(() => loadData());
+    }
+    
+    function toggleActivity(id, completed) {
+      fetch('/api/complete-activity', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id, completed})
+      }).then(() => loadData());
     }
     
     function changeInventory(id, change) {
       fetch('/api/inventory', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({action: 'update', id: id, change: change})
+        body: JSON.stringify({action: 'update', id, change})
       }).then(() => loadData());
+    }
+    
+    function setView(view) {
+      currentView = view;
+      document.querySelectorAll('.calendar-view button').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+    
+    function changeWeek(direction) {
+      currentWeek += direction;
+      document.getElementById('current-week').textContent = 'Semana ' + currentWeek + ' de Septiembre 2025';
+    }
+    
+    function showRecipeCategory(category) {
+      currentRecipeCategory = category;
+      document.querySelectorAll('#recetas button').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      loadData();
+    }
+    
+    function markMealDone(meal, day) {
+      if (confirm('¿Marcar como hecho?')) {
+        fetch('/api/complete-meal', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({meal, day, week: currentWeek})
+        }).then(() => {
+          event.target.style.background = '#f0fdf4';
+          event.target.innerHTML = '✓ Hecho';
+        });
+      }
     }
     
     function showSection(section) {
@@ -324,56 +634,17 @@ function getUserPage(username) {
       event.target.classList.add('active');
     }
     
+    document.addEventListener('DOMContentLoaded', function() {
+      if (document.getElementById('private-to')) {
+        document.getElementById('private-to').addEventListener('change', function() {
+          loadData();
+        });
+      }
+    });
+    
     loadData();
     setInterval(loadData, 10000);
   </script>
 </body>
 </html>`;
 }
-
-function getAdminPage() {
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <title>Administrador - Organización Familiar</title>
-  <style>
-    * { font-family: Verdana, Geneva, sans-serif; margin: 0; padding: 0; }
-    body { background: #f9fafb; }
-    .container { display: flex; min-height: 100vh; }
-    .sidebar { width: 256px; background: #f9fafb; border-right: 1px solid #e5e7eb; position: fixed; height: 100vh; z-index: 10; }
-    .main { flex: 1; margin-left: 256px; }
-    .content { padding: 32px; }
-    .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="sidebar">
-      <div style="padding: 20px;">
-        <h3>Admin Panel</h3>
-      </div>
-    </div>
-    <div class="main">
-      <div class="content">
-        <div class="card">
-          <h2>Panel de Administrador</h2>
-          <p>Funcionalidades de administración</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</body>
-</html>`;
-}
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`🚀 Servidor iniciado en puerto ${PORT}`);
-  console.log(`📱 App disponible en: http://localhost:${PORT}`);
-  console.log(`🔗 Enlaces de usuarios:`);
-  console.log(`   Javier: /javier/abc123xyz789def456`);
-  console.log(`   Raquel: /raquel/uvw012rst345ghi678`);
-  console.log(`   Mario: /mario/jkl901mno234pqr567`);
-  console.log(`   Alba: /alba/stu890vwx123yzb456`);
-  console.log(`   Admin: /admin/cde789fgh012ijl345`);
-});
