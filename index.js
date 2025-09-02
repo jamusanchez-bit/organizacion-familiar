@@ -9,17 +9,23 @@ const USERS = {
 };
 
 let activities = [];
+let mealPlan = {};
 let inventory = [
   { id: '1', name: 'Jamón', quantity: 2, unit: 'paquetes', shop: 'Carne internet' },
   { id: '2', name: 'Salmón fresco', quantity: 1, unit: 'unidades', shop: 'Pescadería' },
   { id: '3', name: 'Ajo', quantity: 5, unit: 'unidades', shop: 'Del bancal a casa' },
   { id: '4', name: 'Pollo', quantity: 3, unit: 'unidades', shop: 'Carne internet' },
-  { id: '5', name: 'Tomate', quantity: 2, unit: 'kg', shop: 'Del bancal a casa' }
+  { id: '5', name: 'Tomate', quantity: 2, unit: 'kg', shop: 'Del bancal a casa' },
+  { id: '6', name: 'Cebolla', quantity: 4, unit: 'unidades', shop: 'Del bancal a casa' },
+  { id: '7', name: 'Arroz', quantity: 1, unit: 'kg', shop: 'Alcampo' },
+  { id: '8', name: 'Pasta', quantity: 3, unit: 'paquetes', shop: 'Alcampo' }
 ];
 
 let recipes = [
-  { id: '1', name: 'Pollo al ajillo', ingredients: 'Pollo, Ajo', time: '30 min' },
-  { id: '2', name: 'Salmón en papillote', ingredients: 'Salmón, Ajo', time: '45 min' }
+  { id: '1', name: 'Pollo al ajillo', ingredients: [{'Pollo': 1}, {'Ajo': 3}], time: '30 min' },
+  { id: '2', name: 'Salmón en papillote', ingredients: [{'Salmón fresco': 1}, {'Ajo': 1}], time: '45 min' },
+  { id: '3', name: 'Pasta con tomate', ingredients: [{'Pasta': 1}, {'Tomate': 1}, {'Cebolla': 1}], time: '25 min' },
+  { id: '4', name: 'Arroz con pollo', ingredients: [{'Arroz': 1}, {'Pollo': 1}, {'Cebolla': 1}], time: '60 min' }
 ];
 
 let forumMessages = [];
@@ -65,6 +71,44 @@ const server = http.createServer((req, res) => {
     return;
   }
   
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/activity') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = JSON.parse(body);
+      const activity = {
+        id: Date.now(),
+        user: data.user,
+        title: data.title,
+        time: data.time,
+        duration: data.duration,
+        repeat: data.repeat,
+        repeatDays: data.repeatDays || [],
+        date: data.date,
+        completed: false
+      };
+      activities.push(activity);
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({success: true}));
+    });
+    return;
+  }
+  
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/complete-activity') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = JSON.parse(body);
+      const activity = activities.find(a => a.id === data.id);
+      if (activity) {
+        activity.completed = data.completed;
+      }
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({success: true}));
+    });
+    return;
+  }
+  
   if (req.method === 'POST' && parsedUrl.pathname === '/api/inventory') {
     let body = '';
     req.on('data', chunk => body += chunk);
@@ -73,6 +117,44 @@ const server = http.createServer((req, res) => {
       const item = inventory.find(i => i.id === data.id);
       if (item) {
         item.quantity = Math.max(0, item.quantity + data.change);
+      }
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({success: true}));
+    });
+    return;
+  }
+  
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/meal-plan') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = JSON.parse(body);
+      const key = `${data.week}-${data.day}-${data.meal}`;
+      mealPlan[key] = data.content;
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({success: true}));
+    });
+    return;
+  }
+  
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/complete-meal') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = JSON.parse(body);
+      // Si es una receta, descontar ingredientes
+      if (data.recipeId) {
+        const recipe = recipes.find(r => r.id === data.recipeId);
+        if (recipe) {
+          recipe.ingredients.forEach(ing => {
+            const ingredientName = Object.keys(ing)[0];
+            const quantity = ing[ingredientName];
+            const inventoryItem = inventory.find(i => i.name === ingredientName);
+            if (inventoryItem) {
+              inventoryItem.quantity = Math.max(0, inventoryItem.quantity - quantity);
+            }
+          });
+        }
       }
       res.writeHead(200, {'Content-Type': 'application/json'});
       res.end(JSON.stringify({success: true}));
@@ -111,8 +193,10 @@ const server = http.createServer((req, res) => {
   if (parsedUrl.pathname === '/api/data') {
     res.writeHead(200, {'Content-Type': 'application/json'});
     res.end(JSON.stringify({
+      activities: activities,
       inventory: inventory,
       recipes: recipes,
+      mealPlan: mealPlan,
       forumMessages: forumMessages,
       adminSuggestions: adminSuggestions,
       privateMessages: privateMessages
@@ -234,21 +318,77 @@ function getUserPage(username) {
   <script>
     const username = '${username}';
     let selectedPrivateChat = null;
+    let currentWeek = 1;
+    let currentView = 'daily';
     
     function loadData() {
       fetch('/api/data')
         .then(r => r.json())
         .then(data => {
+          loadActivities(data.activities);
           loadRecipes(data.recipes);
           loadInventory(data.inventory);
           loadShoppingList(data.inventory);
+          loadMealPlan(data.mealPlan);
           loadMessages(data);
         });
     }
     
+    function loadActivities(activities) {
+      const today = new Date().toDateString();
+      const myActivities = activities.filter(a => a.user === username && a.date === today);
+      
+      document.getElementById('my-activities').innerHTML = myActivities.length > 0 
+        ? myActivities.map(a => 
+            '<div style="background: ' + (a.completed ? '#d4edda' : '#f8f9fa') + '; padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid ' + (a.completed ? '#28a745' : '#007bff') + ';">' +
+            '<strong>' + a.title + '</strong><br>' + a.time + ' (' + a.duration + ' min)' +
+            '<button onclick="toggleActivity(' + a.id + ', ' + !a.completed + ')" style="float: right; padding: 5px 10px;">' + (a.completed ? '✓ Hecho' : 'Marcar') + '</button>' +
+            '</div>'
+          ).join('')
+        : '<p>No tienes actividades para hoy</p>';
+    }
+    
+    function loadMealPlan(mealPlan) {
+      // Cargar plan de comidas en la tabla
+    }
+    
+    function toggleActivity(id, completed) {
+      fetch('/api/complete-activity', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id: id, completed: completed})
+      }).then(() => loadData());
+    }
+    
+    function setView(view) {
+      currentView = view;
+      document.querySelectorAll('#view-daily, #view-weekly').forEach(b => b.classList.remove('active'));
+      document.getElementById('view-' + view).classList.add('active');
+    }
+    
+    function changeWeek(direction) {
+      currentWeek += direction;
+      document.getElementById('current-week').textContent = 'Semana ' + currentWeek + ' de Septiembre 2025';
+    }
+    
+    function markMealDone(meal, day) {
+      if (confirm('¿Marcar como hecho?')) {
+        fetch('/api/complete-meal', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({meal: meal, day: day, week: currentWeek})
+        }).then(() => {
+          event.target.style.background = '#d4edda';
+          event.target.innerHTML = '✓ Hecho';
+        });
+      }
+    }
+    
     function loadRecipes(recipes) {
       document.getElementById('recipes-grid').innerHTML = recipes.map(recipe => 
-        '<div class="card"><h3>' + recipe.name + '</h3><p>' + recipe.ingredients + '</p><p>Tiempo: ' + recipe.time + '</p></div>'
+        '<div class="card"><h3>' + recipe.name + '</h3>' +
+        '<p><strong>Ingredientes:</strong> ' + recipe.ingredients.map(ing => Object.keys(ing)[0] + ' (' + Object.values(ing)[0] + ')').join(', ') + '</p>' +
+        '<p><strong>Tiempo:</strong> ' + recipe.time + '</p></div>'
       ).join('');
     }
     
@@ -366,15 +506,142 @@ function getAdminPage() {
 <head>
   <title>Admin - Organización Familiar</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 50px; background: #f5f5f5; }
-    .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    * { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    body { background: #f5f5f5; }
+    .container { display: flex; min-height: 100vh; }
+    .sidebar { width: 250px; background: white; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
+    .main { flex: 1; padding: 20px; }
+    .btn { width: 100%; padding: 15px; margin: 5px 0; border: none; border-radius: 8px; cursor: pointer; background: #f0f0f0; }
+    .btn.active { background: #007bff; color: white; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .card { background: white; padding: 20px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    input, button, select { padding: 10px; margin: 5px; border: 1px solid #ddd; border-radius: 4px; }
+    button { background: #007bff; color: white; border: none; cursor: pointer; }
+    .form-group { margin: 15px 0; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Panel de Administrador</h1>
-    <p>Funcionalidades de administración</p>
+  <div class="container">
+    <div class="sidebar">
+      <h2>🔧 Admin Panel</h2>
+      <button class="btn active" onclick="showSection('actividades')">📅 Actividades</button>
+      <button class="btn" onclick="showSection('comidas')">🍽️ Comidas</button>
+      <button class="btn" onclick="showSection('recetas')">👨🍳 Recetas</button>
+      <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
+      <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
+      <div style="margin-top: 50px; text-align: center;">
+        <strong>Javi (Admin)</strong>
+      </div>
+    </div>
+    
+    <div class="main">
+      <div id="actividades" class="section active">
+        <h1>Gestionar Actividades</h1>
+        
+        <div class="card">
+          <h3>Crear Nueva Actividad</h3>
+          <div class="form-group">
+            <select id="activity-user">
+              <option value="javier">Javier</option>
+              <option value="raquel">Raquel</option>
+              <option value="mario">Mario</option>
+              <option value="alba">Alba</option>
+            </select>
+            <input type="text" id="activity-title" placeholder="Título de la actividad">
+            <input type="time" id="activity-time">
+            <input type="number" id="activity-duration" placeholder="Duración (min)" value="30">
+            <select id="activity-repeat">
+              <option value="none">No repetir</option>
+              <option value="daily">Todos los días</option>
+              <option value="weekly">Semanal</option>
+              <option value="custom">Días personalizados</option>
+            </select>
+            <button onclick="saveActivity()">💾 Crear Actividad</button>
+          </div>
+        </div>
+      </div>
+      
+      <div id="comidas" class="section">
+        <h1>Gestionar Comidas</h1>
+        <div class="card">
+          <p>Aquí podrás editar el planning de comidas</p>
+        </div>
+      </div>
+      
+      <div id="recetas" class="section">
+        <h1>Gestionar Recetas</h1>
+        <div class="card">
+          <p>Aquí podrás añadir y editar recetas</p>
+        </div>
+      </div>
+      
+      <div id="inventario" class="section">
+        <h1>Gestionar Inventario</h1>
+        <div class="card">
+          <p>Aquí podrás gestionar el inventario</p>
+        </div>
+      </div>
+      
+      <div id="mensajes" class="section">
+        <h1>Mensajes Recibidos</h1>
+        <div class="card">
+          <h3>Sugerencias de usuarios</h3>
+          <div id="admin-messages" style="height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;"></div>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <script>
+    function loadData() {
+      fetch('/api/data')
+        .then(r => r.json())
+        .then(data => {
+          loadAdminMessages(data.adminSuggestions);
+        });
+    }
+    
+    function loadAdminMessages(messages) {
+      document.getElementById('admin-messages').innerHTML = messages.map(msg => 
+        '<div style="background: #f8f9fa; padding: 10px; margin: 5px 0; border-radius: 5px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
+      ).join('') || '<p>No hay sugerencias</p>';
+    }
+    
+    function saveActivity() {
+      const user = document.getElementById('activity-user').value;
+      const title = document.getElementById('activity-title').value.trim();
+      const time = document.getElementById('activity-time').value;
+      const duration = document.getElementById('activity-duration').value;
+      const repeat = document.getElementById('activity-repeat').value;
+      
+      if (!title || !time) {
+        alert('❌ Completa todos los campos');
+        return;
+      }
+      
+      fetch('/api/activity', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({user, title, time, duration, repeat, repeatDays: [], date: new Date().toDateString()})
+      }).then(() => {
+        alert('✅ Actividad creada para ' + user);
+        document.getElementById('activity-title').value = '';
+        document.getElementById('activity-time').value = '';
+        document.getElementById('activity-duration').value = '30';
+      });
+    }
+    
+    function showSection(section) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(section).classList.add('active');
+      event.target.classList.add('active');
+    }
+    
+    loadData();
+    setInterval(loadData, 10000);
+  </script>
 </body>
 </html>`;
 }
