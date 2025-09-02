@@ -233,57 +233,101 @@ function getUserPage(username) {
         </div>
         
         <div class="card">
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <th style="border: 1px solid #ddd; padding: 10px;"></th>
-              <th style="border: 1px solid #ddd; padding: 10px;">Lunes</th>
-              <th style="border: 1px solid #ddd; padding: 10px;">Martes</th>
-              <th style="border: 1px solid #ddd; padding: 10px;">Miércoles</th>
-              <th style="border: 1px solid #ddd; padding: 10px;">Jueves</th>
-              <th style="border: 1px solid #ddd; padding: 10px;">Viernes</th>
-              <th style="border: 1px solid #ddd; padding: 10px;">Sábado</th>
-              <th style="border: 1px solid #ddd; padding: 10px;">Domingo</th>
-            </tr>
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 10px; background: #f5f5f5;">Desayuno Alba y Mario</td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-            </tr>
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 10px; background: #f5f5f5;">Desayuno Raquel y Javier</td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-            </tr>
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 10px; background: #f5f5f5;">Comida</td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-            </tr>
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 10px; background: #f5f5f5;">Cena</td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-              <td style="border: 1px solid #ddd; padding: 10px; cursor: pointer;" onclick="markMealDone()"></td>
-            </tr>
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <thead>
+              <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <th style="border: 1px solid #ddd; padding: 12px; text-align: left;"></th>
+                <th style="border: 1px solid #ddd; padding: 12px; text-align: center;">Lunes</th>
+                <th style="border: 1px solid #ddd; padding: 12px; text-align: center;">Martes</th>
+                <th style="border: 1px solid #ddd; padding: 12px; text-align: center;">Miércoles</th>
+                <th style="border: 1px solid #ddd; padding: 12px; text-align: center;">Jueves</th>
+                <th style="border: 1px solid #ddd; padding: 12px; text-align: center;">Viernes</th>
+                <th style="border: 1px solid #ddd; padding: 12px; text-align: center;">Sábado</th>
+                <th style="border: 1px solid #ddd; padding: 12px; text-align: center;">Domingo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="border: 1px solid #ddd; padding: 12px; background: #e3f2fd; font-weight: bold; text-align: left;">Desayuno Alba y Mario</td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid #ddd; padding: 12px; background: #f3e5f5; font-weight: bold; text-align: left;">Desayuno Raquel y Javier</td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid #ddd; padding: 12px; background: #fff3e0; font-weight: bold; text-align: left;">Almuerzo Alba y Mario</td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid #ddd; padding: 12px; background: #e8f5e8; font-weight: bold; text-align: left;">Almuerzo Raquel y Javier</td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid #ddd; padding: 12px; background: #fce4ec; font-weight: bold; text-align: left;">Comida</td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid #ddd; padding: 12px; background: #f1f8e9; font-weight: bold; text-align: left;">Merienda Alba y Mario</td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid #ddd; padding: 12px; background: #fff8e1; font-weight: bold; text-align: left;">Merienda Raquel y Javier</td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+              </tr>
+              <tr>
+                <td style="border: 1px solid #ddd; padding: 12px; background: #e1f5fe; font-weight: bold; text-align: left;">Cena</td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+                <td style="border: 1px solid #ddd; padding: 12px; cursor: pointer; min-height: 50px; vertical-align: top;" onclick="markMealDone()"></td>
+              </tr>
+            </tbody>
           </table>
         </div>
       </div>
