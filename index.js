@@ -426,8 +426,8 @@ function getUserPage(username) {
           <h2 class="title" style="background: linear-gradient(to right, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Mensajes</h2>
           
           <div class="card">
-            <h3>Esta semana quiero que hablemos de:</h3>
-            <div id="forum-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+            <h3>Chat de grupo</h3>
+            <div id="forum-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0; border: 1px solid #e5e7eb; padding: 10px; border-radius: 8px;"></div>
             <div style="display: flex; gap: 10px;">
               <input type="text" id="forum-input" placeholder="Escribe tu mensaje..." style="flex: 1;">
               <button onclick="sendMessage('forum')">Enviar</button>
@@ -435,27 +435,26 @@ function getUserPage(username) {
           </div>
           
           <div class="card">
-            <h3>Sugerencias para el administrador</h3>
-            <div id="admin-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+            <h3>Chats privados</h3>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+              <button onclick="selectPrivateChat('javier')" id="chat-javier" style="background: #f3f4f6; color: #374151; padding: 8px 16px; border: 1px solid #d1d5db; border-radius: 20px; cursor: pointer;">Javier</button>
+              <button onclick="selectPrivateChat('raquel')" id="chat-raquel" style="background: #f3f4f6; color: #374151; padding: 8px 16px; border: 1px solid #d1d5db; border-radius: 20px; cursor: pointer;">Raquel</button>
+              <button onclick="selectPrivateChat('mario')" id="chat-mario" style="background: #f3f4f6; color: #374151; padding: 8px 16px; border: 1px solid #d1d5db; border-radius: 20px; cursor: pointer;">Mario</button>
+              <button onclick="selectPrivateChat('alba')" id="chat-alba" style="background: #f3f4f6; color: #374151; padding: 8px 16px; border: 1px solid #d1d5db; border-radius: 20px; cursor: pointer;">Alba</button>
+            </div>
+            <div id="private-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0; border: 1px solid #e5e7eb; padding: 10px; border-radius: 8px;"></div>
             <div style="display: flex; gap: 10px;">
-              <input type="text" id="admin-input" placeholder="Escribe tu sugerencia..." style="flex: 1;">
-              <button onclick="sendMessage('admin')">Enviar</button>
+              <input type="text" id="private-input" placeholder="Selecciona un chat..." style="flex: 1;" disabled>
+              <button onclick="sendMessage('private')" disabled id="private-send-btn">Enviar</button>
             </div>
           </div>
           
           <div class="card">
-            <h3>Mensaje privado a:</h3>
-            <select id="private-to" style="margin-bottom: 10px;">
-              <option value="">Seleccionar destinatario</option>
-              <option value="javier">Javier</option>
-              <option value="raquel">Raquel</option>
-              <option value="mario">Mario</option>
-              <option value="alba">Alba</option>
-            </select>
-            <div id="private-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+            <h3>Sugerencias para el administrador</h3>
+            <div id="admin-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0; border: 1px solid #e5e7eb; padding: 10px; border-radius: 8px;"></div>
             <div style="display: flex; gap: 10px;">
-              <input type="text" id="private-input" placeholder="Escribe tu mensaje privado..." style="flex: 1;">
-              <button onclick="sendMessage('private')">Enviar</button>
+              <input type="text" id="admin-input" placeholder="Escribe tu sugerencia..." style="flex: 1;">
+              <button onclick="sendMessage('admin')">Enviar</button>
             </div>
           </div>
         </div>
@@ -789,37 +788,29 @@ function getAdminPage() {
           <h2 class="title">💬 Mensajes</h2>
           
           <div class="card">
-            <h3>Chat de grupo</h3>
-            <div id="forum-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0; border: 1px solid #e5e7eb; padding: 10px; border-radius: 8px;"></div>
-            <div style="display: flex; gap: 10px;">
-              <input type="text" id="forum-input" placeholder="Escribe tu mensaje..." style="flex: 1;">
-              <button onclick="sendMessage('forum')">Enviar</button>
-            </div>
-          </div>
-          
-          <div class="card">
-            <h3>Chats privados</h3>
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-              <button onclick="selectPrivateChat('javier')" id="chat-javier" class="chat-btn">Javier</button>
-              <button onclick="selectPrivateChat('raquel')" id="chat-raquel" class="chat-btn">Raquel</button>
-              <button onclick="selectPrivateChat('mario')" id="chat-mario" class="chat-btn">Mario</button>
-              <button onclick="selectPrivateChat('alba')" id="chat-alba" class="chat-btn">Alba</button>
-            </div>
-            <div id="private-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0; border: 1px solid #e5e7eb; padding: 10px; border-radius: 8px;"></div>
-            <div style="display: flex; gap: 10px;">
-              <input type="text" id="private-input" placeholder="Selecciona un chat..." style="flex: 1;" disabled>
-              <button onclick="sendMessage('private')" disabled id="private-send-btn">Enviar</button>
-            </div>
-          </div>
-          
-          <div class="card">
             <h3>Sugerencias para el administrador</h3>
             <div id="admin-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0; border: 1px solid #e5e7eb; padding: 10px; border-radius: 8px;"></div>
-            <div style="display: flex; gap: 10px;">
-              <input type="text" id="admin-input" placeholder="Escribe tu sugerencia..." style="flex: 1;">
-              <button onclick="sendMessage('admin')">Enviar</button>
-            </div>
           </div>
+        </div>
+        
+        <div id="comidas" class="section">
+          <h2 class="title">🍽️ Comidas</h2>
+          <div class="card"><p>Sección de comidas del administrador</p></div>
+        </div>
+        
+        <div id="recetas" class="section">
+          <h2 class="title">👨🍳 Recetas</h2>
+          <div class="card"><p>Sección de recetas del administrador</p></div>
+        </div>
+        
+        <div id="inventario" class="section">
+          <h2 class="title">📦 Inventario</h2>
+          <div class="card"><p>Sección de inventario del administrador</p></div>
+        </div>
+        
+        <div id="compras" class="section">
+          <h2 class="title">🛒 Lista de la compra</h2>
+          <div class="card"><p>Sección de compras del administrador</p></div>
         </div>
       </div>
     </div>
@@ -835,22 +826,13 @@ function getAdminPage() {
     }
     
     function loadAdminMessages(data) {
-      document.getElementById('forum-messages').innerHTML = data.forumMessages.map(msg => 
-        '<div style="padding: 8px; margin: 5px 0; background: #f0f9ff; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
-      ).join('') || '<p style="color: #6b7280;">No hay mensajes aún</p>';
-      
       document.getElementById('admin-messages').innerHTML = data.adminSuggestions.map(msg => 
-        '<div style="padding: 8px; margin: 5px 0; background: #fef3c7; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
+        '<div style="margin: 5px 0; padding: 8px 12px; border-radius: 12px; max-width: 70%; word-wrap: break-word; background: #f1f1f1; margin-right: auto;">' +
+        '<div><strong>' + msg.user + '</strong></div>' +
+        '<div>' + msg.text + '</div>' +
+        '<div style="font-size: 11px; color: #666; margin-top: 2px;">' + msg.time + '</div>' +
+        '</div>'
       ).join('') || '<p style="color: #6b7280;">No hay sugerencias aún</p>';
-      
-      const selectedUser = document.getElementById('private-to').value;
-      if (selectedUser) {
-        const key = ['javi_administrador', selectedUser].sort().join('-');
-        const privateMessages = data.privateMessages[key] || [];
-        document.getElementById('private-messages').innerHTML = privateMessages.map(msg => 
-          '<div style="padding: 8px; margin: 5px 0; background: ' + (msg.user === 'javi_administrador' ? '#e0f2fe' : '#f0fdf4') + '; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
-        ).join('') || '<p style="color: #6b7280;">No hay mensajes privados aún</p>';
-      }
     }
     
     function sendMessage(type) {
