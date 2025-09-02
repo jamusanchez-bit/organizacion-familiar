@@ -905,4 +905,14 @@ function getAdminPage() {
 </html>`;
 }
 
-server.listen(process.env.PORT || 3000);
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`🚀 Servidor iniciado en puerto ${PORT}`);
+  console.log(`📱 App disponible en: http://localhost:${PORT}`);
+  console.log(`🔗 Enlaces de usuarios:`);
+  console.log(`   Javier: /javier/abc123xyz789def456`);
+  console.log(`   Raquel: /raquel/uvw012rst345ghi678`);
+  console.log(`   Mario: /mario/jkl901mno234pqr567`);
+  console.log(`   Alba: /alba/stu890vwx123yzb456`);
+  console.log(`   Admin: /admin/cde789fgh012ijl345`);
+});
