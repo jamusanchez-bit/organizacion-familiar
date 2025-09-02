@@ -194,6 +194,12 @@ function getUserPage(username) {
   <div class="container">
     <div class="sidebar">
       <h2>🏠 Organización</h2>
+      
+      <div style="text-align: center; margin: 20px 0; padding: 15px; background: linear-gradient(45deg, #667eea, #764ba2); color: white; border-radius: 8px;">
+        <div id="current-date" style="font-size: 16px; font-weight: bold; margin-bottom: 10px;"></div>
+        <div id="daily-quote-text" style="font-size: 14px; line-height: 1.4;"></div>
+      </div>
+      
       <button class="btn active" onclick="showSection('inicio')">🏠 Inicio</button>
       <button class="btn" onclick="showSection('actividades')">📅 Actividades</button>
       <button class="btn" onclick="showSection('comidas')">🍽️ Comidas</button>
@@ -210,12 +216,7 @@ function getUserPage(username) {
       <div id="inicio" class="section active">
         <h1>Inicio</h1>
         
-        <div style="text-align: center; margin: 30px 0;">
-          <h2 id="current-date" style="color: #666; font-size: 24px; margin-bottom: 20px;"></h2>
-          <div class="quote" style="max-width: 800px; margin: 0 auto;">
-            <h3 id="daily-quote-text" style="font-size: 20px; line-height: 1.6;"></h3>
-          </div>
-        </div>
+
         
         <div class="card">
           <h3>Resumen del Día</h3>
