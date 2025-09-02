@@ -13,15 +13,24 @@ const USERS = {
 let activities = [];
 let mealPlan = {};
 let inventory = [
-  { id: '1', name: 'Jamón', category: 'carne', shop: 'Carne internet', unit: 'paquetes', quantity: 0 },
-  { id: '2', name: 'Salmón fresco', category: 'pescado', shop: 'Pescadería', unit: 'unidades', quantity: 0 },
-  { id: '3', name: 'Ajo', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 0 },
-  { id: '4', name: 'Aceite oliva', category: 'otros', shop: 'Alcampo', unit: 'litros', quantity: 0 }
+  { id: '1', name: 'Jamón', category: 'carne', shop: 'Carne internet', unit: 'paquetes', quantity: 2 },
+  { id: '2', name: 'Salmón fresco', category: 'pescado', shop: 'Pescadería', unit: 'unidades', quantity: 1 },
+  { id: '3', name: 'Ajo', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 5 },
+  { id: '4', name: 'Aceite oliva', category: 'otros', shop: 'Alcampo', unit: 'litros', quantity: 1 },
+  { id: '5', name: 'Pollo', category: 'carne', shop: 'Carne internet', unit: 'unidades', quantity: 3 },
+  { id: '6', name: 'Tomate', category: 'verdura', shop: 'Del bancal a casa', unit: 'kg', quantity: 2 },
+  { id: '7', name: 'Cebolla', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 4 },
+  { id: '8', name: 'Arroz', category: 'otros', shop: 'Alcampo', unit: 'kg', quantity: 1 },
+  { id: '9', name: 'Pasta', category: 'otros', shop: 'Alcampo', unit: 'paquetes', quantity: 3 },
+  { id: '10', name: 'Leche', category: 'otros', shop: 'Alcampo', unit: 'litros', quantity: 2 }
 ];
 
 let recipes = [
-  { id: '1', name: 'Lubina sobre cama de verduras', category: 'comidas', ingredients: [{'Lubina': 1}, {'Ajo': 2}], time: 0.5, servings: 4 },
-  { id: '2', name: 'Salmón en papillote', category: 'comidas', ingredients: [{'Salmón fresco': 1}, {'Ajo': 1}], time: 0.75, servings: 4 }
+  { id: '1', name: 'Lubina sobre cama de verduras', category: 'comidas', ingredients: [{'Lubina': 1}, {'Ajo': 2}, {'Tomate': 1}], time: 0.5, servings: 4 },
+  { id: '2', name: 'Salmón en papillote', category: 'comidas', ingredients: [{'Salmón fresco': 1}, {'Ajo': 1}], time: 0.75, servings: 4 },
+  { id: '3', name: 'Pollo al ajillo', category: 'comidas', ingredients: [{'Pollo': 1}, {'Ajo': 3}], time: 0.5, servings: 4 },
+  { id: '4', name: 'Pasta con tomate', category: 'cenas', ingredients: [{'Pasta': 1}, {'Tomate': 1}, {'Cebolla': 1}], time: 0.25, servings: 4 },
+  { id: '5', name: 'Arroz con pollo', category: 'comidas', ingredients: [{'Arroz': 1}, {'Pollo': 1}, {'Cebolla': 1}], time: 1, servings: 6 }
 ];
 
 let forumMessages = [];
@@ -221,6 +230,31 @@ const server = http.createServer((req, res) => {
     return;
   }
   
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/delete-message') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const data = JSON.parse(body);
+      
+      if (data.type === 'forum') {
+        const index = forumMessages.findIndex(m => m.id === data.messageId && m.user === data.user);
+        if (index !== -1) forumMessages.splice(index, 1);
+      } else if (data.type === 'admin') {
+        const index = adminSuggestions.findIndex(m => m.id === data.messageId && m.user === data.user);
+        if (index !== -1) adminSuggestions.splice(index, 1);
+      } else if (data.type === 'private') {
+        Object.keys(privateMessages).forEach(key => {
+          const index = privateMessages[key].findIndex(m => m.id === data.messageId && m.user === data.user);
+          if (index !== -1) privateMessages[key].splice(index, 1);
+        });
+      }
+      
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({success: true}));
+    });
+    return;
+  }
+  
   if (parsedUrl.pathname === '/api/data') {
     res.writeHead(200, {'Content-Type': 'application/json'});
     res.end(JSON.stringify({
@@ -280,6 +314,9 @@ function getUserPage(username) {
     input, button, select { padding: 8px 12px; margin: 4px; border: 1px solid #ddd; border-radius: 4px; }
     button { background: #10b981; color: white; border: none; cursor: pointer; }
     button:hover { background: #059669; }
+    .chat-btn { background: #f3f4f6; color: #374151; padding: 8px 16px; border: 1px solid #d1d5db; border-radius: 20px; cursor: pointer; }
+    .chat-btn.active { background: #10b981; color: white; }
+    .chat-btn:hover:not(.active) { background: #e5e7eb; }
   </style>
 </head>
 <body>
@@ -307,6 +344,9 @@ function getUserPage(username) {
       </div>
       <div class="content">
         <div id="actividades" class="section active">
+          <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; margin-bottom: 20px;">
+            <h3 id="daily-quote" style="font-style: italic; margin: 0;">"Cuando cambias la forma en que miras las cosas, las cosas que miras cambian" - Wayne Dyer</h3>
+          </div>
           <h2 class="title" style="background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Mis Actividades</h2>
           
           <div class="calendar-view">
@@ -412,8 +452,8 @@ function getUserPage(username) {
           <h2 class="title" style="background: linear-gradient(to right, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Mensajes</h2>
           
           <div class="card">
-            <h3>Esta semana quiero que hablemos de:</h3>
-            <div id="forum-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+            <h3>Chat de grupo</h3>
+            <div id="forum-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0; border: 1px solid #e5e7eb; padding: 10px; border-radius: 8px;"></div>
             <div style="display: flex; gap: 10px;">
               <input type="text" id="forum-input" placeholder="Escribe tu mensaje..." style="flex: 1;">
               <button onclick="sendMessage('forum')">Enviar</button>
@@ -421,27 +461,26 @@ function getUserPage(username) {
           </div>
           
           <div class="card">
-            <h3>Sugerencias para el administrador</h3>
-            <div id="admin-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+            <h3>Chats privados</h3>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+              <button onclick="selectPrivateChat('javier')" id="chat-javier" class="chat-btn">Javier</button>
+              <button onclick="selectPrivateChat('raquel')" id="chat-raquel" class="chat-btn">Raquel</button>
+              <button onclick="selectPrivateChat('mario')" id="chat-mario" class="chat-btn">Mario</button>
+              <button onclick="selectPrivateChat('alba')" id="chat-alba" class="chat-btn">Alba</button>
+            </div>
+            <div id="private-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0; border: 1px solid #e5e7eb; padding: 10px; border-radius: 8px;"></div>
             <div style="display: flex; gap: 10px;">
-              <input type="text" id="admin-input" placeholder="Escribe tu sugerencia..." style="flex: 1;">
-              <button onclick="sendMessage('admin')">Enviar</button>
+              <input type="text" id="private-input" placeholder="Selecciona un chat..." style="flex: 1;" disabled>
+              <button onclick="sendMessage('private')" disabled id="private-send-btn">Enviar</button>
             </div>
           </div>
           
           <div class="card">
-            <h3>Mensaje privado a:</h3>
-            <select id="private-to" style="margin-bottom: 10px;">
-              <option value="">Seleccionar destinatario</option>
-              <option value="javier">Javier</option>
-              <option value="raquel">Raquel</option>
-              <option value="mario">Mario</option>
-              <option value="alba">Alba</option>
-            </select>
-            <div id="private-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+            <h3>Sugerencias para el administrador</h3>
+            <div id="admin-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0; border: 1px solid #e5e7eb; padding: 10px; border-radius: 8px;"></div>
             <div style="display: flex; gap: 10px;">
-              <input type="text" id="private-input" placeholder="Escribe tu mensaje privado..." style="flex: 1;">
-              <button onclick="sendMessage('private')">Enviar</button>
+              <input type="text" id="admin-input" placeholder="Escribe tu sugerencia..." style="flex: 1;">
+              <button onclick="sendMessage('admin')">Enviar</button>
             </div>
           </div>
         </div>
@@ -454,6 +493,20 @@ function getUserPage(username) {
     let currentWeek = 1;
     let currentView = 'daily';
     let currentRecipeCategory = 'comidas';
+    
+    const quotes = [
+      '"Cuando cambias la forma en que miras las cosas, las cosas que miras cambian" - Wayne Dyer',
+      '"El éxito es la suma de pequeños esfuerzos repetidos día tras día" - Robert Collier',
+      '"No esperes por el momento perfecto, toma el momento y hazlo perfecto" - Zoey Sayward',
+      '"La disciplina es el puente entre metas y logros" - Jim Rohn',
+      '"Cada día es una nueva oportunidad para cambiar tu vida" - Anónimo'
+    ];
+    
+    function updateDailyQuote() {
+      const today = new Date().getDate();
+      const quoteIndex = today % quotes.length;
+      document.getElementById('daily-quote').textContent = quotes[quoteIndex];
+    }
     
     function loadData() {
       fetch('/api/data')
@@ -544,22 +597,58 @@ function getUserPage(username) {
       // Cargar plan de comidas en la tabla
     }
     
+    let selectedPrivateChat = null;
+    
     function loadMessagesData(data) {
+      // Chat de grupo
       document.getElementById('forum-messages').innerHTML = data.forumMessages.map(msg => 
-        '<div style="padding: 8px; margin: 5px 0; background: #f0f9ff; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
+        '<div style="margin: 5px 0; padding: 8px 12px; border-radius: 12px; max-width: 70%; word-wrap: break-word; ' + (msg.user === username ? 'background: #dcf8c6; margin-left: auto; text-align: right;' : 'background: #f1f1f1; margin-right: auto;') + '">' +
+        '<div><strong>' + msg.user + '</strong></div>' +
+        '<div>' + msg.text + '</div>' +
+        '<div style="font-size: 11px; color: #666; margin-top: 2px;">' + msg.time + (msg.user === username ? '<span style="font-size: 12px; color: #dc2626; cursor: pointer; margin-left: 10px;" onclick="deleteMessage(\'forum\', ' + msg.id + ')"> × Eliminar</span>' : '') + '</div>' +
+        '</div>'
       ).join('') || '<p style="color: #6b7280;">No hay mensajes aún</p>';
       
+      // Sugerencias admin
       document.getElementById('admin-messages').innerHTML = data.adminSuggestions.map(msg => 
-        '<div style="padding: 8px; margin: 5px 0; background: #fef3c7; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
+        '<div style="margin: 5px 0; padding: 8px 12px; border-radius: 12px; max-width: 70%; word-wrap: break-word; ' + (msg.user === username ? 'background: #dcf8c6; margin-left: auto; text-align: right;' : 'background: #f1f1f1; margin-right: auto;') + '">' +
+        '<div><strong>' + msg.user + '</strong></div>' +
+        '<div>' + msg.text + '</div>' +
+        '<div style="font-size: 11px; color: #666; margin-top: 2px;">' + msg.time + (msg.user === username ? '<span style="font-size: 12px; color: #dc2626; cursor: pointer; margin-left: 10px;" onclick="deleteMessage(\'admin\', ' + msg.id + ')"> × Eliminar</span>' : '') + '</div>' +
+        '</div>'
       ).join('') || '<p style="color: #6b7280;">No hay sugerencias aún</p>';
       
-      const selectedUser = document.getElementById('private-to').value;
-      if (selectedUser) {
-        const key = [username, selectedUser].sort().join('-');
+      // Chat privado seleccionado
+      if (selectedPrivateChat) {
+        const key = [username, selectedPrivateChat].sort().join('-');
         const privateMessages = data.privateMessages[key] || [];
         document.getElementById('private-messages').innerHTML = privateMessages.map(msg => 
-          '<div style="padding: 8px; margin: 5px 0; background: ' + (msg.user === username ? '#e0f2fe' : '#f0fdf4') + '; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
-        ).join('') || '<p style="color: #6b7280;">No hay mensajes privados aún</p>';
+          '<div style="margin: 5px 0; padding: 8px 12px; border-radius: 12px; max-width: 70%; word-wrap: break-word; ' + (msg.user === username ? 'background: #dcf8c6; margin-left: auto; text-align: right;' : 'background: #f1f1f1; margin-right: auto;') + '">' +
+          '<div><strong>' + msg.user + '</strong></div>' +
+          '<div>' + msg.text + '</div>' +
+          '<div style="font-size: 11px; color: #666; margin-top: 2px;">' + msg.time + (msg.user === username ? '<span style="font-size: 12px; color: #dc2626; cursor: pointer; margin-left: 10px;" onclick="deleteMessage(\'private\', ' + msg.id + ')"> × Eliminar</span>' : '') + '</div>' +
+          '</div>'
+        ).join('') || '<p style="color: #6b7280;">No hay mensajes aún</p>';
+      }
+    }
+    
+    function selectPrivateChat(user) {
+      selectedPrivateChat = user;
+      document.querySelectorAll('.chat-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('chat-' + user).classList.add('active');
+      document.getElementById('private-input').disabled = false;
+      document.getElementById('private-input').placeholder = 'Escribe a ' + user + '...';
+      document.getElementById('private-send-btn').disabled = false;
+      loadData();
+    }
+    
+    function deleteMessage(type, messageId) {
+      if (confirm('¿Eliminar mensaje?')) {
+        fetch('/api/delete-message', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({type, messageId, user: username})
+        }).then(() => loadData());
       }
     }
     
@@ -574,9 +663,9 @@ function getUserPage(username) {
         document.getElementById('admin-input').value = '';
       } else if (type === 'private') {
         text = document.getElementById('private-input').value.trim();
-        to = document.getElementById('private-to').value;
+        to = selectedPrivateChat;
         if (!to) {
-          alert('Selecciona un destinatario');
+          alert('Selecciona un chat');
           return;
         }
         document.getElementById('private-input').value = '';
@@ -653,6 +742,7 @@ function getUserPage(username) {
       }
     });
     
+    updateDailyQuote();
     loadData();
     setInterval(loadData, 10000);
   </script>
