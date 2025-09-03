@@ -1,5 +1,7 @@
 const http = require('http');
 const url = require('url');
+const fs = require('fs');
+const path = require('path');
 
 // Base de datos en memoria
 const USERS = {
@@ -224,6 +226,66 @@ const server = http.createServer((req, res) => {
     return;
   }
   
+  if (parsedUrl.pathname === '/auth-bridge.js') {
+    const fs = require('fs');
+    const path = require('path');
+    try {
+      const filePath = path.join(__dirname, 'auth-bridge.js');
+      const content = fs.readFileSync(filePath, 'utf8');
+      res.writeHead(200, {'Content-Type': 'application/javascript'});
+      res.end(content);
+    } catch (error) {
+      res.writeHead(404);
+      res.end('File not found');
+    }
+    return;
+  }
+  
+  // Rutas para la app de inglés
+  if (parsedUrl.pathname.startsWith('/english/api/')) {
+    // Proxy a la API de inglés (por ahora devolver 404)
+    res.writeHead(404, {'Content-Type': 'application/json'});
+    res.end(JSON.stringify({error: 'English API not implemented yet'}));
+    return;
+  }
+  
+  if (parsedUrl.pathname === '/english' || parsedUrl.pathname === '/english/') {
+    try {
+      const filePath = path.join(__dirname, 'public/english/index.html');
+      const content = fs.readFileSync(filePath, 'utf8');
+      res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
+      res.end(content);
+    } catch (error) {
+      res.writeHead(404);
+      res.end('English app not found');
+    }
+    return;
+  }
+  
+  if (parsedUrl.pathname.startsWith('/english/')) {
+    const filePath = path.join(__dirname, 'public', parsedUrl.pathname);
+    try {
+      const content = fs.readFileSync(filePath);
+      const ext = path.extname(filePath);
+      const contentType = {
+        '.js': 'application/javascript',
+        '.css': 'text/css',
+        '.html': 'text/html',
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.gif': 'image/gif',
+        '.svg': 'image/svg+xml'
+      }[ext] || 'text/plain';
+      
+      res.writeHead(200, {'Content-Type': contentType});
+      res.end(content);
+    } catch (error) {
+      res.writeHead(404);
+      res.end('File not found');
+    }
+    return;
+  }
+  
   res.writeHead(200, {'Content-Type': 'text/html'});
   res.end('<h1>Organización Familiar</h1><p>Accede con tu enlace personal</p>');
 });
@@ -269,6 +331,8 @@ function getUserPage(username) {
     input, button, select { padding: 8px 12px; margin: 4px; border: 1px solid #ddd; border-radius: 4px; }
     button { background: #10b981; color: white; border: none; cursor: pointer; }
     button:hover { background: #059669; }
+    .english-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; }
+    .english-btn:hover { background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%) !important; }
   </style>
 </head>
 <body>
@@ -284,6 +348,7 @@ function getUserPage(username) {
         <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
         <button class="btn" onclick="showSection('compras')">🛒 Lista de la compra</button>
         <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
+        <button class="btn english-btn" onclick="accessEnglishApp('${user.name}')">🎓 Ca'mon</button>
       </div>
       <div class="user">
         <span style="font-size: 12px; font-weight: 500;">${user.name}</span>
@@ -438,6 +503,7 @@ function getUserPage(username) {
     </div>
   </div>
 
+  <script src="/auth-bridge.js"></script>
   <script>
     const username = '${username}';
     let currentWeek = 1;
@@ -648,3 +714,12 @@ function getUserPage(username) {
 </body>
 </html>`;
 }
+
+function getAdminPage() {
+  return getUserPage('javi_administrador');
+}
+
+const PORT = process.env.PORT || 10000;
+server.listen(PORT, () => {
+  console.log(`Servidor corriendo en puerto ${PORT}`);
+});

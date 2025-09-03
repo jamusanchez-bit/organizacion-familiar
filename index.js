@@ -325,6 +325,7 @@ function getUserPage(username) {
       <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
       <button class="btn" onclick="showSection('compras')">🛒 Compras</button>
       <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
+      <button class="btn" onclick="showSection('english')">🇬🇧 Ca'mon</button>
       <div style="margin-top: 50px; text-align: center;">
         <strong>${user.name}</strong>
       </div>
@@ -525,6 +526,20 @@ function getUserPage(username) {
             <input type="text" id="admin-input" placeholder="Escribe tu sugerencia..." style="width: 70%;">
             <button onclick="sendMessage('admin')">Enviar</button>
           </div>
+        </div>
+      </div>
+      
+      <div id="english" class="section">
+        <h1>Ca'mon - Aprende Inglés</h1>
+        <div class="card">
+          <iframe 
+            id="englishApp"
+            src="http://localhost:3000/dashboard" 
+            width="100%" 
+            height="800px"
+            frameborder="0"
+            style="border-radius: 8px;">
+          </iframe>
         </div>
       </div>
     </div>
@@ -735,6 +750,25 @@ function getUserPage(username) {
       }
       if (document.getElementById('daily-quote-text')) {
         document.getElementById('daily-quote-text').textContent = quote;
+      }
+    }
+    
+    async function loginToEnglishApp(username) {
+      try {
+        const response = await fetch('http://localhost:3000/api/auto-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username })
+        });
+        const data = await response.json();
+        
+        document.getElementById('englishApp').contentWindow.postMessage({
+          type: 'AUTO_LOGIN',
+          token: data.token,
+          user: data.user
+        }, '*');
+      } catch (error) {
+        console.log('Auto-login no disponible, usando modo demo');
       }
     }
     
