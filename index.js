@@ -610,10 +610,14 @@ function getUserPage(username) {
       const day = now.getDate();
       const month = months[now.getMonth()];
       const year = now.getFullYear();
-      const dateString = `${dayName} ${day} de ${month} de ${year}`;
+      const dateString = dayName + ' ' + day + ' de ' + month + ' de ' + year;
       const quote = getDailyQuote();
-      document.getElementById('current-date').textContent = dateString;
-      document.getElementById('daily-quote-text').textContent = quote;
+      if (document.getElementById('current-date')) {
+        document.getElementById('current-date').textContent = dateString;
+      }
+      if (document.getElementById('daily-quote-text')) {
+        document.getElementById('daily-quote-text').textContent = quote;
+      }
     }
     
     updateDailyContent();
