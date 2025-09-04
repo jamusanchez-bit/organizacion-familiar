@@ -276,89 +276,12 @@ const server = http.createServer((req, res) => {
     return;
   }
   
-  // Ruta de inglés
+  // Ruta Ca'mon - Sistema completo de aprendizaje de inglés
   if (parsedUrl.pathname === '/english' || parsedUrl.pathname === '/english/') {
-    const englishHTML = `<!DOCTYPE html>
-<html>
-<head>
-  <title>Ca'mon English</title>
-  <style>
-    * { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-    body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-    .header { text-align: center; color: white; margin-bottom: 40px; }
-    .card { background: white; border-radius: 12px; padding: 30px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    .btn { background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; }
-    .btn:hover { background: #5a67d8; }
-    .exercise { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 15px 0; }
-    input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin: 5px 0; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>🎓 Ca'mon English</h1>
-      <p>Aprende inglés de forma divertida y efectiva</p>
-    </div>
-    
-    <div class="card">
-      <h2>📊 Tu Nivel Actual</h2>
-      <p>Nivel: A1</p>
-      <button class="btn" onclick="alert('Prueba completada! Tu nivel es A2')">🎯 Hacer Prueba de Nivel</button>
-    </div>
-    
-    <div class="card">
-      <h2>📚 Ejercicios Diarios</h2>
-      <div class="exercise">
-        <h3>Gramática: Presente Simple</h3>
-        <p>Completa la frase: I _____ a student.</p>
-        <input type="text" id="grammar-answer" placeholder="Escribe tu respuesta">
-        <button class="btn" onclick="checkGrammar()">Verificar</button>
-        <div id="grammar-result"></div>
-      </div>
-      
-      <div class="exercise">
-        <h3>Comprensión Lectora</h3>
-        <p><strong>Texto:</strong> Hello, my name is Sarah. I am 25 years old.</p>
-        <p><strong>Pregunta:</strong> How old is Sarah?</p>
-        <div>
-          <input type="radio" name="reading" value="23"> 23
-          <input type="radio" name="reading" value="25"> 25
-          <input type="radio" name="reading" value="27"> 27
-        </div>
-        <button class="btn" onclick="checkReading()">Verificar</button>
-        <div id="reading-result"></div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    function checkGrammar() {
-      const answer = document.getElementById('grammar-answer').value.toLowerCase().trim();
-      const result = document.getElementById('grammar-result');
-      
-      if (answer === 'am') {
-        result.innerHTML = '<p style="color: green;">✅ ¡Correcto!</p>';
-      } else {
-        result.innerHTML = '<p style="color: red;">❌ Incorrecto. La respuesta es "am".</p>';
-      }
-    }
-    
-    function checkReading() {
-      const selected = document.querySelector('input[name="reading"]:checked');
-      const result = document.getElementById('reading-result');
-      
-      if (selected && selected.value === '25') {
-        result.innerHTML = '<p style="color: green;">✅ ¡Correcto!</p>';
-      } else {
-        result.innerHTML = '<p style="color: red;">❌ Incorrecto. Sarah tiene 25 años.</p>';
-      }
-    }
-  </script>
-</body>
-</html>`;
+    const user = parsedUrl.query.user || 'Usuario';
+    const camonHTML = getCamonPage(user);
     res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
-    res.end(englishHTML);
+    res.end(camonHTML);
     return;
   }
   
@@ -1122,6 +1045,142 @@ function getAdminPage() {
     
     loadData();
     setInterval(loadData, 10000);
+  </script>
+</body>
+</html>`;
+}
+
+// Sistema Ca'mon - Base de datos en memoria
+let camonUsers = {
+  javier: { level: 'A1.1', dailyScores: [], levelTests: [], lastActivity: null },
+  raquel: { level: 'A1.1', dailyScores: [], levelTests: [], lastActivity: null },
+  mario: { level: 'A1.1', dailyScores: [], levelTests: [], lastActivity: null },
+  alba: { level: 'A1.1', dailyScores: [], levelTests: [], lastActivity: null }
+};
+
+function getCamonPage(user) {
+  if (user === 'javi_administrador') {
+    return '<h1>Acceso denegado</h1><p>El administrador no tiene acceso a Ca\'mon</p>';
+  }
+  
+  const userData = camonUsers[user.toLowerCase()] || camonUsers['javier'];
+  
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <title>Ca'mon - ${user}</title>
+  <style>
+    * { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .header { text-align: center; color: white; margin-bottom: 40px; }
+    .user-info { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; margin-bottom: 30px; text-align: center; color: white; }
+    .level-badge { background: #10b981; color: white; padding: 8px 16px; border-radius: 25px; font-size: 18px; font-weight: bold; }
+    .card { background: white; border-radius: 12px; padding: 30px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .btn { background: #667eea; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; transition: all 0.3s; }
+    .btn:hover { background: #5a67d8; transform: translateY(-2px); }
+    .btn-primary { background: #10b981; }
+    .btn-primary:hover { background: #059669; }
+    .btn-secondary { background: #f59e0b; }
+    .btn-secondary:hover { background: #d97706; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .back-btn { background: #6b7280; margin-bottom: 20px; }
+    .back-btn:hover { background: #4b5563; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎓 Ca'mon</h1>
+      <p>Tu plataforma personal de aprendizaje de inglés</p>
+    </div>
+    
+    <div class="user-info">
+      <h2>Bienvenido, ${user}!</h2>
+      <p>Nivel actual: <span class="level-badge">${userData.level}</span></p>
+      <p>Ejercicios completados: ${userData.dailyScores.length} días</p>
+    </div>
+    
+    <div id="main-menu" class="section active">
+      <div class="card">
+        <h2>🎯 Prueba Inicial</h2>
+        <p>Evalúa tu nivel de inglés con 25 preguntas diseñadas por Cambridge University Press & Assessment.</p>
+        <button class="btn btn-primary" onclick="showSection('level-test')">Hacer Prueba de Nivel</button>
+      </div>
+      
+      <div class="card">
+        <h2>📚 Ejercicios Diarios</h2>
+        <p>Practica gramática y comprensión lectora adaptados a tu nivel actual (${userData.level}).</p>
+        <button class="btn btn-secondary" onclick="showSection('daily-exercises')">Comenzar Ejercicios</button>
+      </div>
+      
+      <div class="card">
+        <h2>📈 Mi Evolución</h2>
+        <p>Revisa tu progreso, calificaciones y historial de aprendizaje.</p>
+        <button class="btn" onclick="showSection('evolution')">Ver Mi Progreso</button>
+      </div>
+    </div>
+    
+    <div id="level-test" class="section">
+      <button class="btn back-btn" onclick="showSection('main-menu')">← Volver al Menú</button>
+      <div class="card">
+        <h2>🎯 Prueba de Nivel Cambridge</h2>
+        <p>Esta prueba determinará tu nivel exacto de inglés. Consta de 25 preguntas que evalúan desde A1.1 hasta C2.5.</p>
+        <button class="btn btn-primary" onclick="startLevelTest()">Comenzar Prueba</button>
+        <div id="test-content" style="display: none;"></div>
+      </div>
+    </div>
+    
+    <div id="daily-exercises" class="section">
+      <button class="btn back-btn" onclick="showSection('main-menu')">← Volver al Menú</button>
+      <div class="card">
+        <h2>📚 Ejercicios Diarios - Nivel ${userData.level}</h2>
+        <p>Completa los ejercicios de gramática y comprensión lectora de hoy.</p>
+        <button class="btn btn-secondary" onclick="startDailyExercises()">Comenzar Ejercicios</button>
+        <div id="exercises-content" style="display: none;"></div>
+      </div>
+    </div>
+    
+    <div id="evolution" class="section">
+      <button class="btn back-btn" onclick="showSection('main-menu')">← Volver al Menú</button>
+      <div class="card">
+        <h2>📈 Mi Evolución</h2>
+        <div id="evolution-content">
+          <p>Cargando tu historial de progreso...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const currentUser = '${user}';
+    const userLevel = '${userData.level}';
+    
+    function showSection(sectionId) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById(sectionId).classList.add('active');
+      
+      if (sectionId === 'evolution') {
+        loadEvolution();
+      }
+    }
+    
+    function startLevelTest() {
+      alert('Iniciando prueba de nivel Cambridge. Esta funcionalidad se está implementando.');
+    }
+    
+    function startDailyExercises() {
+      alert('Iniciando ejercicios diarios para nivel ' + userLevel + '. Esta funcionalidad se está implementando.');
+    }
+    
+    function loadEvolution() {
+      document.getElementById('evolution-content').innerHTML = 
+        '<p>Nivel actual: <strong>' + userLevel + '</strong></p>' +
+        '<p>Ejercicios completados: <strong>0 días</strong></p>' +
+        '<p>Pruebas de nivel realizadas: <strong>0</strong></p>' +
+        '<p><em>Tu historial aparecerá aquí cuando completes ejercicios.</em></p>';
+    }
   </script>
 </body>
 </html>`;
