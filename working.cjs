@@ -708,6 +708,11 @@ function getUserPage(username) {
       }
     });
     
+    function accessEnglishApp(userName) {
+      // Abrir la app de inglés en nueva ventana
+      window.open('/english?user=' + encodeURIComponent(userName), '_blank');
+    }
+    
     loadData();
     setInterval(loadData, 10000);
   </script>
