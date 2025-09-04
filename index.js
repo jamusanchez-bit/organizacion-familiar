@@ -325,7 +325,7 @@ function getUserPage(username) {
       <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
       <button class="btn" onclick="showSection('compras')">🛒 Compras</button>
       <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
-      <a href="/english?user=${user.name}" class="btn" style="text-decoration: none; color: inherit;">🇬🇧 Ca'mon</a>
+      <a href="/english?user=${user.name}" class="btn" style="text-decoration: none; color: inherit; display: block; text-align: left;">🇬🇧 Ca'mon</a>
       <div style="margin-top: 50px; text-align: center;">
         <strong>${user.name}</strong>
       </div>
