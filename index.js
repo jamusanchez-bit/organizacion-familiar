@@ -276,6 +276,92 @@ const server = http.createServer((req, res) => {
     return;
   }
   
+  // Ruta de inglés
+  if (parsedUrl.pathname === '/english' || parsedUrl.pathname === '/english/') {
+    const englishHTML = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Ca'mon English</title>
+  <style>
+    * { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .header { text-align: center; color: white; margin-bottom: 40px; }
+    .card { background: white; border-radius: 12px; padding: 30px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .btn { background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; }
+    .btn:hover { background: #5a67d8; }
+    .exercise { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 15px 0; }
+    input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin: 5px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎓 Ca'mon English</h1>
+      <p>Aprende inglés de forma divertida y efectiva</p>
+    </div>
+    
+    <div class="card">
+      <h2>📊 Tu Nivel Actual</h2>
+      <p>Nivel: A1</p>
+      <button class="btn" onclick="alert('Prueba completada! Tu nivel es A2')">🎯 Hacer Prueba de Nivel</button>
+    </div>
+    
+    <div class="card">
+      <h2>📚 Ejercicios Diarios</h2>
+      <div class="exercise">
+        <h3>Gramática: Presente Simple</h3>
+        <p>Completa la frase: I _____ a student.</p>
+        <input type="text" id="grammar-answer" placeholder="Escribe tu respuesta">
+        <button class="btn" onclick="checkGrammar()">Verificar</button>
+        <div id="grammar-result"></div>
+      </div>
+      
+      <div class="exercise">
+        <h3>Comprensión Lectora</h3>
+        <p><strong>Texto:</strong> Hello, my name is Sarah. I am 25 years old.</p>
+        <p><strong>Pregunta:</strong> How old is Sarah?</p>
+        <div>
+          <input type="radio" name="reading" value="23"> 23
+          <input type="radio" name="reading" value="25"> 25
+          <input type="radio" name="reading" value="27"> 27
+        </div>
+        <button class="btn" onclick="checkReading()">Verificar</button>
+        <div id="reading-result"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function checkGrammar() {
+      const answer = document.getElementById('grammar-answer').value.toLowerCase().trim();
+      const result = document.getElementById('grammar-result');
+      
+      if (answer === 'am') {
+        result.innerHTML = '<p style="color: green;">✅ ¡Correcto!</p>';
+      } else {
+        result.innerHTML = '<p style="color: red;">❌ Incorrecto. La respuesta es "am".</p>';
+      }
+    }
+    
+    function checkReading() {
+      const selected = document.querySelector('input[name="reading"]:checked');
+      const result = document.getElementById('reading-result');
+      
+      if (selected && selected.value === '25') {
+        result.innerHTML = '<p style="color: green;">✅ ¡Correcto!</p>';
+      } else {
+        result.innerHTML = '<p style="color: red;">❌ Incorrecto. Sarah tiene 25 años.</p>';
+      }
+    }
+  </script>
+</body>
+</html>`;
+    res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
+    res.end(englishHTML);
+    return;
+  }
+  
   res.writeHead(200, {'Content-Type': 'text/html'});
   res.end('<h1>Organización Familiar</h1>');
 });
