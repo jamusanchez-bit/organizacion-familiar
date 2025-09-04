@@ -1038,4 +1038,4 @@ function getAdminPage() {
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
-});// Force redeploy Thu Sep  4 16:14:45 CEST 2025
+});
