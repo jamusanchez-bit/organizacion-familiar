@@ -534,7 +534,7 @@ function getUserPage(username) {
         <div class="card">
           <iframe 
             id="englishApp"
-            src="http://localhost:3000/dashboard" 
+            src="/english" 
             width="100%" 
             height="800px"
             frameborder="0"
@@ -755,7 +755,7 @@ function getUserPage(username) {
     
     async function loginToEnglishApp(username) {
       try {
-        const response = await fetch('http://localhost:3000/api/auto-login', {
+        const response = await fetch('/api/auto-login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username })
