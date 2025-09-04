@@ -662,7 +662,7 @@ function getUserPage(username) {
         <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
         <button class="btn" onclick="showSection('compras')">🛒 Lista de la compra</button>
         <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
-        <button class="btn english-btn" onclick="accessEnglishApp('${user.name}')">🎓 Ca'mon</button>
+        <a href="/english?user=${encodeURIComponent(user.name)}" class="btn english-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">🎓 Ca'mon</a>
       </div>
       <div class="user">
         <span style="font-size: 12px; font-weight: 500;">${user.name}</span>
@@ -1022,10 +1022,7 @@ function getUserPage(username) {
       }
     });
     
-    function accessEnglishApp(userName) {
-      // Redirigir a la app de inglés en la misma ventana
-      window.location.href = '/english?user=' + encodeURIComponent(userName);
-    }
+
     
     loadData();
     setInterval(loadData, 10000);
