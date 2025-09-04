@@ -1,17 +1,20 @@
 REGLA CRÍTICA: PROTECCIÓN DEL ESTADO FUNCIONANDO
 
 ## ESTADO ACTUAL FUNCIONANDO (NO TOCAR):
-- Commit: 07c4b34 "Funcionalidad completada: app inglés en index.js"
+- Commit: 6138bfa "Funcionalidad completada: ejercicios diarios mejorados"
+- Tag estable: v2.0-camon-estable
 - Archivo principal: index.js (Railway lo ejecuta según railway.json)
 - App principal: ✅ Funcionando
-- App inglés: ✅ Funcionando en /english
-- Botón inglés: ✅ Funcionando
+- Sección Ca'mon: ✅ Funcionando completamente
+- Ejercicios diarios: ✅ Gramática y Reading implementados
+- Prueba de nivel: ✅ 25 preguntas Cambridge
+- Sistema de usuarios: ✅ 25 subniveles A1.1-C2.5
 
 ## ANTES DE CUALQUIER CAMBIO:
 1. SIEMPRE hacer backup: `git add . && git commit -m "Backup antes de [cambio]"`
 2. NUNCA tocar index.js sin backup
 3. NUNCA cambiar railway.json
-4. Si algo se rompe: `git checkout 07c4b34 -- index.js`
+4. Si algo se rompe: `git checkout v2.0-camon-estable -- index.js`
 
 ## ARCHIVOS CRÍTICOS:
 - index.js (archivo principal que ejecuta Railway)
