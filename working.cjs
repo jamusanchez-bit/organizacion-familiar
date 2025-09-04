@@ -1023,8 +1023,8 @@ function getUserPage(username) {
     });
     
     function accessEnglishApp(userName) {
-      // Abrir la app de inglés en nueva ventana
-      window.open('/english?user=' + encodeURIComponent(userName), '_blank');
+      // Redirigir a la app de inglés en la misma ventana
+      window.location.href = '/english?user=' + encodeURIComponent(userName);
     }
     
     loadData();
