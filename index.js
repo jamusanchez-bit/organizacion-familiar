@@ -1170,7 +1170,7 @@ function getCamonPage(user) {
     const levelQuestions = {
       'A1.1': {grammar: [{q: 'I _____ a student.', a: 'am'}, {q: 'She _____ happy.', a: 'is'}], reading: [{text: 'Hello. My name is John.', q: 'What is his name?', options: ['John', 'Peter', 'Mike'], a: 0}]},
       'A1.2': {grammar: [{q: 'They _____ teachers.', a: 'are'}, {q: 'We _____ from Spain.', a: 'are'}], reading: [{text: 'I live in London. It is a big city.', q: 'Where does he live?', options: ['Paris', 'London', 'Madrid'], a: 1}]},
-      'A1.3': {grammar: [{q: 'He _____ not here.', a: 'is'}, {q: 'You _____ very kind.', a: 'are'}], reading: [{text: 'Sarah works in a hospital. She is a nurse.', q: 'What is Sarah\'s job?', options: ['Doctor', 'Nurse', 'Teacher'], a: 1}]}
+      'A1.3': {grammar: [{q: 'He _____ not here.', a: 'is'}, {q: 'You _____ very kind.', a: 'are'}], reading: [{text: 'Sarah works in a hospital. She is a nurse.', q: 'What is Sarahs job?', options: ['Doctor', 'Nurse', 'Teacher'], a: 1}]}
     };
     
     let currentTest = [];
@@ -1274,7 +1274,7 @@ function getCamonPage(user) {
         '<h2>✅ Prueba Completada</h2>' +
         '<p>Puntuación: <strong>' + testScore + '/25 (' + percentage + '%)</strong></p>' +
         '<p>Tu nivel es: <strong>' + newLevel + '</strong></p>' +
-        '<button class="btn" onclick="showSection(\'main-menu\')">← Volver al Menú</button>' +
+        '<button class="btn" onclick="showSection(\"main-menu\")">← Volver al Menú</button>' +
         '</div>';
     }
     
