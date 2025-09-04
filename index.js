@@ -1278,29 +1278,225 @@ function getCamonPage(user) {
         '</div>';
     }
     
+    // Estado de ejercicios diarios
+    let dailyProgress = {
+      grammar: false,
+      reading: false,
+      chat: false,
+      grammarScore: 0,
+      readingScore: 0
+    };
+    
     function startDailyExercises() {
       document.getElementById('exercises-content').style.display = 'block';
-      document.getElementById('exercises-content').innerHTML = 
-        '<div class="card">' +
-        '<h3>📝 Gramática - Nivel ' + userLevel + '</h3>' +
-        '<p><strong>Lección:</strong> Presente Simple</p>' +
-        '<p>El presente simple se usa para expresar acciones habituales. Con "I/You/We/They" usamos el verbo base. Con "He/She/It" añadimos "-s".</p>' +
-        '<hr>' +
-        '<p>Completa: I _____ coffee every morning.</p>' +
-        '<input type="text" id="grammar1" placeholder="Tu respuesta">' +
-        '<button class="btn" onclick="checkGrammar1()">Verificar</button>' +
-        '<div id="grammar1-result"></div>' +
-        '</div>' +
-        '<div class="card">' +
-        '<h3>📚 Comprensión Lectora</h3>' +
-        '<p><strong>Texto:</strong> My name is Emma. I am 28 years old. I work as a teacher in a primary school. I love my job because I enjoy working with children.</p>' +
-        '<p><strong>Pregunta:</strong> What does Emma do for work?</p>' +
-        '<label><input type="radio" name="reading1" value="0"> She is a doctor</label><br>' +
-        '<label><input type="radio" name="reading1" value="1"> She is a teacher</label><br>' +
-        '<label><input type="radio" name="reading1" value="2"> She is a nurse</label><br>' +
-        '<button class="btn" onclick="checkReading1()">Verificar</button>' +
-        '<div id="reading1-result"></div>' +
-        '</div>';
+      showDailyMenu();
+    }
+    
+    function showDailyMenu() {
+      const today = new Date().toDateString();
+      let html = '<div class="card">';
+      html += '<h3>📚 Ejercicios Diarios - ' + today + '</h3>';
+      html += '<p>Completa los tres ejercicios para terminar tu sesión diaria:</p>';
+      
+      // Botón Gramática
+      html += '<div style="margin: 15px 0;">';
+      if (dailyProgress.grammar) {
+        html += '<button class="btn" style="background: #10b981;" disabled>✅ Gramática Completada (' + dailyProgress.grammarScore + '/10)</button>';
+      } else {
+        html += '<button class="btn btn-primary" onclick="startGrammar()">1. 📝 Gramática</button>';
+      }
+      html += '</div>';
+      
+      // Botón Reading
+      html += '<div style="margin: 15px 0;">';
+      if (dailyProgress.reading) {
+        html += '<button class="btn" style="background: #10b981;" disabled>✅ Reading Completado (' + dailyProgress.readingScore + '/10)</button>';
+      } else {
+        html += '<button class="btn btn-secondary" onclick="startReading()">2. 📚 Reading</button>';
+      }
+      html += '</div>';
+      
+      // Botón Chat
+      html += '<div style="margin: 15px 0;">';
+      if (dailyProgress.chat) {
+        html += '<button class="btn" style="background: #10b981;" disabled>✅ Chat con Elizabeth Completado</button>';
+      } else {
+        html += '<button class="btn" onclick="startChat()">3. 💬 Chat con Elizabeth</button>';
+      }
+      html += '</div>';
+      
+      // Progreso total
+      const completed = (dailyProgress.grammar ? 1 : 0) + (dailyProgress.reading ? 1 : 0) + (dailyProgress.chat ? 1 : 0);
+      html += '<hr><p><strong>Progreso:</strong> ' + completed + '/3 ejercicios completados</p>';
+      
+      if (completed === 3) {
+        const avgScore = Math.round((dailyProgress.grammarScore + dailyProgress.readingScore) / 2);
+        html += '<p style="color: #10b981; font-weight: bold;">✅ ¡Sesión diaria completada! Puntuación promedio: ' + avgScore + '/10</p>';
+      }
+      
+      html += '</div>';
+      document.getElementById('exercises-content').innerHTML = html;
+    }
+    
+    function startGrammar() {
+      const grammarLessons = {
+        'A1.1': {topic: 'Verbo TO BE - Presente', explanation: 'El verbo "to be" (ser/estar) es fundamental en inglés. Se conjuga: I am, You are, He/She/It is, We are, They are.', questions: [{q: 'I _____ happy.', a: 'am'}, {q: 'She _____ a doctor.', a: 'is'}, {q: 'They _____ students.', a: 'are'}, {q: 'We _____ friends.', a: 'are'}, {q: 'He _____ tall.', a: 'is'}, {q: 'You _____ smart.', a: 'are'}, {q: 'It _____ cold.', a: 'is'}, {q: 'I _____ tired.', a: 'am'}, {q: 'She _____ beautiful.', a: 'is'}, {q: 'We _____ ready.', a: 'are'}]},
+        'A1.2': {topic: 'Presente Simple - Verbos regulares', explanation: 'En presente simple, con I/You/We/They usamos el verbo base. Con He/She/It añadimos -s al final.', questions: [{q: 'I _____ coffee every day. (drink)', a: 'drink'}, {q: 'She _____ English. (speak)', a: 'speaks'}, {q: 'They _____ in London. (live)', a: 'live'}, {q: 'He _____ football. (play)', a: 'plays'}, {q: 'We _____ books. (read)', a: 'read'}, {q: 'She _____ to music. (listen)', a: 'listens'}, {q: 'I _____ early. (wake)', a: 'wake'}, {q: 'He _____ fast. (run)', a: 'runs'}, {q: 'They _____ hard. (work)', a: 'work'}, {q: 'She _____ well. (cook)', a: 'cooks'}]}
+      };
+      
+      const lesson = grammarLessons[userLevel] || grammarLessons['A1.1'];
+      
+      let html = '<div class="card">';
+      html += '<h3>📝 Gramática: ' + lesson.topic + '</h3>';
+      html += '<div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin: 15px 0;">';
+      html += '<p><strong>Lección de hoy:</strong></p>';
+      html += '<p>' + lesson.explanation + '</p>';
+      html += '</div>';
+      html += '<div id="grammar-exercise"></div>';
+      html += '</div>';
+      
+      document.getElementById('exercises-content').innerHTML = html;
+      startGrammarQuestions(lesson.questions);
+    }
+    
+    let grammarQuestions = [];
+    let currentGrammarQ = 0;
+    let grammarScore = 0;
+    
+    function startGrammarQuestions(questions) {
+      grammarQuestions = questions;
+      currentGrammarQ = 0;
+      grammarScore = 0;
+      showGrammarQuestion();
+    }
+    
+    function showGrammarQuestion() {
+      if (currentGrammarQ >= grammarQuestions.length) {
+        finishGrammar();
+        return;
+      }
+      
+      const q = grammarQuestions[currentGrammarQ];
+      let html = '<h4>Pregunta ' + (currentGrammarQ + 1) + ' de 10</h4>';
+      html += '<p>' + q.q + '</p>';
+      html += '<input type="text" id="grammar-answer" placeholder="Escribe tu respuesta" style="width: 300px;">';
+      html += '<br><button class="btn" onclick="checkGrammarAnswer()">Verificar</button>';
+      html += '<div id="grammar-feedback"></div>';
+      
+      document.getElementById('grammar-exercise').innerHTML = html;
+      document.getElementById('grammar-answer').focus();
+    }
+    
+    function checkGrammarAnswer() {
+      const answer = document.getElementById('grammar-answer').value.toLowerCase().trim();
+      const correct = grammarQuestions[currentGrammarQ].a.toLowerCase();
+      const feedback = document.getElementById('grammar-feedback');
+      
+      if (answer === correct) {
+        grammarScore++;
+        feedback.innerHTML = '<p style="color: #10b981; margin: 10px 0;">✅ ¡Correcto!</p>';
+      } else {
+        feedback.innerHTML = '<p style="color: #dc2626; margin: 10px 0;">❌ Incorrecto. La respuesta correcta es: <strong>' + grammarQuestions[currentGrammarQ].a + '</strong></p>';
+      }
+      
+      setTimeout(() => {
+        currentGrammarQ++;
+        showGrammarQuestion();
+      }, 2000);
+    }
+    
+    function finishGrammar() {
+      dailyProgress.grammar = true;
+      dailyProgress.grammarScore = grammarScore;
+      
+      let html = '<h4>✅ Gramática Completada</h4>';
+      html += '<p>Puntuación: <strong>' + grammarScore + '/10</strong></p>';
+      html += '<button class="btn" onclick="showDailyMenu()">Volver a Ejercicios Diarios</button>';
+      
+      document.getElementById('grammar-exercise').innerHTML = html;
+    }
+    
+    function startReading() {
+      const readingTexts = {
+        'A1.1': {text: 'Hello! My name is Anna. I am 25 years old. I live in Madrid with my family. I work in a small office near my house. I like my job because it is interesting. Every morning I wake up at 7 AM and have breakfast with my parents. Then I go to work by bus. In the evening, I come home and watch TV with my family.', questions: [{q: 'How old is Anna?', options: ['23', '25', '27'], a: 1}, {q: 'Where does Anna live?', options: ['Barcelona', 'Madrid', 'Valencia'], a: 1}, {q: 'How does Anna go to work?', options: ['By car', 'By bus', 'Walking'], a: 1}, {q: 'What time does Anna wake up?', options: ['6 AM', '7 AM', '8 AM'], a: 1}, {q: 'Who does Anna live with?', options: ['Friends', 'Alone', 'Family'], a: 2}, {q: 'Where is Annas office?', options: ['Far from home', 'Near her house', 'In the city center'], a: 1}, {q: 'What does Anna do in the evening?', options: ['Read books', 'Watch TV', 'Go shopping'], a: 1}, {q: 'Does Anna like her job?', options: ['No', 'Yes', 'Sometimes'], a: 1}, {q: 'What does Anna have for breakfast?', options: ['With parents', 'Alone', 'With friends'], a: 0}, {q: 'How does Anna describe her job?', options: ['Boring', 'Interesting', 'Difficult'], a: 1}]}
+      };
+      
+      const reading = readingTexts[userLevel] || readingTexts['A1.1'];
+      
+      let html = '<div class="card">';
+      html += '<h3>📚 Reading Comprehension</h3>';
+      html += '<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; line-height: 1.6;">';
+      html += '<p>' + reading.text + '</p>';
+      html += '</div>';
+      html += '<div id="reading-exercise"></div>';
+      html += '</div>';
+      
+      document.getElementById('exercises-content').innerHTML = html;
+      startReadingQuestions(reading.questions);
+    }
+    
+    let readingQuestions = [];
+    let currentReadingQ = 0;
+    let readingScore = 0;
+    
+    function startReadingQuestions(questions) {
+      readingQuestions = questions;
+      currentReadingQ = 0;
+      readingScore = 0;
+      showReadingQuestion();
+    }
+    
+    function showReadingQuestion() {
+      if (currentReadingQ >= readingQuestions.length) {
+        finishReading();
+        return;
+      }
+      
+      const q = readingQuestions[currentReadingQ];
+      let html = '<h4>Pregunta ' + (currentReadingQ + 1) + ' de 10</h4>';
+      html += '<p><strong>' + q.q + '</strong></p>';
+      
+      for (let i = 0; i < q.options.length; i++) {
+        html += '<label style="display: block; margin: 8px 0;"><input type="radio" name="reading-answer" value="' + i + '"> ' + q.options[i] + '</label>';
+      }
+      
+      html += '<br><button class="btn" onclick="checkReadingAnswer()">Verificar</button>';
+      html += '<div id="reading-feedback"></div>';
+      
+      document.getElementById('reading-exercise').innerHTML = html;
+    }
+    
+    function checkReadingAnswer() {
+      const selected = document.querySelector('input[name="reading-answer"]:checked');
+      const feedback = document.getElementById('reading-feedback');
+      
+      if (selected && parseInt(selected.value) === readingQuestions[currentReadingQ].a) {
+        readingScore++;
+        feedback.innerHTML = '<p style="color: #10b981; margin: 10px 0;">✅ ¡Correcto!</p>';
+      } else {
+        const correctAnswer = readingQuestions[currentReadingQ].options[readingQuestions[currentReadingQ].a];
+        feedback.innerHTML = '<p style="color: #dc2626; margin: 10px 0;">❌ Incorrecto. La respuesta correcta es: <strong>' + correctAnswer + '</strong></p>';
+      }
+      
+      setTimeout(() => {
+        currentReadingQ++;
+        showReadingQuestion();
+      }, 2000);
+    }
+    
+    function finishReading() {
+      dailyProgress.reading = true;
+      dailyProgress.readingScore = readingScore;
+      
+      let html = '<h4>✅ Reading Completado</h4>';
+      html += '<p>Puntuación: <strong>' + readingScore + '/10</strong></p>';
+      html += '<button class="btn" onclick="showDailyMenu()">Volver a Ejercicios Diarios</button>';
+      
+      document.getElementById('reading-exercise').innerHTML = html;
+    }
+    
+    function startChat() {
+      alert('Chat con Elizabeth se implementará próximamente con OpenAI + ElevenLabs');
     }
     
     function checkGrammar1() {
