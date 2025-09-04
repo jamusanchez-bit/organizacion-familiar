@@ -2,10 +2,10 @@
   "name": "organizacion-familiar",
   "version": "1.0.0",
   "description": "Sistema de organización familiar",
-  "main": "index.js",
+  "main": "working.cjs",
   "scripts": {
-    "start": "node index.js",
-    "dev": "node index.js"
+    "start": "node working.cjs",
+    "dev": "node working.cjs"
   },
   "dependencies": {
     "pg": "^8.11.3",
