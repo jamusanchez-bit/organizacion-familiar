@@ -1,11 +1,17 @@
 # 📋 ESTRUCTURA COMPLETA DE LA WEB
 
+## 🌐 Información de Despliegue
+- **Dominio Principal**: https://organizacion-familiar-javi.onrender.com
+- **Plataforma**: Render (migrado desde Railway)
+- **Base de Datos**: PostgreSQL (Neon)
+- **Archivo Principal**: `working.cjs`
+
 ## 🔗 URLs y Usuarios
-- **Javier**: `/javier/abc123xyz789def456`
-- **Raquel**: `/raquel/uvw012rst345ghi678`
-- **Mario**: `/mario/jkl901mno234pqr567`
-- **Alba**: `/alba/stu890vwx123yzb456`
-- **Admin**: `/admin/cde789fgh012ijl345`
+- **Javier**: https://organizacion-familiar-javi.onrender.com/javier/abc123xyz789def456
+- **Raquel**: https://organizacion-familiar-javi.onrender.com/raquel/uvw012rst345ghi678
+- **Mario**: https://organizacion-familiar-javi.onrender.com/mario/jkl901mno234pqr567
+- **Alba**: https://organizacion-familiar-javi.onrender.com/alba/stu890vwx123yzb456
+- **Admin**: https://organizacion-familiar-javi.onrender.com/admin/cde789fgh012ijl345
 
 ## 🎨 Diseño y Layout
 
@@ -121,6 +127,7 @@
 - `POST /api/complete-meal` - Marcar comida hecha
 - `POST /api/message` - Enviar mensaje
 - `GET /api/data` - Obtener todos los datos
+- `GET /health` - Endpoint de salud para monitoreo
 
 ### Actualizaciones
 - Carga inicial: `loadData()`
@@ -147,5 +154,52 @@ javi_administrador: { id: 'javi_administrador', name: 'Javi (Admin)', password: 
 ### Recetas Iniciales
 - Lubina sobre cama de verduras
 - Salmón en papillote
+
+## 🛡️ Sistema de Protección y Backup
+
+### Archivos de Backup
+- `backup-system.sh` - Backup completo automático
+- `deploy-safe.sh` - Despliegue con verificaciones
+- `health-check.js` - Monitoreo de salud de la app
+- Carpeta `backups/` con respaldos automáticos
+
+### Reglas de Desarrollo
+- NUNCA tocar `working.cjs` si funciona en producción
+- Siempre hacer backup antes de cambios: `git add . && git commit -m "Backup antes de cambios"`
+- Usar ramas separadas para nuevas funcionalidades
+- Rollback inmediato si algo se rompe
+
+### Comandos de Emergencia
+```bash
+# Verificar salud
+node health-check.js
+
+# Backup completo
+./backup-system.sh
+
+# Despliegue seguro
+./deploy-safe.sh
+
+# Rollback rápido
+git log --oneline -10
+git checkout <ultimo_commit_funcionando>
+git push origin main --force
+```
+
+## 🔧 Arquitectura Técnica
+
+### Archivos Principales
+- `working.cjs` - Servidor principal en producción
+- `package.json` - Dependencias y scripts
+- `vercel.json` - Configuración de despliegue
+- `.env` - Variables de entorno
+
+### Estructura de Carpetas
+- `api/` - Endpoints adicionales
+- `public/` - Archivos estáticos
+- `src/` - Código fuente React/TypeScript
+- `server/` - Lógica del servidor
+- `backups/` - Respaldos automáticos
+- `.amazonq/rules/` - Reglas de desarrollo
 
 Esta documentación permite recrear exactamente la web tal como está funcionando ahora.
