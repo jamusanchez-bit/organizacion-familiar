@@ -64,6 +64,7 @@ node health-check.js
 - **Comidas**: Planificación semanal
 - **Compras**: Lista automática
 - **Recetas**: Gestión de recetas
+- **Ca'mon**: Sección de aprendizaje de inglés integrada
 
 ## 🚨 En Caso de Problemas
 
