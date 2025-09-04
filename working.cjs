@@ -600,7 +600,7 @@ const server = http.createServer((req, res) => {
     return;
   }
   
-  // Ruta de inglés
+  // Ruta de inglés - PRIMERA PRIORIDAD
   if (parsedUrl.pathname === '/english' || parsedUrl.pathname === '/english/') {
     const englishHTML = `<!DOCTYPE html>
 <html>
@@ -614,6 +614,9 @@ const server = http.createServer((req, res) => {
     .card { background: white; border-radius: 12px; padding: 30px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
     .btn { background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; }
     .btn:hover { background: #5a67d8; }
+    .level-badge { background: #10b981; color: white; padding: 4px 12px; border-radius: 20px; font-size: 14px; }
+    .exercise { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 15px 0; }
+    input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin: 5px 0; }
   </style>
 </head>
 <body>
@@ -622,18 +625,67 @@ const server = http.createServer((req, res) => {
       <h1>🎓 Ca'mon English</h1>
       <p>Aprende inglés de forma divertida y efectiva</p>
     </div>
+    
     <div class="card">
       <h2>📊 Tu Nivel Actual</h2>
-      <p>Nivel: A1</p>
-      <button class="btn" onclick="alert('Prueba de nivel iniciada')">🎯 Hacer Prueba de Nivel</button>
+      <p>Nivel: <span class="level-badge">A1</span></p>
+      <button class="btn" onclick="startLevelTest()">🎯 Hacer Prueba de Nivel</button>
     </div>
+    
     <div class="card">
       <h2>📚 Ejercicios Diarios</h2>
-      <p>Completa la frase: I _____ a student.</p>
-      <input type="text" placeholder="Escribe tu respuesta">
-      <button class="btn" onclick="alert('¡Correcto! La respuesta es am')">Verificar</button>
+      <div class="exercise">
+        <h3>Gramática: Presente Simple</h3>
+        <p>Completa la frase:</p>
+        <p>I _____ a student.</p>
+        <input type="text" id="grammar-answer" placeholder="Escribe tu respuesta">
+        <button class="btn" onclick="checkGrammar()">Verificar</button>
+        <div id="grammar-result"></div>
+      </div>
+      
+      <div class="exercise">
+        <h3>Comprensión Lectora</h3>
+        <p><strong>Texto:</strong> Hello, my name is Sarah. I am 25 years old and I live in London.</p>
+        <p><strong>Pregunta:</strong> How old is Sarah?</p>
+        <div>
+          <input type="radio" name="reading" value="23"> 23
+          <input type="radio" name="reading" value="24"> 24
+          <input type="radio" name="reading" value="25"> 25
+          <input type="radio" name="reading" value="26"> 26
+        </div>
+        <button class="btn" onclick="checkReading()">Verificar</button>
+        <div id="reading-result"></div>
+      </div>
     </div>
   </div>
+
+  <script>
+    function startLevelTest() {
+      alert('Prueba de nivel iniciada. Esta funcionalidad se implementará próximamente.');
+    }
+    
+    function checkGrammar() {
+      const answer = document.getElementById('grammar-answer').value.toLowerCase().trim();
+      const result = document.getElementById('grammar-result');
+      
+      if (answer === 'am') {
+        result.innerHTML = '<p style="color: green;">✅ ¡Correcto! "I am a student."</p>';
+      } else {
+        result.innerHTML = '<p style="color: red;">❌ Incorrecto. La respuesta correcta es "am".</p>';
+      }
+    }
+    
+    function checkReading() {
+      const selected = document.querySelector('input[name="reading"]:checked');
+      const result = document.getElementById('reading-result');
+      
+      if (selected && selected.value === '25') {
+        result.innerHTML = '<p style="color: green;">✅ ¡Correcto! Sarah tiene 25 años.</p>';
+      } else {
+        result.innerHTML = '<p style="color: red;">❌ Incorrecto. Sarah tiene 25 años.</p>';
+      }
+    }
+  </script>
 </body>
 </html>`;
     res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
@@ -703,7 +755,7 @@ function getUserPage(username) {
         <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
         <button class="btn" onclick="showSection('compras')">🛒 Lista de la compra</button>
         <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
-        <button class="btn" onclick="window.open('https://www.duolingo.com', '_blank')">🎓 Ca'mon</button>
+        <button class="btn" onclick="window.location.href='/english'">🎓 Ca'mon</button>
       </div>
       <div class="user">
         <span style="font-size: 12px; font-weight: 500;">${user.name}</span>
