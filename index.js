@@ -1166,12 +1166,163 @@ function getCamonPage(user) {
       }
     }
     
+    // Base de preguntas Cambridge por nivel
+    const levelQuestions = {
+      'A1.1': {grammar: [{q: 'I _____ a student.', a: 'am'}, {q: 'She _____ happy.', a: 'is'}], reading: [{text: 'Hello. My name is John.', q: 'What is his name?', options: ['John', 'Peter', 'Mike'], a: 0}]},
+      'A1.2': {grammar: [{q: 'They _____ teachers.', a: 'are'}, {q: 'We _____ from Spain.', a: 'are'}], reading: [{text: 'I live in London. It is a big city.', q: 'Where does he live?', options: ['Paris', 'London', 'Madrid'], a: 1}]},
+      'A1.3': {grammar: [{q: 'He _____ not here.', a: 'is'}, {q: 'You _____ very kind.', a: 'are'}], reading: [{text: 'Sarah works in a hospital. She is a nurse.', q: 'What is Sarah\'s job?', options: ['Doctor', 'Nurse', 'Teacher'], a: 1}]}
+    };
+    
+    let currentTest = [];
+    let currentQuestion = 0;
+    let testScore = 0;
+    
     function startLevelTest() {
-      alert('Iniciando prueba de nivel Cambridge. Esta funcionalidad se está implementando.');
+      // Generar 25 preguntas aleatorias (10 gramática + 15 reading)
+      currentTest = [];
+      currentQuestion = 0;
+      testScore = 0;
+      
+      // 10 preguntas de gramática
+      const levels = ['A1.1', 'A1.2', 'A1.3', 'A2.1', 'A2.2', 'B1.1', 'B1.2', 'B2.1', 'B2.2', 'C1.1'];
+      for (let i = 0; i < 10; i++) {
+        const level = levels[i % levels.length];
+        const questions = levelQuestions[level] ? levelQuestions[level].grammar : levelQuestions['A1.1'].grammar;
+        const q = questions[Math.floor(Math.random() * questions.length)];
+        currentTest.push({...q, type: 'grammar', level: level});
+      }
+      
+      // 15 preguntas de reading
+      for (let i = 0; i < 15; i++) {
+        const level = levels[i % levels.length];
+        const questions = levelQuestions[level] ? levelQuestions[level].reading : levelQuestions['A1.1'].reading;
+        const q = questions[Math.floor(Math.random() * questions.length)];
+        currentTest.push({...q, type: 'reading', level: level});
+      }
+      
+      // Mezclar preguntas
+      currentTest.sort(() => Math.random() - 0.5);
+      
+      document.getElementById('test-content').style.display = 'block';
+      showTestQuestion();
+    }
+    
+    function showTestQuestion() {
+      if (currentQuestion >= currentTest.length) {
+        finishLevelTest();
+        return;
+      }
+      
+      const q = currentTest[currentQuestion];
+      let html = '<div class="card">';
+      html += '<h3>Pregunta ' + (currentQuestion + 1) + ' de 25</h3>';
+      
+      if (q.type === 'grammar') {
+        html += '<p>' + q.q + '</p>';
+        html += '<input type="text" id="answer" placeholder="Escribe tu respuesta">';
+      } else {
+        html += '<p><strong>Texto:</strong> ' + q.text + '</p>';
+        html += '<p><strong>Pregunta:</strong> ' + q.q + '</p>';
+        for (let i = 0; i < q.options.length; i++) {
+          html += '<label><input type="radio" name="answer" value="' + i + '"> ' + q.options[i] + '</label><br>';
+        }
+      }
+      
+      html += '<button class="btn" onclick="submitTestAnswer()">Siguiente</button>';
+      html += '</div>';
+      
+      document.getElementById('test-content').innerHTML = html;
+    }
+    
+    function submitTestAnswer() {
+      const q = currentTest[currentQuestion];
+      let correct = false;
+      
+      if (q.type === 'grammar') {
+        const answer = document.getElementById('answer').value.toLowerCase().trim();
+        correct = answer === q.a.toLowerCase();
+      } else {
+        const selected = document.querySelector('input[name="answer"]:checked');
+        correct = selected && parseInt(selected.value) === q.a;
+      }
+      
+      if (correct) testScore++;
+      currentQuestion++;
+      showTestQuestion();
+    }
+    
+    function finishLevelTest() {
+      const percentage = Math.round((testScore / 25) * 100);
+      let newLevel = 'A1.1';
+      
+      if (percentage >= 95) newLevel = 'C2.5';
+      else if (percentage >= 90) newLevel = 'C2.1';
+      else if (percentage >= 85) newLevel = 'C1.5';
+      else if (percentage >= 80) newLevel = 'C1.1';
+      else if (percentage >= 75) newLevel = 'B2.5';
+      else if (percentage >= 70) newLevel = 'B2.1';
+      else if (percentage >= 65) newLevel = 'B1.5';
+      else if (percentage >= 60) newLevel = 'B1.1';
+      else if (percentage >= 55) newLevel = 'A2.5';
+      else if (percentage >= 50) newLevel = 'A2.1';
+      else if (percentage >= 40) newLevel = 'A1.5';
+      else if (percentage >= 30) newLevel = 'A1.3';
+      else if (percentage >= 20) newLevel = 'A1.2';
+      
+      document.getElementById('test-content').innerHTML = 
+        '<div class="card">' +
+        '<h2>✅ Prueba Completada</h2>' +
+        '<p>Puntuación: <strong>' + testScore + '/25 (' + percentage + '%)</strong></p>' +
+        '<p>Tu nivel es: <strong>' + newLevel + '</strong></p>' +
+        '<button class="btn" onclick="showSection(\'main-menu\')">← Volver al Menú</button>' +
+        '</div>';
     }
     
     function startDailyExercises() {
-      alert('Iniciando ejercicios diarios para nivel ' + userLevel + '. Esta funcionalidad se está implementando.');
+      document.getElementById('exercises-content').style.display = 'block';
+      document.getElementById('exercises-content').innerHTML = 
+        '<div class="card">' +
+        '<h3>📝 Gramática - Nivel ' + userLevel + '</h3>' +
+        '<p><strong>Lección:</strong> Presente Simple</p>' +
+        '<p>El presente simple se usa para expresar acciones habituales. Con "I/You/We/They" usamos el verbo base. Con "He/She/It" añadimos "-s".</p>' +
+        '<hr>' +
+        '<p>Completa: I _____ coffee every morning.</p>' +
+        '<input type="text" id="grammar1" placeholder="Tu respuesta">' +
+        '<button class="btn" onclick="checkGrammar1()">Verificar</button>' +
+        '<div id="grammar1-result"></div>' +
+        '</div>' +
+        '<div class="card">' +
+        '<h3>📚 Comprensión Lectora</h3>' +
+        '<p><strong>Texto:</strong> My name is Emma. I am 28 years old. I work as a teacher in a primary school. I love my job because I enjoy working with children.</p>' +
+        '<p><strong>Pregunta:</strong> What does Emma do for work?</p>' +
+        '<label><input type="radio" name="reading1" value="0"> She is a doctor</label><br>' +
+        '<label><input type="radio" name="reading1" value="1"> She is a teacher</label><br>' +
+        '<label><input type="radio" name="reading1" value="2"> She is a nurse</label><br>' +
+        '<button class="btn" onclick="checkReading1()">Verificar</button>' +
+        '<div id="reading1-result"></div>' +
+        '</div>';
+    }
+    
+    function checkGrammar1() {
+      const answer = document.getElementById('grammar1').value.toLowerCase().trim();
+      const result = document.getElementById('grammar1-result');
+      
+      if (answer === 'drink') {
+        result.innerHTML = '<p style="color: green;">✅ ¡Correcto!</p>';
+      } else {
+        result.innerHTML = '<p style="color: red;">❌ Incorrecto. La respuesta es "drink".</p>';
+      }
+    }
+    
+    function checkReading1() {
+      const selected = document.querySelector('input[name="reading1"]:checked');
+      const result = document.getElementById('reading1-result');
+      
+      if (selected && selected.value === '1') {
+        result.innerHTML = '<p style="color: green;">✅ ¡Correcto!</p>';
+      } else {
+        result.innerHTML = '<p style="color: red;">❌ Incorrecto. Emma es profesora.</p>';
+      }
     }
     
     function loadEvolution() {
