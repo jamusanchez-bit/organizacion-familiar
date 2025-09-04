@@ -600,6 +600,47 @@ const server = http.createServer((req, res) => {
     return;
   }
   
+  // Ruta de inglés
+  if (parsedUrl.pathname === '/english' || parsedUrl.pathname === '/english/') {
+    const englishHTML = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Ca'mon English</title>
+  <style>
+    * { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .header { text-align: center; color: white; margin-bottom: 40px; }
+    .card { background: white; border-radius: 12px; padding: 30px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .btn { background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; }
+    .btn:hover { background: #5a67d8; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎓 Ca'mon English</h1>
+      <p>Aprende inglés de forma divertida y efectiva</p>
+    </div>
+    <div class="card">
+      <h2>📊 Tu Nivel Actual</h2>
+      <p>Nivel: A1</p>
+      <button class="btn" onclick="alert('Prueba de nivel iniciada')">🎯 Hacer Prueba de Nivel</button>
+    </div>
+    <div class="card">
+      <h2>📚 Ejercicios Diarios</h2>
+      <p>Completa la frase: I _____ a student.</p>
+      <input type="text" placeholder="Escribe tu respuesta">
+      <button class="btn" onclick="alert('¡Correcto! La respuesta es am')">Verificar</button>
+    </div>
+  </div>
+</body>
+</html>`;
+    res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
+    res.end(englishHTML);
+    return;
+  }
+  
   res.writeHead(200, {'Content-Type': 'text/html'});
   res.end('<h1>Organización Familiar</h1><p>Accede con tu enlace personal</p>');
 });
