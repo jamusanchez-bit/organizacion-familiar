@@ -4,11 +4,11 @@ Sistema completo de organización familiar con mensajes, actividades, inventario
 
 ## 🔗 Enlaces de Acceso
 
-- **Javier**: https://organizacion-familiar-javi.onrender.com/javier/abc123xyz789def456
-- **Raquel**: https://organizacion-familiar-javi.onrender.com/raquel/uvw012rst345ghi678
-- **Mario**: https://organizacion-familiar-javi.onrender.com/mario/jkl901mno234pqr567
-- **Alba**: https://organizacion-familiar-javi.onrender.com/alba/stu890vwx123yzb456
-- **Administrador**: https://organizacion-familiar-javi.onrender.com/admin/cde789fgh012ijl345
+- **Javier**: https://organizacion-familiar-production.up.railway.app/javier/abc123xyz789def456
+- **Raquel**: https://organizacion-familiar-production.up.railway.app/raquel/uvw012rst345ghi678
+- **Mario**: https://organizacion-familiar-production.up.railway.app/mario/jkl901mno234pqr567
+- **Alba**: https://organizacion-familiar-production.up.railway.app/alba/stu890vwx123yzb456
+- **Administrador**: https://organizacion-familiar-production.up.railway.app/admin/cde789fgh012ijl345
 
 ## 🛠️ Comandos de Mantenimiento
 
@@ -32,8 +32,21 @@ node health-check.js
 - **Frontend**: HTML/CSS/JavaScript vanilla
 - **Backend**: Node.js
 - **Base de Datos**: PostgreSQL (Neon)
-- **Hosting**: Render
-- **Dominio**: organizacion-familiar-javi.onrender.com
+- **Hosting**: Railway
+- **Dominio**: organizacion-familiar-production.up.railway.app
+
+## 📝 ESTADO ACTUAL DEL PROYECTO (CRÍTICO - NO BORRAR)
+
+### Plataforma de Despliegue: RAILWAY
+- URL: https://organizacion-familiar-production.up.railway.app
+- Archivo principal: `working.cjs`
+- Render eliminado completamente - SOLO RAILWAY
+
+### Últimos Cambios Realizados:
+- ✅ Migración completa a Railway
+- ✅ Eliminación de todos los proyectos de Render
+- ✅ Botón de inglés arreglado (cambio de window.open a window.location.href)
+- 🔄 PENDIENTE: Verificar despliegue del botón de inglés en Railway
 
 ## 🛡️ Sistema de Protección
 
@@ -55,9 +68,10 @@ node health-check.js
 ## 🚨 En Caso de Problemas
 
 1. **App no funciona**: `node health-check.js`
-2. **Rollback**: Vercel Dashboard → Deployments → deployment anterior → "Promote to Production"
+2. **Rollback**: Railway Dashboard → Deployments → deployment anterior → "Redeploy"
 3. **Restaurar BD**: Usar archivo `backups/db_backup_*.sql`
 4. **Restaurar código**: `git log` y `git checkout <commit>`
+5. **Forzar redeploy**: Railway Dashboard → "Deploy Now"
 
 ## 📞 Soporte
 

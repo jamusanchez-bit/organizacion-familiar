@@ -1,17 +1,17 @@
 # 📋 ESTRUCTURA COMPLETA DE LA WEB
 
 ## 🌐 Información de Despliegue
-- **Dominio Principal**: https://organizacion-familiar-javi.onrender.com
-- **Plataforma**: Render (migrado desde Railway)
+- **Dominio Principal**: https://organizacion-familiar-production.up.railway.app
+- **Plataforma**: Railway (Render eliminado completamente)
 - **Base de Datos**: PostgreSQL (Neon)
 - **Archivo Principal**: `working.cjs`
 
 ## 🔗 URLs y Usuarios
-- **Javier**: https://organizacion-familiar-javi.onrender.com/javier/abc123xyz789def456
-- **Raquel**: https://organizacion-familiar-javi.onrender.com/raquel/uvw012rst345ghi678
-- **Mario**: https://organizacion-familiar-javi.onrender.com/mario/jkl901mno234pqr567
-- **Alba**: https://organizacion-familiar-javi.onrender.com/alba/stu890vwx123yzb456
-- **Admin**: https://organizacion-familiar-javi.onrender.com/admin/cde789fgh012ijl345
+- **Javier**: https://organizacion-familiar-production.up.railway.app/javier/abc123xyz789def456
+- **Raquel**: https://organizacion-familiar-production.up.railway.app/raquel/uvw012rst345ghi678
+- **Mario**: https://organizacion-familiar-production.up.railway.app/mario/jkl901mno234pqr567
+- **Alba**: https://organizacion-familiar-production.up.railway.app/alba/stu890vwx123yzb456
+- **Admin**: https://organizacion-familiar-production.up.railway.app/admin/cde789fgh012ijl345
 
 ## 🎨 Diseño y Layout
 
