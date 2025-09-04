@@ -241,14 +241,7 @@ const server = http.createServer((req, res) => {
     return;
   }
   
-  // Rutas para la app de inglés
-  if (parsedUrl.pathname.startsWith('/english/api/')) {
-    // Proxy a la API de inglés (por ahora devolver 404)
-    res.writeHead(404, {'Content-Type': 'application/json'});
-    res.end(JSON.stringify({error: 'English API not implemented yet'}));
-    return;
-  }
-  
+  // Rutas para la app de inglés - ANTES de la página principal
   if (parsedUrl.pathname === '/english' || parsedUrl.pathname === '/english/') {
     try {
       const filePath = path.join(__dirname, 'public/english/index.html');
@@ -259,6 +252,13 @@ const server = http.createServer((req, res) => {
       res.writeHead(404);
       res.end('English app not found');
     }
+    return;
+  }
+  
+  if (parsedUrl.pathname.startsWith('/english/api/')) {
+    // Proxy a la API de inglés (por ahora devolver 404)
+    res.writeHead(404, {'Content-Type': 'application/json'});
+    res.end(JSON.stringify({error: 'English API not implemented yet'}));
     return;
   }
   
