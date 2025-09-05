@@ -395,7 +395,7 @@ function getUserPage(username) {
       <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
       <button class="btn" onclick="showSection('compras')">🛒 Compras</button>
       <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
-      <button class="btn" onclick="showSection('english')">🇬🇧 Ca'mon</button>
+      <button class="btn" onclick="window.location.href='/english'">🇬🇧 Ca'mon</button>
       <div style="margin-top: 50px; text-align: center;">
         <strong>${user.name}</strong>
       </div>
@@ -612,7 +612,7 @@ function getUserPage(username) {
         <div class="card">
           <h2>📚 Ejercicios Diarios</h2>
           <p>Practica gramática y comprensión lectora adaptados a tu nivel actual.</p>
-          <button class="btn btn-secondary" onclick="showCamonChat()">Comenzar Ejercicios</button>
+          <button class="btn btn-secondary" onclick="window.open('/english', '_blank')">Comenzar Ejercicios</button>
         </div>
         
         <div class="card">
@@ -620,8 +620,6 @@ function getUserPage(username) {
           <p>Revisa tu progreso, calificaciones y historial de aprendizaje.</p>
           <button class="btn" onclick="alert('Evolución disponible próximamente')">Ver Mi Progreso</button>
         </div>
-        
-        <div id="camon-chat-area" style="display: none;"></div>
       </div>
     </div>
   </div>
@@ -850,76 +848,6 @@ function getUserPage(username) {
         }, '*');
       } catch (error) {
         console.log('Auto-login no disponible, usando modo demo');
-      }
-    }
-    
-    function showCamonChat() {
-      document.getElementById('camon-chat-area').style.display = 'block';
-      document.getElementById('camon-chat-area').innerHTML = 
-        '<div class="card">' +
-        '<h3>💬 Chat con Elizabeth</h3>' +
-        '<div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin: 15px 0;">' +
-        '<p><strong>Instrucciones:</strong> Habla con Elizabeth para practicar inglés. Ella te ayudará y corregirá tus errores.</p>' +
-        '</div>' +
-        '<div id="chat-messages" style="height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; margin: 15px 0; background: white; border-radius: 8px;"></div>' +
-        '<div style="display: flex; gap: 10px; margin: 15px 0;">' +
-        '<input type="text" id="chat-input" placeholder="Escribe tu mensaje en inglés..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">' +
-        '<button class="btn btn-primary" onclick="sendChatMessage()">Enviar</button>' +
-        '</div>' +
-        '<button class="btn" onclick="document.getElementById(\"camon-chat-area\").style.display=\"none\"">Volver a Ca\'mon</button>' +
-        '</div>';
-      
-      // Mensaje inicial de Elizabeth
-      addChatMessage('Elizabeth', 'Hello! I am Elizabeth, your English teacher. What would you like to talk about today?', true);
-    }
-    
-    function addChatMessage(sender, message, isElizabeth) {
-      const messagesDiv = document.getElementById('chat-messages');
-      if (!messagesDiv) return;
-      
-      const messageDiv = document.createElement('div');
-      messageDiv.style.margin = '10px 0';
-      messageDiv.style.padding = '10px';
-      messageDiv.style.borderRadius = '8px';
-      
-      if (isElizabeth) {
-        messageDiv.style.background = '#e0f2fe';
-        messageDiv.style.textAlign = 'left';
-        messageDiv.innerHTML = '<strong>Elizabeth:</strong> ' + message;
-      } else {
-        messageDiv.style.background = '#f0f9ff';
-        messageDiv.style.textAlign = 'right';
-        messageDiv.innerHTML = '<strong>Tú:</strong> ' + message;
-      }
-      
-      messagesDiv.appendChild(messageDiv);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
-    
-    async function sendChatMessage() {
-      const input = document.getElementById('chat-input');
-      const message = input.value.trim();
-      if (!message) return;
-      
-      addChatMessage('Tú', message, false);
-      input.value = '';
-      
-      try {
-        const response = await fetch('/api/chat-elizabeth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: message,
-            user: username,
-            level: 'A1.1'
-          })
-        });
-        
-        const data = await response.json();
-        addChatMessage('Elizabeth', data.response || "I'm having trouble right now.", true);
-        
-      } catch (error) {
-        addChatMessage('Elizabeth', "Sorry, I'm having connection issues.", true);
       }
     }
     
