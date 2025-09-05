@@ -244,10 +244,9 @@ const server = http.createServer((req, res) => {
         const data = JSON.parse(body);
         const { message, user, level } = data;
         
-        // Usar OpenAI GPT-4o para respuestas naturales
-        const apiKey = process.env.API_KEY || process.env.OPENAI_API_KEY || process.env.OPENAI_KEY;
+        const apiKey = process.env.API_KEY;
         
-        if (apiKey && apiKey !== 'your-openai-key-here' && apiKey.startsWith('sk-')) {
+        if (apiKey && apiKey.startsWith('sk-')) {
           const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -258,7 +257,7 @@ const server = http.createServer((req, res) => {
               model: 'gpt-4o',
               messages: [{
                 role: 'system',
-                content: `You are Elizabeth, a friendly and natural English conversation partner. You're chatting with ${user} who has ${level} level English. Have a normal, flowing conversation like a real person would. Be encouraging, ask follow-up questions, and gently correct mistakes by naturally rephrasing. Keep responses conversational and not too teacher-like.`
+                content: `You are Elizabeth, a friendly English conversation partner. You're chatting with ${user} who has ${level} level English. Have natural conversations like a real person. Be encouraging and gently correct mistakes.`
               }, {
                 role: 'user',
                 content: message
@@ -280,47 +279,10 @@ const server = http.createServer((req, res) => {
           }
         }
         
-        // Respuestas naturales e inteligentes
-        const msg = message.toLowerCase().trim();
-        let response;
-        
-        if (msg.includes('hello') || msg.includes('hi')) {
-          response = 'Hello! It\'s great to meet you. How has your day been so far?';
-        } else if (msg.includes('good') || msg.includes('fine') || msg.includes('ok')) {
-          response = 'That\'s wonderful to hear! What\'s been the best part of your day?';
-        } else if (msg.includes('you') && (msg.includes('how') || msg.includes('and you'))) {
-          response = 'I\'m doing great, thank you for asking! I love chatting with students. What are you passionate about?';
-        } else if (msg.includes('work') || msg.includes('job')) {
-          response = 'Work can be interesting! What kind of work do you do? Do you enjoy it?';
-        } else if (msg.includes('family') || msg.includes('parents') || msg.includes('children')) {
-          response = 'Family is so important! Tell me more about your family. What do you like to do together?';
-        } else if (msg.includes('hobby') || msg.includes('hobbies') || msg.includes('like to do')) {
-          response = 'Hobbies are a great way to relax! What activities make you happy?';
-        } else if (msg.includes('study') || msg.includes('learn') || msg.includes('english')) {
-          response = 'Learning English is exciting! What\'s your favorite thing about studying languages?';
-        } else if (msg.includes('tired') || msg.includes('busy')) {
-          response = 'I understand. Sometimes life gets overwhelming. What helps you relax?';
-        } else if (msg.includes('weekend') || msg.includes('free time')) {
-          response = 'Weekends are the best! What do you usually do when you have free time?';
-        } else if (msg.includes('food') || msg.includes('eat') || msg.includes('cooking')) {
-          response = 'I love talking about food! What\'s your favorite dish? Do you like to cook?';
-        } else if (msg.includes('travel') || msg.includes('country') || msg.includes('place')) {
-          response = 'Travel is so enriching! Have you been to any interesting places recently?';
-        } else {
-          const naturalResponses = [
-            'That sounds really interesting! Can you tell me more about that?',
-            'I\'d love to hear more about that. What do you think about it?',
-            'That\'s fascinating! How do you feel about that situation?',
-            'Really? That\'s quite interesting. What happened next?',
-            'I see! That must have been quite an experience. How did it make you feel?'
-          ];
-          response = naturalResponses[Math.floor(Math.random() * naturalResponses.length)];
-        }
-        
         res.writeHead(200, {'Content-Type': 'application/json'});
         res.end(JSON.stringify({
-          success: true,
-          response: response
+          success: false,
+          response: "I'm having trouble right now. Can you try again?"
         }));
         
       } catch (error) {
@@ -371,20 +333,6 @@ const server = http.createServer((req, res) => {
       forumMessages: forumMessages,
       adminSuggestions: adminSuggestions,
       privateMessages: privateMessages
-    }));
-    return;
-  }
-  
-  // Test endpoint para verificar API key
-  if (parsedUrl.pathname === '/test-api-key') {
-    const apiKey = process.env.API_KEY || process.env.OPENAI_API_KEY || process.env.OPENAI_KEY;
-    res.writeHead(200, {'Content-Type': 'application/json'});
-    res.end(JSON.stringify({
-      hasApiKey: !!(apiKey && apiKey !== 'your-openai-key-here' && apiKey.startsWith('sk-')),
-      keyStart: apiKey ? apiKey.substring(0, 10) : 'none',
-      allEnvVars: Object.keys(process.env).filter(k => k.includes('OPENAI') || k.includes('API') || k.includes('KEY')),
-      railwayEnv: process.env.RAILWAY_ENVIRONMENT,
-      timestamp: new Date().toISOString()
     }));
     return;
   }
@@ -653,26 +601,10 @@ function getUserPage(username) {
       
       <div id="english" class="section">
         <h1>🎓 Ca'mon - Aprende Inglés</h1>
-        
         <div class="card">
-          <h2>🎯 Prueba Inicial</h2>
-          <p>Evalúa tu nivel de inglés con 25 preguntas diseñadas por Cambridge University Press & Assessment.</p>
-          <button class="btn btn-primary" onclick="openCamonSection('level-test')">Hacer Prueba de Nivel</button>
+          <p>Haz clic en el botón para abrir Ca'mon en una nueva pestaña:</p>
+          <button class="btn btn-primary" onclick="window.open('/english', '_blank')">Abrir Ca'mon</button>
         </div>
-        
-        <div class="card">
-          <h2>📚 Ejercicios Diarios</h2>
-          <p>Practica gramática y comprensión lectora adaptados a tu nivel actual.</p>
-          <button class="btn btn-secondary" onclick="openCamonSection('daily-exercises')">Comenzar Ejercicios</button>
-        </div>
-        
-        <div class="card">
-          <h2>📈 Mi Evolución</h2>
-          <p>Revisa tu progreso, calificaciones y historial de aprendizaje.</p>
-          <button class="btn" onclick="openCamonSection('evolution')">Ver Mi Progreso</button>
-        </div>
-        
-        <div id="camon-content" style="display: none;"></div>
       </div>
     </div>
   </div>
@@ -902,30 +834,6 @@ function getUserPage(username) {
       } catch (error) {
         console.log('Auto-login no disponible, usando modo demo');
       }
-    }
-    
-    function openCamonSection(section) {
-      document.getElementById('camon-content').style.display = 'block';
-      
-      if (section === 'daily-exercises') {
-        document.getElementById('camon-content').innerHTML = 
-          '<div class="card">' +
-          '<h3>📚 Ejercicios Diarios</h3>' +
-          '<p>Completa los tres ejercicios para terminar tu sesión diaria:</p>' +
-          '<button class="btn btn-primary" onclick="startCamonChat()">3. 💬 Chat con Elizabeth</button>' +
-          '</div>';
-      } else {
-        document.getElementById('camon-content').innerHTML = 
-          '<div class="card">' +
-          '<h3>Sección en desarrollo</h3>' +
-          '<p>Esta funcionalidad estará disponible próximamente.</p>' +
-          '<button class="btn" onclick="document.getElementById(\"camon-content\").style.display=\"none\"">Volver</button>' +
-          '</div>';
-      }
-    }
-    
-    function startCamonChat() {
-      window.open('/english', '_blank');
     }
     
     updateDailyContent();
@@ -1642,144 +1550,8 @@ function getCamonPage(user) {
       document.getElementById('reading-exercise').innerHTML = html;
     }
     
-    let chatTimer = 0;
-    let chatInterval = null;
-    let chatHistory = [];
-    
     function startChat() {
-      document.getElementById('exercises-content').innerHTML = 
-        '<div class="card">' +
-        '<h3>💬 Chat con Elizabeth</h3>' +
-        '<div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin: 15px 0;">' +
-        '<p><strong>Instrucciones:</strong></p>' +
-        '<p>Habla con Elizabeth durante al menos 10 minutos. Ella te ayudará a practicar inglés y corregirá tus errores.</p>' +
-        '</div>' +
-        '<div style="text-align: center; margin: 20px 0;">' +
-        '<div id="chat-timer" style="font-size: 24px; font-weight: bold; color: #667eea;">00:00</div>' +
-        '<p>Tiempo mínimo: 10:00</p>' +
-        '</div>' +
-        '<div id="chat-interface" style="display: none;">' +
-        '<div id="chat-messages" style="height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; margin: 15px 0; background: white; border-radius: 8px;"></div>' +
-        '<div style="display: flex; gap: 10px;">' +
-        '<button id="record-btn" class="btn btn-primary" onclick="toggleRecording()">🎤 Hablar</button>' +
-        '<button id="type-btn" class="btn" onclick="toggleTyping()">⌨️ Escribir</button>' +
-        '</div>' +
-        '<div id="input-area" style="margin: 15px 0; display: none;">' +
-        '<input type="text" id="text-input" placeholder="Escribe tu mensaje en inglés..." style="width: 70%;">' +
-        '<button class="btn" onclick="sendTextMessage()">Enviar</button>' +
-        '</div>' +
-        '</div>' +
-        '<div style="text-align: center;">' +
-        '<button class="btn btn-primary" onclick="initializeChat()">Comenzar Chat con Elizabeth</button>' +
-        '</div>' +
-        '</div>';
-    }
-    
-    function initializeChat() {
-      document.getElementById('chat-interface').style.display = 'block';
-      chatTimer = 0;
-      chatHistory = [];
-      
-      chatInterval = setInterval(() => {
-        chatTimer++;
-        updateTimer();
-      }, 1000);
-      
-      addChatMessage('Elizabeth', 'Hello! I am Elizabeth, your English teacher. What would you like to talk about today?', true);
-    }
-    
-    function updateTimer() {
-      const minutes = Math.floor(chatTimer / 60);
-      const seconds = chatTimer % 60;
-      const display = minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
-      document.getElementById('chat-timer').textContent = display;
-      
-      if (chatTimer >= 600) {
-        document.getElementById('chat-timer').style.color = '#10b981';
-        if (!dailyProgress.chat) {
-          dailyProgress.chat = true;
-          setTimeout(() => {
-            addChatMessage('System', '✅ Chat completado! Has practicado durante 10 minutos.', false);
-          }, 1000);
-        }
-      }
-    }
-    
-    function addChatMessage(sender, message, isElizabeth) {
-      const messagesDiv = document.getElementById('chat-messages');
-      const messageDiv = document.createElement('div');
-      messageDiv.style.margin = '10px 0';
-      messageDiv.style.padding = '10px';
-      messageDiv.style.borderRadius = '8px';
-      
-      if (isElizabeth) {
-        messageDiv.style.background = '#e0f2fe';
-        messageDiv.style.textAlign = 'left';
-        messageDiv.innerHTML = '<strong>Elizabeth:</strong> ' + message;
-        
-        if ('speechSynthesis' in window) {
-          const utterance = new SpeechSynthesisUtterance(message);
-          utterance.lang = 'en-US';
-          utterance.rate = 0.9;
-          speechSynthesis.speak(utterance);
-        }
-      } else {
-        messageDiv.style.background = '#f0f9ff';
-        messageDiv.style.textAlign = 'right';
-        messageDiv.innerHTML = '<strong>' + (sender === 'System' ? 'Sistema' : 'Tú') + ':</strong> ' + message;
-      }
-      
-      messagesDiv.appendChild(messageDiv);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
-    
-    function toggleTyping() {
-      const inputArea = document.getElementById('input-area');
-      if (inputArea.style.display === 'none') {
-        inputArea.style.display = 'block';
-        document.getElementById('text-input').focus();
-      } else {
-        inputArea.style.display = 'none';
-      }
-    }
-    
-    function sendTextMessage() {
-      const input = document.getElementById('text-input');
-      const message = input.value.trim();
-      if (message) {
-        addChatMessage('Tú', message, false);
-        sendToElizabeth(message);
-        input.value = '';
-      }
-    }
-    
-    async function sendToElizabeth(userMessage) {
-      try {
-        const response = await fetch('/api/chat-elizabeth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: userMessage,
-            user: currentUser,
-            level: userLevel
-          })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          addChatMessage('Elizabeth', data.response, true);
-        } else {
-          addChatMessage('Elizabeth', data.response, true);
-        }
-        
-      } catch (error) {
-        addChatMessage('Elizabeth', "Sorry, I'm having connection issues. Can you try again?", true);
-      }
-    }
-    
-    function toggleRecording() {
-      alert('Reconocimiento de voz disponible próximamente. Usa el chat de texto por ahora.');
+      alert('Chat con Elizabeth se implementará próximamente con OpenAI + ElevenLabs');
     }
     
     function checkGrammar1() {
