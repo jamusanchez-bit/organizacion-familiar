@@ -1,1 +1,1 @@
-La sencillez debe ser el principal objetivo al programar cualquier cosa. Lo sencillo funciona mejor, se entiende mejor y es mas practico.
+La sencillez y estabilidad deben ser los principales objetivos al programar cualquier cosa. Lo sencillo funciona mejor, se entiende mejor y es más práctico. La estabilidad garantiza que lo que funciona hoy siga funcionando mañana.
