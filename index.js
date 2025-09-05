@@ -280,18 +280,42 @@ const server = http.createServer((req, res) => {
           }
         }
         
-        // Fallback si no hay API key
-        const responses = {
-          'hello': 'Hello! Nice to meet you. How are you feeling today?',
-          'hi': 'Hi there! What would you like to practice today?',
-          'i am ok': 'I\'m doing well too, thank you for asking! What did you do today?',
-          'good': 'That\'s wonderful! Can you tell me more about your day?',
-          'fine': 'Great! What are your hobbies?',
-          'default': 'That\'s interesting! Can you tell me more about that?'
-        };
+        // Respuestas naturales e inteligentes
+        const msg = message.toLowerCase().trim();
+        let response;
         
-        const key = message.toLowerCase().trim();
-        const response = responses[key] || responses['default'];
+        if (msg.includes('hello') || msg.includes('hi')) {
+          response = 'Hello! It\'s great to meet you. How has your day been so far?';
+        } else if (msg.includes('good') || msg.includes('fine') || msg.includes('ok')) {
+          response = 'That\'s wonderful to hear! What\'s been the best part of your day?';
+        } else if (msg.includes('you') && (msg.includes('how') || msg.includes('and you'))) {
+          response = 'I\'m doing great, thank you for asking! I love chatting with students. What are you passionate about?';
+        } else if (msg.includes('work') || msg.includes('job')) {
+          response = 'Work can be interesting! What kind of work do you do? Do you enjoy it?';
+        } else if (msg.includes('family') || msg.includes('parents') || msg.includes('children')) {
+          response = 'Family is so important! Tell me more about your family. What do you like to do together?';
+        } else if (msg.includes('hobby') || msg.includes('hobbies') || msg.includes('like to do')) {
+          response = 'Hobbies are a great way to relax! What activities make you happy?';
+        } else if (msg.includes('study') || msg.includes('learn') || msg.includes('english')) {
+          response = 'Learning English is exciting! What\'s your favorite thing about studying languages?';
+        } else if (msg.includes('tired') || msg.includes('busy')) {
+          response = 'I understand. Sometimes life gets overwhelming. What helps you relax?';
+        } else if (msg.includes('weekend') || msg.includes('free time')) {
+          response = 'Weekends are the best! What do you usually do when you have free time?';
+        } else if (msg.includes('food') || msg.includes('eat') || msg.includes('cooking')) {
+          response = 'I love talking about food! What\'s your favorite dish? Do you like to cook?';
+        } else if (msg.includes('travel') || msg.includes('country') || msg.includes('place')) {
+          response = 'Travel is so enriching! Have you been to any interesting places recently?';
+        } else {
+          const naturalResponses = [
+            'That sounds really interesting! Can you tell me more about that?',
+            'I\'d love to hear more about that. What do you think about it?',
+            'That\'s fascinating! How do you feel about that situation?',
+            'Really? That\'s quite interesting. What happened next?',
+            'I see! That must have been quite an experience. How did it make you feel?'
+          ];
+          response = naturalResponses[Math.floor(Math.random() * naturalResponses.length)];
+        }
         
         res.writeHead(200, {'Content-Type': 'application/json'});
         res.end(JSON.stringify({
