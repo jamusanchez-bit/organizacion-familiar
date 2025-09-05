@@ -358,7 +358,8 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({
       hasApiKey: !!(apiKey && apiKey !== 'your-openai-key-here' && apiKey.startsWith('sk-')),
       keyStart: apiKey ? apiKey.substring(0, 10) : 'none',
-      allEnvVars: Object.keys(process.env).filter(k => k.includes('OPENAI') || k.includes('API')),
+      allEnvVars: Object.keys(process.env).filter(k => k.includes('OPENAI') || k.includes('API') || k.includes('KEY')),
+      railwayEnv: process.env.RAILWAY_ENVIRONMENT,
       timestamp: new Date().toISOString()
     }));
     return;
