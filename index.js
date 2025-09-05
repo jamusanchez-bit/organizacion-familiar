@@ -866,7 +866,7 @@ function getUserPage(username) {
         '<input type="text" id="chat-input" placeholder="Escribe tu mensaje en inglés..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">' +
         '<button class="btn btn-primary" onclick="sendChatMessage()">Enviar</button>' +
         '</div>' +
-        '<button class="btn" onclick="document.getElementById(\'camon-chat-area\').style.display=\'none\'">Volver a Ca\'mon</button>' +
+        '<button class="btn" onclick="document.getElementById(\"camon-chat-area\").style.display=\"none\"">Volver a Ca\'mon</button>' +
         '</div>';
       
       // Mensaje inicial de Elizabeth
