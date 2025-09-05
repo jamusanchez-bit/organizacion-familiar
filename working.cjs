@@ -499,7 +499,7 @@ const server = http.createServer((req, res) => {
   }
   
   
-  res.writeHead(200, {'Content-Type': 'text/html'});
+  res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
   res.end('<h1>Organización Familiar</h1><p>Accede con tu enlace personal</p>');
 });
 
