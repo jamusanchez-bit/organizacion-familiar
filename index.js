@@ -1551,8 +1551,144 @@ function getCamonPage(user) {
       document.getElementById('reading-exercise').innerHTML = html;
     }
     
+    let chatTimer = 0;
+    let chatInterval = null;
+    let chatHistory = [];
+    
     function startChat() {
-      alert('Chat con Elizabeth se implementará próximamente con OpenAI + ElevenLabs');
+      document.getElementById('exercises-content').innerHTML = 
+        '<div class="card">' +
+        '<h3>💬 Chat con Elizabeth</h3>' +
+        '<div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin: 15px 0;">' +
+        '<p><strong>Instrucciones:</strong></p>' +
+        '<p>Habla con Elizabeth durante al menos 10 minutos. Ella te ayudará a practicar inglés y corregirá tus errores.</p>' +
+        '</div>' +
+        '<div style="text-align: center; margin: 20px 0;">' +
+        '<div id="chat-timer" style="font-size: 24px; font-weight: bold; color: #667eea;">00:00</div>' +
+        '<p>Tiempo mínimo: 10:00</p>' +
+        '</div>' +
+        '<div id="chat-interface" style="display: none;">' +
+        '<div id="chat-messages" style="height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; margin: 15px 0; background: white; border-radius: 8px;"></div>' +
+        '<div style="display: flex; gap: 10px;">' +
+        '<button id="record-btn" class="btn btn-primary" onclick="toggleRecording()">🎤 Hablar</button>' +
+        '<button id="type-btn" class="btn" onclick="toggleTyping()">⌨️ Escribir</button>' +
+        '</div>' +
+        '<div id="input-area" style="margin: 15px 0; display: none;">' +
+        '<input type="text" id="text-input" placeholder="Escribe tu mensaje en inglés..." style="width: 70%;">' +
+        '<button class="btn" onclick="sendTextMessage()">Enviar</button>' +
+        '</div>' +
+        '</div>' +
+        '<div style="text-align: center;">' +
+        '<button class="btn btn-primary" onclick="initializeChat()">Comenzar Chat con Elizabeth</button>' +
+        '</div>' +
+        '</div>';
+    }
+    
+    function initializeChat() {
+      document.getElementById('chat-interface').style.display = 'block';
+      chatTimer = 0;
+      chatHistory = [];
+      
+      chatInterval = setInterval(() => {
+        chatTimer++;
+        updateTimer();
+      }, 1000);
+      
+      addChatMessage('Elizabeth', 'Hello! I am Elizabeth, your English teacher. What would you like to talk about today?', true);
+    }
+    
+    function updateTimer() {
+      const minutes = Math.floor(chatTimer / 60);
+      const seconds = chatTimer % 60;
+      const display = minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
+      document.getElementById('chat-timer').textContent = display;
+      
+      if (chatTimer >= 600) {
+        document.getElementById('chat-timer').style.color = '#10b981';
+        if (!dailyProgress.chat) {
+          dailyProgress.chat = true;
+          setTimeout(() => {
+            addChatMessage('System', '✅ Chat completado! Has practicado durante 10 minutos.', false);
+          }, 1000);
+        }
+      }
+    }
+    
+    function addChatMessage(sender, message, isElizabeth) {
+      const messagesDiv = document.getElementById('chat-messages');
+      const messageDiv = document.createElement('div');
+      messageDiv.style.margin = '10px 0';
+      messageDiv.style.padding = '10px';
+      messageDiv.style.borderRadius = '8px';
+      
+      if (isElizabeth) {
+        messageDiv.style.background = '#e0f2fe';
+        messageDiv.style.textAlign = 'left';
+        messageDiv.innerHTML = '<strong>Elizabeth:</strong> ' + message;
+        
+        if ('speechSynthesis' in window) {
+          const utterance = new SpeechSynthesisUtterance(message);
+          utterance.lang = 'en-US';
+          utterance.rate = 0.9;
+          speechSynthesis.speak(utterance);
+        }
+      } else {
+        messageDiv.style.background = '#f0f9ff';
+        messageDiv.style.textAlign = 'right';
+        messageDiv.innerHTML = '<strong>' + (sender === 'System' ? 'Sistema' : 'Tú') + ':</strong> ' + message;
+      }
+      
+      messagesDiv.appendChild(messageDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+    
+    function toggleTyping() {
+      const inputArea = document.getElementById('input-area');
+      if (inputArea.style.display === 'none') {
+        inputArea.style.display = 'block';
+        document.getElementById('text-input').focus();
+      } else {
+        inputArea.style.display = 'none';
+      }
+    }
+    
+    function sendTextMessage() {
+      const input = document.getElementById('text-input');
+      const message = input.value.trim();
+      if (message) {
+        addChatMessage('Tú', message, false);
+        sendToElizabeth(message);
+        input.value = '';
+      }
+    }
+    
+    async function sendToElizabeth(userMessage) {
+      try {
+        const response = await fetch('/api/chat-elizabeth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: userMessage,
+            user: currentUser,
+            level: userLevel
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          addChatMessage('Elizabeth', data.response, true);
+        } else {
+          addChatMessage('Elizabeth', data.response, true);
+        }
+        
+      } catch (error) {
+        addChatMessage('Elizabeth', "Sorry, I'm having connection issues. Can you try again?", true);
+      }
+    }
+    
+    function toggleRecording() {
+      alert('Reconocimiento de voz disponible próximamente. Usa el chat de texto por ahora.');
     }
     
     function checkGrammar1() {
