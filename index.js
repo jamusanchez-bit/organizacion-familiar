@@ -351,6 +351,18 @@ const server = http.createServer((req, res) => {
     return;
   }
   
+  // Test endpoint para verificar API key
+  if (parsedUrl.pathname === '/test-api-key') {
+    const apiKey = process.env.OPENAI_API_KEY;
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    res.end(JSON.stringify({
+      hasApiKey: !!(apiKey && apiKey !== 'your-openai-key-here'),
+      keyStart: apiKey ? apiKey.substring(0, 10) : 'none',
+      timestamp: new Date().toISOString()
+    }));
+    return;
+  }
+  
   // Ruta Ca'mon - Sistema completo de aprendizaje de inglés
   if (parsedUrl.pathname === '/english' || parsedUrl.pathname === '/english/') {
     const user = parsedUrl.query.user || 'Usuario';
