@@ -447,7 +447,7 @@ function getUserPage(username) {
       <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
       <button class="btn" onclick="showSection('compras')">🛒 Compras</button>
       <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
-      <button class="btn" onclick="window.location.href='/english'">🇬🇧 Ca'mon</button>
+      <button class="btn" onclick="showSection('english')">🇬🇧 Ca'mon</button>
       <div style="margin-top: 50px; text-align: center;">
         <strong>${user.name}</strong>
       </div>
@@ -652,17 +652,27 @@ function getUserPage(username) {
       </div>
       
       <div id="english" class="section">
-        <h1>Ca'mon - Aprende Inglés</h1>
+        <h1>🎓 Ca'mon - Aprende Inglés</h1>
+        
         <div class="card">
-          <iframe 
-            id="englishApp"
-            src="/english" 
-            width="100%" 
-            height="800px"
-            frameborder="0"
-            style="border-radius: 8px;">
-          </iframe>
+          <h2>🎯 Prueba Inicial</h2>
+          <p>Evalúa tu nivel de inglés con 25 preguntas diseñadas por Cambridge University Press & Assessment.</p>
+          <button class="btn btn-primary" onclick="openCamonSection('level-test')">Hacer Prueba de Nivel</button>
         </div>
+        
+        <div class="card">
+          <h2>📚 Ejercicios Diarios</h2>
+          <p>Practica gramática y comprensión lectora adaptados a tu nivel actual.</p>
+          <button class="btn btn-secondary" onclick="openCamonSection('daily-exercises')">Comenzar Ejercicios</button>
+        </div>
+        
+        <div class="card">
+          <h2>📈 Mi Evolución</h2>
+          <p>Revisa tu progreso, calificaciones y historial de aprendizaje.</p>
+          <button class="btn" onclick="openCamonSection('evolution')">Ver Mi Progreso</button>
+        </div>
+        
+        <div id="camon-content" style="display: none;"></div>
       </div>
     </div>
   </div>
@@ -892,6 +902,30 @@ function getUserPage(username) {
       } catch (error) {
         console.log('Auto-login no disponible, usando modo demo');
       }
+    }
+    
+    function openCamonSection(section) {
+      document.getElementById('camon-content').style.display = 'block';
+      
+      if (section === 'daily-exercises') {
+        document.getElementById('camon-content').innerHTML = 
+          '<div class="card">' +
+          '<h3>📚 Ejercicios Diarios</h3>' +
+          '<p>Completa los tres ejercicios para terminar tu sesión diaria:</p>' +
+          '<button class="btn btn-primary" onclick="startCamonChat()">3. 💬 Chat con Elizabeth</button>' +
+          '</div>';
+      } else {
+        document.getElementById('camon-content').innerHTML = 
+          '<div class="card">' +
+          '<h3>Sección en desarrollo</h3>' +
+          '<p>Esta funcionalidad estará disponible próximamente.</p>' +
+          '<button class="btn" onclick="document.getElementById(\'camon-content\').style.display=\'none\'">Volver</button>' +
+          '</div>';
+      }
+    }
+    
+    function startCamonChat() {
+      window.open('/english', '_blank');
     }
     
     updateDailyContent();
