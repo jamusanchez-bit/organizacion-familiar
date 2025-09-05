@@ -919,7 +919,7 @@ function getUserPage(username) {
           '<div class="card">' +
           '<h3>Sección en desarrollo</h3>' +
           '<p>Esta funcionalidad estará disponible próximamente.</p>' +
-          '<button class="btn" onclick="document.getElementById(\'camon-content\').style.display=\'none\'">Volver</button>' +
+          '<button class="btn" onclick="document.getElementById(\"camon-content\").style.display=\"none\"">Volver</button>' +
           '</div>';
       }
     }
