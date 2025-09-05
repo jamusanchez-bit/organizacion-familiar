@@ -348,7 +348,7 @@ const server = http.createServer((req, res) => {
   }
   
   res.writeHead(200, {'Content-Type': 'text/html'});
-  res.end('<h1>Organización Familiar</h1>');
+  res.end('<h1>Organización Familiar - ACTUALIZADO ' + new Date().toISOString() + '</h1>');
 });
 
 function getUserPage(username) {
