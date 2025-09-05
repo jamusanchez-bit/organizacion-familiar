@@ -66,7 +66,7 @@ const server = http.createServer((req, res) => {
     
     <div class="card">
       <h2>📊 Tu Nivel Actual</h2>
-      <p>Nivel: <span class="level-badge" id="current-level">A1</span></p>
+      <p style="font-size: 24px; font-weight: bold; color: #10b981; margin: 15px 0;">Nivel actual: A1.1</p>
       <button class="btn" onclick="startLevelTest()">🎯 Hacer Prueba de Nivel</button>
     </div>
     
@@ -341,6 +341,67 @@ const server = http.createServer((req, res) => {
       }
       res.writeHead(200, {'Content-Type': 'application/json'});
       res.end(JSON.stringify({success: true}));
+    });
+    return;
+  }
+  
+  // API para chat con Elizabeth (OpenAI)
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/chat-elizabeth') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const data = JSON.parse(body);
+        const { message, user, level } = data;
+        
+        const apiKey = process.env.API_KEY;
+        
+        if (apiKey && apiKey.startsWith('sk-')) {
+          const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o',
+              messages: [{
+                role: 'system',
+                content: `You are Elizabeth, a friendly English conversation partner. You're chatting with ${user} who has ${level} level English. Have natural conversations like a real person. Be encouraging and gently correct mistakes.`
+              }, {
+                role: 'user',
+                content: message
+              }],
+              max_tokens: 150,
+              temperature: 0.8
+            })
+          });
+          
+          const result = await response.json();
+          
+          if (result.choices && result.choices[0]) {
+            res.writeHead(200, {'Content-Type': 'application/json'});
+            res.end(JSON.stringify({
+              success: true,
+              response: result.choices[0].message.content
+            }));
+            return;
+          }
+        }
+        
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify({
+          success: false,
+          response: "I'm having trouble right now. Can you try again?"
+        }));
+        
+      } catch (error) {
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify({
+          success: false,
+          response: "I'm having trouble right now. Can you try again?"
+        }));
+      }
     });
     return;
   }
