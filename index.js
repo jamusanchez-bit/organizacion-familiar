@@ -244,41 +244,23 @@ const server = http.createServer((req, res) => {
         const data = JSON.parse(body);
         const { message, user, level } = data;
         
-        if (!process.env.OPENAI_API_KEY) {
-          throw new Error('API key not configured');
-        }
+        // Respuestas educativas mientras se configura OpenAI
+        const responses = {
+          'hello': 'Hello! Nice to meet you. How are you feeling today?',
+          'hi': 'Hi there! What would you like to practice today?',
+          'good': 'That\'s wonderful! Can you tell me more about your day?',
+          'fine': 'Great! What are your hobbies?',
+          'default': 'That\'s interesting! Can you tell me more about that?'
+        };
         
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o',
-            messages: [{
-              role: 'system',
-              content: `You are Elizabeth, a friendly English teacher talking with ${user} (level ${level}). Keep responses short and educational.`
-            }, {
-              role: 'user',
-              content: message
-            }],
-            max_tokens: 100,
-            temperature: 0.7
-          })
-        });
+        const key = message.toLowerCase().trim();
+        const response = responses[key] || responses['default'];
         
-        const result = await response.json();
-        
-        if (result.choices && result.choices[0]) {
-          res.writeHead(200, {'Content-Type': 'application/json'});
-          res.end(JSON.stringify({
-            success: true,
-            response: result.choices[0].message.content
-          }));
-        } else {
-          throw new Error('No response from OpenAI');
-        }
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify({
+          success: true,
+          response: response
+        }));
         
       } catch (error) {
         res.writeHead(200, {'Content-Type': 'application/json'});
