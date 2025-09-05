@@ -245,9 +245,9 @@ const server = http.createServer((req, res) => {
         const { message, user, level } = data;
         
         // Usar OpenAI GPT-4o para respuestas naturales
-        const apiKey = process.env.OPENAI_API_KEY;
+        const apiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || process.env.API_KEY;
         
-        if (apiKey && apiKey !== 'your-openai-key-here') {
+        if (apiKey && apiKey !== 'your-openai-key-here' && apiKey.startsWith('sk-')) {
           const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -353,11 +353,12 @@ const server = http.createServer((req, res) => {
   
   // Test endpoint para verificar API key
   if (parsedUrl.pathname === '/test-api-key') {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || process.env.API_KEY;
     res.writeHead(200, {'Content-Type': 'application/json'});
     res.end(JSON.stringify({
-      hasApiKey: !!(apiKey && apiKey !== 'your-openai-key-here'),
+      hasApiKey: !!(apiKey && apiKey !== 'your-openai-key-here' && apiKey.startsWith('sk-')),
       keyStart: apiKey ? apiKey.substring(0, 10) : 'none',
+      allEnvVars: Object.keys(process.env).filter(k => k.includes('OPENAI') || k.includes('API')),
       timestamp: new Date().toISOString()
     }));
     return;
