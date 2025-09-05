@@ -244,10 +244,47 @@ const server = http.createServer((req, res) => {
         const data = JSON.parse(body);
         const { message, user, level } = data;
         
-        // Respuestas educativas mientras se configura OpenAI
+        // Usar OpenAI GPT-4o para respuestas naturales
+        const apiKey = process.env.OPENAI_API_KEY;
+        
+        if (apiKey && apiKey !== 'your-openai-key-here') {
+          const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o',
+              messages: [{
+                role: 'system',
+                content: `You are Elizabeth, a friendly and natural English conversation partner. You're chatting with ${user} who has ${level} level English. Have a normal, flowing conversation like a real person would. Be encouraging, ask follow-up questions, and gently correct mistakes by naturally rephrasing. Keep responses conversational and not too teacher-like.`
+              }, {
+                role: 'user',
+                content: message
+              }],
+              max_tokens: 150,
+              temperature: 0.8
+            })
+          });
+          
+          const result = await response.json();
+          
+          if (result.choices && result.choices[0]) {
+            res.writeHead(200, {'Content-Type': 'application/json'});
+            res.end(JSON.stringify({
+              success: true,
+              response: result.choices[0].message.content
+            }));
+            return;
+          }
+        }
+        
+        // Fallback si no hay API key
         const responses = {
           'hello': 'Hello! Nice to meet you. How are you feeling today?',
           'hi': 'Hi there! What would you like to practice today?',
+          'i am ok': 'I\'m doing well too, thank you for asking! What did you do today?',
           'good': 'That\'s wonderful! Can you tell me more about your day?',
           'fine': 'Great! What are your hobbies?',
           'default': 'That\'s interesting! Can you tell me more about that?'
