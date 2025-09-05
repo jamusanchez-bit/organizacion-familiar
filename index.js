@@ -242,15 +242,11 @@ const server = http.createServer((req, res) => {
     req.on('end', async () => {
       try {
         const data = JSON.parse(body);
-        const { message, user, level, history } = data;
+        const { message, user, level } = data;
         
-        const systemPrompt = `You are Elizabeth, a friendly English teacher. You're talking with ${user} (level ${level}). Keep responses short (1-2 sentences), natural, and educational. Gently correct errors by rephrasing: "I think you meant to say..." Adapt language to their level.`;
-        
-        const messages = [
-          { role: 'system', content: systemPrompt },
-          ...history.slice(-6),
-          { role: 'user', content: message }
-        ];
+        if (!process.env.OPENAI_API_KEY) {
+          throw new Error('API key not configured');
+        }
         
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
@@ -260,7 +256,13 @@ const server = http.createServer((req, res) => {
           },
           body: JSON.stringify({
             model: 'gpt-4o',
-            messages: messages,
+            messages: [{
+              role: 'system',
+              content: `You are Elizabeth, a friendly English teacher talking with ${user} (level ${level}). Keep responses short and educational.`
+            }, {
+              role: 'user',
+              content: message
+            }],
             max_tokens: 100,
             temperature: 0.7
           })
@@ -279,7 +281,6 @@ const server = http.createServer((req, res) => {
         }
         
       } catch (error) {
-        console.error('OpenAI Error:', error.message);
         res.writeHead(200, {'Content-Type': 'application/json'});
         res.end(JSON.stringify({
           success: false,
@@ -1550,28 +1551,8 @@ function getCamonPage(user) {
       document.getElementById('reading-exercise').innerHTML = html;
     }
     
-    async function sendToElizabeth(userMessage) {
-      try {
-        const response = await fetch('/api/chat-elizabeth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: userMessage,
-            user: currentUser,
-            level: userLevel,
-            history: []
-          })
-        });
-        
-        const data = await response.json();
-        return data.success ? data.response : "I'm having trouble right now.";
-      } catch (error) {
-        return "Sorry, I'm having connection issues.";
-      }
-    }
-    
     function startChat() {
-      alert('Chat con Elizabeth implementado con OpenAI GPT-4o. Funcionalidad completa disponible.');
+      alert('Chat con Elizabeth se implementará próximamente con OpenAI + ElevenLabs');
     }
     
     function checkGrammar1() {
