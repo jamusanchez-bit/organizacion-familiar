@@ -332,7 +332,8 @@ const server = http.createServer((req, res) => {
       recipes: recipes,
       forumMessages: forumMessages,
       adminSuggestions: adminSuggestions,
-      privateMessages: privateMessages
+      privateMessages: privateMessages,
+      timestamp: new Date().toISOString()
     }));
     return;
   }
