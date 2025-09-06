@@ -938,8 +938,8 @@ const server = http.createServer((req, res) => {
     return;
   }
   
-  res.writeHead(200, {'Content-Type': 'text/html'});
-  res.end('<h1>Organización Familiar</h1><p>Accede con tu enlace personal</p>');
+  res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
+  res.end('<h1>Organización Familiar - ACTUALIZADO ' + new Date().toISOString() + '</h1><p>Accede con tu enlace personal</p>');
 });
 
 function getUserPage(username) {
