@@ -236,9 +236,17 @@ const server = http.createServer((req, res) => {
       }
     }
     
-    function toggleRecording() {
+    async function toggleRecording() {
       if (!recognition) {
         alert('Tu navegador no soporta reconocimiento de voz. Usa Chrome o Safari.');
+        return;
+      }
+      
+      // Solicitar permisos de micrófono
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (error) {
+        alert('Necesitas dar permisos de micrófono para usar esta función. Revisa la configuración de tu navegador.');
         return;
       }
       
