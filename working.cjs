@@ -591,7 +591,7 @@ const server = http.createServer((req, res) => {
         timestamp: Date.now()
       };
       
-      if (data.type === 'forum') {
+      if (data.type === 'group') {
         forumMessages.push(message);
       } else if (data.type === 'admin') {
         adminSuggestions.push(message);
@@ -1204,37 +1204,45 @@ function getUserPage(username) {
         <div id="mensajes" class="section">
           <h2 class="title" style="background: linear-gradient(to right, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Mensajes</h2>
           
-          <div class="card">
-            <h3>Esta semana quiero que hablemos de:</h3>
-            <div id="forum-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+          <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button class="btn" onclick="showMessageSection('group')" id="btn-group">💬 Chat Grupal</button>
+            <button class="btn" onclick="showMessageSection('private')" id="btn-private">👥 Chats Privados</button>
+            <button class="btn" onclick="showMessageSection('admin')" id="btn-admin">📝 Sugerencias Admin</button>
+          </div>
+          
+          <!-- CHAT GRUPAL -->
+          <div id="message-group" class="card" style="display: block;">
+            <h3>💬 Chat Familiar</h3>
+            <div id="group-messages" style="max-height: 400px; overflow-y: auto; margin: 15px 0; padding: 10px; background: #f9f9f9; border-radius: 8px;"></div>
             <div style="display: flex; gap: 10px;">
-              <input type="text" id="forum-input" placeholder="Escribe tu mensaje..." style="flex: 1;">
-              <button onclick="sendMessage('forum')">Enviar</button>
+              <input type="text" id="group-input" placeholder="Escribe tu mensaje..." style="flex: 1; padding: 12px; border-radius: 20px; border: 1px solid #ddd;">
+              <button onclick="sendMessage('group')" style="border-radius: 50%; width: 50px; height: 50px;">📤</button>
             </div>
           </div>
           
-          <div class="card">
-            <h3>Sugerencias para el administrador</h3>
-            <div id="admin-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+          <!-- CHATS PRIVADOS -->
+          <div id="message-private" class="card" style="display: none;">
+            <h3>👥 Chats Privados</h3>
+            <div style="display: flex; gap: 10px; margin: 15px 0;">
+              <button class="btn" onclick="selectPrivateChat('javier')" id="chat-javier">Javier</button>
+              <button class="btn" onclick="selectPrivateChat('raquel')" id="chat-raquel">Raquel</button>
+              <button class="btn" onclick="selectPrivateChat('mario')" id="chat-mario">Mario</button>
+              <button class="btn" onclick="selectPrivateChat('alba')" id="chat-alba">Alba</button>
+            </div>
+            <div id="private-messages" style="max-height: 400px; overflow-y: auto; margin: 15px 0; padding: 10px; background: #f9f9f9; border-radius: 8px;"></div>
             <div style="display: flex; gap: 10px;">
-              <input type="text" id="admin-input" placeholder="Escribe tu sugerencia..." style="flex: 1;">
-              <button onclick="sendMessage('admin')">Enviar</button>
+              <input type="text" id="private-input" placeholder="Selecciona un chat primero..." style="flex: 1; padding: 12px; border-radius: 20px; border: 1px solid #ddd;" disabled>
+              <button onclick="sendMessage('private')" style="border-radius: 50%; width: 50px; height: 50px;" disabled id="private-send-btn">📤</button>
             </div>
           </div>
           
-          <div class="card">
-            <h3>Mensaje privado a:</h3>
-            <select id="private-to" style="margin-bottom: 10px;">
-              <option value="">Seleccionar destinatario</option>
-              <option value="javier">Javier</option>
-              <option value="raquel">Raquel</option>
-              <option value="mario">Mario</option>
-              <option value="alba">Alba</option>
-            </select>
-            <div id="private-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+          <!-- SUGERENCIAS ADMIN -->
+          <div id="message-admin" class="card" style="display: none;">
+            <h3>📝 Sugerencias para el Administrador</h3>
+            <div id="admin-messages" style="max-height: 400px; overflow-y: auto; margin: 15px 0; padding: 10px; background: #f9f9f9; border-radius: 8px;"></div>
             <div style="display: flex; gap: 10px;">
-              <input type="text" id="private-input" placeholder="Escribe tu mensaje privado..." style="flex: 1;">
-              <button onclick="sendMessage('private')">Enviar</button>
+              <input type="text" id="admin-input" placeholder="Escribe tu sugerencia..." style="flex: 1; padding: 12px; border-radius: 20px; border: 1px solid #ddd;">
+              <button onclick="sendMessage('admin')" style="border-radius: 50%; width: 50px; height: 50px;">📤</button>
             </div>
           </div>
         </div>
@@ -1338,39 +1346,89 @@ function getUserPage(username) {
       // Cargar plan de comidas en la tabla
     }
     
-    function loadMessagesData(data) {
-      document.getElementById('forum-messages').innerHTML = data.forumMessages.map(msg => 
-        '<div style="padding: 8px; margin: 5px 0; background: #f0f9ff; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
-      ).join('') || '<p style="color: #6b7280;">No hay mensajes aún</p>';
+    function loadMessagesData(data = null) {
+      if (!data) {
+        fetch('/api/data')
+          .then(r => r.json())
+          .then(data => loadMessagesData(data));
+        return;
+      }
       
-      document.getElementById('admin-messages').innerHTML = data.adminSuggestions.map(msg => 
-        '<div style="padding: 8px; margin: 5px 0; background: #fef3c7; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
-      ).join('') || '<p style="color: #6b7280;">No hay sugerencias aún</p>';
+      // Chat grupal
+      if (currentMessageSection === 'group') {
+        document.getElementById('group-messages').innerHTML = data.forumMessages.map(msg => 
+          `<div style="padding: 10px; margin: 8px 0; background: ${msg.user === username ? '#dcf8c6' : 'white'}; border-radius: 12px; max-width: 80%; ${msg.user === username ? 'margin-left: auto;' : ''}">
+            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">${msg.user} - ${msg.time}</div>
+            <div>${msg.text}</div>
+          </div>`
+        ).join('') || '<p style="color: #6b7280; text-align: center;">No hay mensajes aún</p>';
+      }
       
-      const selectedUser = document.getElementById('private-to').value;
-      if (selectedUser) {
-        const key = [username, selectedUser].sort().join('-');
+      // Sugerencias admin
+      if (currentMessageSection === 'admin') {
+        document.getElementById('admin-messages').innerHTML = data.adminSuggestions.map(msg => 
+          `<div style="padding: 10px; margin: 8px 0; background: #fef3c7; border-radius: 12px;">
+            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">${msg.user} - ${msg.time}</div>
+            <div>${msg.text}</div>
+          </div>`
+        ).join('') || '<p style="color: #6b7280; text-align: center;">No hay sugerencias aún</p>';
+      }
+      
+      // Chat privado
+      if (currentMessageSection === 'private' && currentPrivateChat) {
+        const key = [username, currentPrivateChat].sort().join('-');
         const privateMessages = data.privateMessages[key] || [];
         document.getElementById('private-messages').innerHTML = privateMessages.map(msg => 
-          '<div style="padding: 8px; margin: 5px 0; background: ' + (msg.user === username ? '#e0f2fe' : '#f0fdf4') + '; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
-        ).join('') || '<p style="color: #6b7280;">No hay mensajes privados aún</p>';
+          `<div style="padding: 10px; margin: 8px 0; background: ${msg.user === username ? '#dcf8c6' : 'white'}; border-radius: 12px; max-width: 80%; ${msg.user === username ? 'margin-left: auto;' : ''}">
+            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">${msg.user} - ${msg.time}</div>
+            <div>${msg.text}</div>
+          </div>`
+        ).join('') || '<p style="color: #6b7280; text-align: center;">No hay mensajes aún</p>';
       }
+    }
+    
+    let currentPrivateChat = null;
+    let currentMessageSection = 'group';
+    
+    function showMessageSection(section) {
+      currentMessageSection = section;
+      document.querySelectorAll('[id^="message-"]').forEach(el => el.style.display = 'none');
+      document.getElementById(`message-${section}`).style.display = 'block';
+      
+      document.querySelectorAll('[id^="btn-"]').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(`btn-${section}`).classList.add('active');
+      
+      loadMessagesData();
+    }
+    
+    function selectPrivateChat(user) {
+      if (user === username) return; // No chat consigo mismo
+      currentPrivateChat = user;
+      
+      document.querySelectorAll('[id^="chat-"]').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(`chat-${user}`).classList.add('active');
+      
+      document.getElementById('private-input').disabled = false;
+      document.getElementById('private-input').placeholder = `Mensaje para ${user}...`;
+      document.getElementById('private-send-btn').disabled = false;
+      
+      loadMessagesData();
     }
     
     function sendMessage(type) {
       let text, to;
       
-      if (type === 'forum') {
-        text = document.getElementById('forum-input').value.trim();
-        document.getElementById('forum-input').value = '';
+      if (type === 'group') {
+        text = document.getElementById('group-input').value.trim();
+        document.getElementById('group-input').value = '';
       } else if (type === 'admin') {
         text = document.getElementById('admin-input').value.trim();
         document.getElementById('admin-input').value = '';
       } else if (type === 'private') {
         text = document.getElementById('private-input').value.trim();
-        to = document.getElementById('private-to').value;
+        to = currentPrivateChat;
         if (!to) {
-          alert('Selecciona un destinatario');
+          alert('Selecciona un chat primero');
           return;
         }
         document.getElementById('private-input').value = '';
@@ -1382,7 +1440,7 @@ function getUserPage(username) {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({type, user: username, text, to})
-      }).then(() => loadData());
+      }).then(() => loadMessagesData());
     }
     
     function toggleActivity(id, completed) {
