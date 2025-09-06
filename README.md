@@ -4,11 +4,11 @@ Sistema completo de organización familiar con mensajes, actividades, inventario
 
 ## 🔗 Enlaces de Acceso
 
-- **Javier**: https://organizacion-familiar-production.up.railway.app/javier/abc123xyz789def456
-- **Raquel**: https://organizacion-familiar-production.up.railway.app/raquel/uvw012rst345ghi678
-- **Mario**: https://organizacion-familiar-production.up.railway.app/mario/jkl901mno234pqr567
-- **Alba**: https://organizacion-familiar-production.up.railway.app/alba/stu890vwx123yzb456
-- **Administrador**: https://organizacion-familiar-production.up.railway.app/admin/cde789fgh012ijl345
+- **Javier**: https://organizacion-familiar-production-e98c.up.railway.app/javier/abc123xyz789def456
+- **Raquel**: https://organizacion-familiar-production-e98c.up.railway.app/raquel/uvw012rst345ghi678
+- **Mario**: https://organizacion-familiar-production-e98c.up.railway.app/mario/jkl901mno234pqr567
+- **Alba**: https://organizacion-familiar-production-e98c.up.railway.app/alba/stu890vwx123yzb456
+- **Administrador**: https://organizacion-familiar-production-e98c.up.railway.app/admin/cde789fgh012ijl345
 
 ## 🛠️ Comandos de Mantenimiento
 
@@ -38,7 +38,7 @@ node health-check.js
 ## 📝 ESTADO ACTUAL DEL PROYECTO (CRÍTICO - NO BORRAR)
 
 ### Plataforma de Despliegue: RAILWAY
-- URL: https://organizacion-familiar-production.up.railway.app
+- URL: https://organizacion-familiar-production-e98c.up.railway.app
 - Archivo principal: `working.cjs`
 - Render eliminado completamente - SOLO RAILWAY
 
