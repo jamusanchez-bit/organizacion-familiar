@@ -12,18 +12,62 @@ const USERS = {
   javi_administrador: { id: 'javi_administrador', name: 'Javi (Admin)', password: 'admin123' }
 };
 
-let activities = [];
-let mealPlan = {};
+let activities = [
+  // Actividades de ejemplo
+  { id: 1, user: 'javier', title: 'Ejercicio matutino', time: '07:00', duration: 30, repeat: 'daily', repeatDays: ['lunes','martes','miercoles','jueves','viernes'], date: new Date().toDateString(), completed: false },
+  { id: 2, user: 'raquel', title: 'Yoga', time: '18:00', duration: 45, repeat: 'daily', repeatDays: ['lunes','miercoles','viernes'], date: new Date().toDateString(), completed: false },
+  { id: 3, user: 'mario', title: 'Estudiar inglés', time: '16:00', duration: 60, repeat: 'daily', repeatDays: ['lunes','martes','miercoles','jueves','viernes'], date: new Date().toDateString(), completed: false },
+  { id: 4, user: 'alba', title: 'Leer', time: '20:00', duration: 30, repeat: 'daily', repeatDays: ['todos'], date: new Date().toDateString(), completed: false }
+];
+let mealPlan = {
+  // Semana 1 - Ejemplo
+  '1-lunes-desayuno-alba-mario': 'Tostadas con mermelada',
+  '1-lunes-desayuno-raquel-javier': 'Café con tostadas',
+  '1-lunes-comida': 'Lubina sobre cama de verduras',
+  '1-lunes-cena': 'Pasta con tomate',
+  '1-martes-comida': 'Pollo al horno',
+  '1-martes-cena': 'Merluza a la plancha'
+};
 let inventory = [
-  { id: '1', name: 'Jamón', category: 'carne', shop: 'Carne internet', unit: 'paquetes', quantity: 0 },
-  { id: '2', name: 'Salmón fresco', category: 'pescado', shop: 'Pescadería', unit: 'unidades', quantity: 0 },
-  { id: '3', name: 'Ajo', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 0 },
-  { id: '4', name: 'Aceite oliva', category: 'otros', shop: 'Alcampo', unit: 'litros', quantity: 0 }
+  // Carne
+  { id: '1', name: 'Jamón serrano', category: 'carne', shop: 'Carne internet', unit: 'paquetes', quantity: 2 },
+  { id: '2', name: 'Pollo entero', category: 'carne', shop: 'Carne internet', unit: 'unidades', quantity: 1 },
+  { id: '3', name: 'Ternera filetes', category: 'carne', shop: 'Carne internet', unit: 'paquetes', quantity: 0 },
+  // Pescado
+  { id: '4', name: 'Salmón fresco', category: 'pescado', shop: 'Pescadería', unit: 'unidades', quantity: 1 },
+  { id: '5', name: 'Lubina', category: 'pescado', shop: 'Pescadería', unit: 'unidades', quantity: 2 },
+  { id: '6', name: 'Merluza', category: 'pescado', shop: 'Pescadería', unit: 'unidades', quantity: 0 },
+  // Verdura
+  { id: '7', name: 'Tomates', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 5 },
+  { id: '8', name: 'Ajo', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 3 },
+  { id: '9', name: 'Cebolla', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 2 },
+  { id: '10', name: 'Pimientos', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 0 },
+  // Fruta
+  { id: '11', name: 'Manzanas', category: 'fruta', shop: 'Alcampo', unit: 'unidades', quantity: 8 },
+  { id: '12', name: 'Plátanos', category: 'fruta', shop: 'Alcampo', unit: 'unidades', quantity: 6 },
+  { id: '13', name: 'Naranjas', category: 'fruta', shop: 'Alcampo', unit: 'unidades', quantity: 1 },
+  // Frutos secos
+  { id: '14', name: 'Almendras', category: 'frutos secos', shop: 'Internet', unit: 'botes', quantity: 1 },
+  { id: '15', name: 'Nueces', category: 'frutos secos', shop: 'Internet', unit: 'botes', quantity: 0 },
+  // Productos limpieza
+  { id: '16', name: 'Detergente', category: 'productos limpieza/hogar', shop: 'Alcampo', unit: 'botes', quantity: 1 },
+  { id: '17', name: 'Papel higiénico', category: 'productos limpieza/hogar', shop: 'Alcampo', unit: 'paquetes', quantity: 2 },
+  // Otros
+  { id: '18', name: 'Aceite oliva', category: 'otros', shop: 'Alcampo', unit: 'litros', quantity: 1 },
+  { id: '19', name: 'Arroz', category: 'otros', shop: 'Alcampo', unit: 'paquetes', quantity: 3 },
+  { id: '20', name: 'Pasta', category: 'otros', shop: 'Alcampo', unit: 'paquetes', quantity: 0 }
 ];
 
 let recipes = [
-  { id: '1', name: 'Lubina sobre cama de verduras', category: 'comidas', ingredients: [{'Lubina': 1}, {'Ajo': 2}], time: 0.5, servings: 4 },
-  { id: '2', name: 'Salmón en papillote', category: 'comidas', ingredients: [{'Salmón fresco': 1}, {'Ajo': 1}], time: 0.75, servings: 4 }
+  // Comidas
+  { id: '1', name: 'Lubina sobre cama de verduras', category: 'comidas', ingredients: [{'Lubina': 1}, {'Ajo': 2}, {'Tomates': 2}, {'Cebolla': 1}], time: 0.5, servings: 4 },
+  { id: '2', name: 'Salmón en papillote', category: 'comidas', ingredients: [{'Salmón fresco': 1}, {'Ajo': 1}, {'Pimientos': 1}], time: 0.75, servings: 4 },
+  { id: '3', name: 'Pollo al horno', category: 'comidas', ingredients: [{'Pollo entero': 1}, {'Ajo': 3}, {'Tomates': 3}], time: 1.5, servings: 4 },
+  { id: '4', name: 'Arroz con verduras', category: 'comidas', ingredients: [{'Arroz': 1}, {'Tomates': 2}, {'Cebolla': 1}, {'Pimientos': 2}], time: 0.5, servings: 4 },
+  // Cenas
+  { id: '5', name: 'Merluza a la plancha', category: 'cenas', ingredients: [{'Merluza': 1}, {'Ajo': 2}, {'Aceite oliva': 0.1}], time: 0.25, servings: 4 },
+  { id: '6', name: 'Pasta con tomate', category: 'cenas', ingredients: [{'Pasta': 1}, {'Tomates': 3}, {'Ajo': 2}, {'Aceite oliva': 0.1}], time: 0.33, servings: 4 },
+  { id: '7', name: 'Ternera con verduras', category: 'cenas', ingredients: [{'Ternera filetes': 1}, {'Cebolla': 1}, {'Pimientos': 2}], time: 0.5, servings: 4 }
 ];
 
 let forumMessages = [];
@@ -993,6 +1037,9 @@ function getUserPage(username) {
       <div class="header">
         <div class="icon">🏠</div>
       </div>
+      <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; margin-bottom: 16px;">
+        <div id="daily-phrase" style="font-size: 11px; color: #6b7280; text-align: center; line-height: 1.3;"></div>
+      </div>
       <div class="nav">
         <button class="btn active" onclick="showSection('actividades')">📅 Actividades</button>
         <button class="btn" onclick="showSection('comidas')">🍽️ Comidas</button>
@@ -1031,14 +1078,14 @@ function getUserPage(username) {
           
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <button onclick="changeWeek(-1)">← Semana Anterior</button>
-            <h3 id="current-week">Semana del 1 al 7 de Septiembre 2025</h3>
+            <h3 id="current-week">Semana 1 (1-7 Septiembre 2025)</h3>
             <button onclick="changeWeek(1)">Semana Siguiente →</button>
           </div>
           
           <table class="meal-table" id="meal-table">
             <thead>
               <tr>
-                <th></th>
+                <th style="width: 200px;"></th>
                 <th>Lunes</th>
                 <th>Martes</th>
                 <th>Miércoles</th>
@@ -1048,46 +1095,86 @@ function getUserPage(username) {
                 <th>Domingo</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="meal-table-body">
               <tr>
                 <td class="meal-label">Desayuno Alba y Mario</td>
-                <td onclick="markMealDone('desayuno-alba-mario', 'lunes')"></td>
-                <td onclick="markMealDone('desayuno-alba-mario', 'martes')"></td>
-                <td onclick="markMealDone('desayuno-alba-mario', 'miercoles')"></td>
-                <td onclick="markMealDone('desayuno-alba-mario', 'jueves')"></td>
-                <td onclick="markMealDone('desayuno-alba-mario', 'viernes')"></td>
-                <td onclick="markMealDone('desayuno-alba-mario', 'sabado')"></td>
-                <td onclick="markMealDone('desayuno-alba-mario', 'domingo')"></td>
+                <td id="cell-1-lunes-desayuno-alba-mario" onclick="handleMealClick('1', 'lunes', 'desayuno-alba-mario')"></td>
+                <td id="cell-1-martes-desayuno-alba-mario" onclick="handleMealClick('1', 'martes', 'desayuno-alba-mario')"></td>
+                <td id="cell-1-miercoles-desayuno-alba-mario" onclick="handleMealClick('1', 'miercoles', 'desayuno-alba-mario')"></td>
+                <td id="cell-1-jueves-desayuno-alba-mario" onclick="handleMealClick('1', 'jueves', 'desayuno-alba-mario')"></td>
+                <td id="cell-1-viernes-desayuno-alba-mario" onclick="handleMealClick('1', 'viernes', 'desayuno-alba-mario')"></td>
+                <td id="cell-1-sabado-desayuno-alba-mario" onclick="handleMealClick('1', 'sabado', 'desayuno-alba-mario')"></td>
+                <td id="cell-1-domingo-desayuno-alba-mario" onclick="handleMealClick('1', 'domingo', 'desayuno-alba-mario')"></td>
               </tr>
               <tr>
                 <td class="meal-label">Desayuno Raquel y Javier</td>
-                <td onclick="markMealDone('desayuno-raquel-javier', 'lunes')"></td>
-                <td onclick="markMealDone('desayuno-raquel-javier', 'martes')"></td>
-                <td onclick="markMealDone('desayuno-raquel-javier', 'miercoles')"></td>
-                <td onclick="markMealDone('desayuno-raquel-javier', 'jueves')"></td>
-                <td onclick="markMealDone('desayuno-raquel-javier', 'viernes')"></td>
-                <td onclick="markMealDone('desayuno-raquel-javier', 'sabado')"></td>
-                <td onclick="markMealDone('desayuno-raquel-javier', 'domingo')"></td>
+                <td id="cell-1-lunes-desayuno-raquel-javier" onclick="handleMealClick('1', 'lunes', 'desayuno-raquel-javier')"></td>
+                <td id="cell-1-martes-desayuno-raquel-javier" onclick="handleMealClick('1', 'martes', 'desayuno-raquel-javier')"></td>
+                <td id="cell-1-miercoles-desayuno-raquel-javier" onclick="handleMealClick('1', 'miercoles', 'desayuno-raquel-javier')"></td>
+                <td id="cell-1-jueves-desayuno-raquel-javier" onclick="handleMealClick('1', 'jueves', 'desayuno-raquel-javier')"></td>
+                <td id="cell-1-viernes-desayuno-raquel-javier" onclick="handleMealClick('1', 'viernes', 'desayuno-raquel-javier')"></td>
+                <td id="cell-1-sabado-desayuno-raquel-javier" onclick="handleMealClick('1', 'sabado', 'desayuno-raquel-javier')"></td>
+                <td id="cell-1-domingo-desayuno-raquel-javier" onclick="handleMealClick('1', 'domingo', 'desayuno-raquel-javier')"></td>
+              </tr>
+              <tr>
+                <td class="meal-label">Almuerzo Alba y Mario</td>
+                <td id="cell-1-lunes-almuerzo-alba-mario" onclick="handleMealClick('1', 'lunes', 'almuerzo-alba-mario')"></td>
+                <td id="cell-1-martes-almuerzo-alba-mario" onclick="handleMealClick('1', 'martes', 'almuerzo-alba-mario')"></td>
+                <td id="cell-1-miercoles-almuerzo-alba-mario" onclick="handleMealClick('1', 'miercoles', 'almuerzo-alba-mario')"></td>
+                <td id="cell-1-jueves-almuerzo-alba-mario" onclick="handleMealClick('1', 'jueves', 'almuerzo-alba-mario')"></td>
+                <td id="cell-1-viernes-almuerzo-alba-mario" onclick="handleMealClick('1', 'viernes', 'almuerzo-alba-mario')"></td>
+                <td id="cell-1-sabado-almuerzo-alba-mario" onclick="handleMealClick('1', 'sabado', 'almuerzo-alba-mario')"></td>
+                <td id="cell-1-domingo-almuerzo-alba-mario" onclick="handleMealClick('1', 'domingo', 'almuerzo-alba-mario')"></td>
+              </tr>
+              <tr>
+                <td class="meal-label">Almuerzo Raquel y Javier</td>
+                <td id="cell-1-lunes-almuerzo-raquel-javier" onclick="handleMealClick('1', 'lunes', 'almuerzo-raquel-javier')"></td>
+                <td id="cell-1-martes-almuerzo-raquel-javier" onclick="handleMealClick('1', 'martes', 'almuerzo-raquel-javier')"></td>
+                <td id="cell-1-miercoles-almuerzo-raquel-javier" onclick="handleMealClick('1', 'miercoles', 'almuerzo-raquel-javier')"></td>
+                <td id="cell-1-jueves-almuerzo-raquel-javier" onclick="handleMealClick('1', 'jueves', 'almuerzo-raquel-javier')"></td>
+                <td id="cell-1-viernes-almuerzo-raquel-javier" onclick="handleMealClick('1', 'viernes', 'almuerzo-raquel-javier')"></td>
+                <td id="cell-1-sabado-almuerzo-raquel-javier" onclick="handleMealClick('1', 'sabado', 'almuerzo-raquel-javier')"></td>
+                <td id="cell-1-domingo-almuerzo-raquel-javier" onclick="handleMealClick('1', 'domingo', 'almuerzo-raquel-javier')"></td>
               </tr>
               <tr>
                 <td class="meal-label">Comida</td>
-                <td onclick="markMealDone('comida', 'lunes')"></td>
-                <td onclick="markMealDone('comida', 'martes')"></td>
-                <td onclick="markMealDone('comida', 'miercoles')"></td>
-                <td onclick="markMealDone('comida', 'jueves')"></td>
-                <td onclick="markMealDone('comida', 'viernes')"></td>
-                <td onclick="markMealDone('comida', 'sabado')"></td>
-                <td onclick="markMealDone('comida', 'domingo')"></td>
+                <td id="cell-1-lunes-comida" onclick="handleMealClick('1', 'lunes', 'comida')"></td>
+                <td id="cell-1-martes-comida" onclick="handleMealClick('1', 'martes', 'comida')"></td>
+                <td id="cell-1-miercoles-comida" onclick="handleMealClick('1', 'miercoles', 'comida')"></td>
+                <td id="cell-1-jueves-comida" onclick="handleMealClick('1', 'jueves', 'comida')"></td>
+                <td id="cell-1-viernes-comida" onclick="handleMealClick('1', 'viernes', 'comida')"></td>
+                <td id="cell-1-sabado-comida" onclick="handleMealClick('1', 'sabado', 'comida')"></td>
+                <td id="cell-1-domingo-comida" onclick="handleMealClick('1', 'domingo', 'comida')"></td>
+              </tr>
+              <tr>
+                <td class="meal-label">Merienda Alba y Mario</td>
+                <td id="cell-1-lunes-merienda-alba-mario" onclick="handleMealClick('1', 'lunes', 'merienda-alba-mario')"></td>
+                <td id="cell-1-martes-merienda-alba-mario" onclick="handleMealClick('1', 'martes', 'merienda-alba-mario')"></td>
+                <td id="cell-1-miercoles-merienda-alba-mario" onclick="handleMealClick('1', 'miercoles', 'merienda-alba-mario')"></td>
+                <td id="cell-1-jueves-merienda-alba-mario" onclick="handleMealClick('1', 'jueves', 'merienda-alba-mario')"></td>
+                <td id="cell-1-viernes-merienda-alba-mario" onclick="handleMealClick('1', 'viernes', 'merienda-alba-mario')"></td>
+                <td id="cell-1-sabado-merienda-alba-mario" onclick="handleMealClick('1', 'sabado', 'merienda-alba-mario')"></td>
+                <td id="cell-1-domingo-merienda-alba-mario" onclick="handleMealClick('1', 'domingo', 'merienda-alba-mario')"></td>
+              </tr>
+              <tr>
+                <td class="meal-label">Merienda Raquel y Javier</td>
+                <td id="cell-1-lunes-merienda-raquel-javier" onclick="handleMealClick('1', 'lunes', 'merienda-raquel-javier')"></td>
+                <td id="cell-1-martes-merienda-raquel-javier" onclick="handleMealClick('1', 'martes', 'merienda-raquel-javier')"></td>
+                <td id="cell-1-miercoles-merienda-raquel-javier" onclick="handleMealClick('1', 'miercoles', 'merienda-raquel-javier')"></td>
+                <td id="cell-1-jueves-merienda-raquel-javier" onclick="handleMealClick('1', 'jueves', 'merienda-raquel-javier')"></td>
+                <td id="cell-1-viernes-merienda-raquel-javier" onclick="handleMealClick('1', 'viernes', 'merienda-raquel-javier')"></td>
+                <td id="cell-1-sabado-merienda-raquel-javier" onclick="handleMealClick('1', 'sabado', 'merienda-raquel-javier')"></td>
+                <td id="cell-1-domingo-merienda-raquel-javier" onclick="handleMealClick('1', 'domingo', 'merienda-raquel-javier')"></td>
               </tr>
               <tr>
                 <td class="meal-label">Cena</td>
-                <td onclick="markMealDone('cena', 'lunes')"></td>
-                <td onclick="markMealDone('cena', 'martes')"></td>
-                <td onclick="markMealDone('cena', 'miercoles')"></td>
-                <td onclick="markMealDone('cena', 'jueves')"></td>
-                <td onclick="markMealDone('cena', 'viernes')"></td>
-                <td onclick="markMealDone('cena', 'sabado')"></td>
-                <td onclick="markMealDone('cena', 'domingo')"></td>
+                <td id="cell-1-lunes-cena" onclick="handleMealClick('1', 'lunes', 'cena')"></td>
+                <td id="cell-1-martes-cena" onclick="handleMealClick('1', 'martes', 'cena')"></td>
+                <td id="cell-1-miercoles-cena" onclick="handleMealClick('1', 'miercoles', 'cena')"></td>
+                <td id="cell-1-jueves-cena" onclick="handleMealClick('1', 'jueves', 'cena')"></td>
+                <td id="cell-1-viernes-cena" onclick="handleMealClick('1', 'viernes', 'cena')"></td>
+                <td id="cell-1-sabado-cena" onclick="handleMealClick('1', 'sabado', 'cena')"></td>
+                <td id="cell-1-domingo-cena" onclick="handleMealClick('1', 'domingo', 'cena')"></td>
               </tr>
             </tbody>
           </table>
@@ -1322,7 +1409,54 @@ function getUserPage(username) {
     
     function changeWeek(direction) {
       currentWeek += direction;
-      document.getElementById('current-week').textContent = 'Semana ' + currentWeek + ' de Septiembre 2025';
+      if (currentWeek < 1) currentWeek = 1;
+      document.getElementById('current-week').textContent = 'Semana ' + currentWeek + ' (Septiembre 2025)';
+      loadMealPlan();
+    }
+    
+    function handleMealClick(week, day, meal) {
+      if (username === 'javi_administrador') {
+        // Admin puede editar
+        const currentContent = document.getElementById(`cell-${week}-${day}-${meal}`).textContent;
+        const newContent = prompt('Contenido de la comida:', currentContent);
+        if (newContent !== null) {
+          saveMealPlan(week, day, meal, newContent);
+        }
+      } else {
+        // Usuario solo puede marcar como hecho
+        if (confirm('¿Marcar como hecho?')) {
+          const cell = document.getElementById(`cell-${week}-${day}-${meal}`);
+          cell.style.background = '#f0fdf4';
+          cell.innerHTML += ' ✓';
+        }
+      }
+    }
+    
+    function saveMealPlan(week, day, meal, content) {
+      fetch('/api/meal-plan', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({week, day, meal, content})
+      }).then(() => loadData());
+    }
+    
+    function loadMealPlan() {
+      fetch('/api/data')
+        .then(r => r.json())
+        .then(data => {
+          const meals = ['desayuno-alba-mario', 'desayuno-raquel-javier', 'almuerzo-alba-mario', 'almuerzo-raquel-javier', 'comida', 'merienda-alba-mario', 'merienda-raquel-javier', 'cena'];
+          const days = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+          
+          meals.forEach(meal => {
+            days.forEach(day => {
+              const key = `${currentWeek}-${day}-${meal}`;
+              const cell = document.getElementById(`cell-${currentWeek}-${day}-${meal}`);
+              if (cell && data.mealPlan[key]) {
+                cell.textContent = data.mealPlan[key];
+              }
+            });
+          });
+        });
     }
     
     function showRecipeCategory(category) {
@@ -1362,7 +1496,33 @@ function getUserPage(username) {
     
 
     
+    // Cargar frase motivadora diaria
+    function loadDailyPhrase() {
+      const phrases = [
+        'Cuando eliges pensamientos de amor, todo tu mundo se ordena. (Wayne Dyer)',
+        'Tu mente es la semilla, tu vida es la cosecha. (Joe Dispenza)',
+        'Nada real puede ser amenazado; nada irreal existe. (Un curso de milagros)',
+        'El dinero es energía, y se mueve hacia quien le da dirección. (Raimón Samsó)',
+        'El futuro no está escrito, se crea en tu mente. (Wayne Dyer)'
+      ];
+      
+      const today = new Date();
+      const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+      const phraseIndex = (dayOfYear - 1) % phrases.length;
+      
+      const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+      const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+      
+      const dateStr = `${days[today.getDay()]} ${today.getDate()} de ${months[today.getMonth()]} de ${today.getFullYear()}`;
+      
+      document.getElementById('daily-phrase').innerHTML = `
+        <div style="font-weight: bold; margin-bottom: 4px;">${dateStr}</div>
+        <div>${phrases[phraseIndex]}</div>
+      `;
+    }
+    
     loadData();
+    loadDailyPhrase();
     setInterval(loadData, 10000);
   </script>
 </body>
