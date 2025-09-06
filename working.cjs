@@ -755,7 +755,7 @@ function getUserPage(username) {
         <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
         <button class="btn" onclick="showSection('compras')">🛒 Lista de la compra</button>
         <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
-        <button class="btn" onclick="showSection('english')">🎓 Ca'mon</button>
+        <button class="btn" onclick="window.location.href='/english'">🎓 Ca'mon</button>
       </div>
       <div class="user">
         <span style="font-size: 12px; font-weight: 500;">${user.name}</span>
@@ -867,14 +867,6 @@ function getUserPage(username) {
         <div id="compras" class="section">
           <h2 class="title" style="background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Lista de la Compra</h2>
           <div id="shopping-lists"></div>
-        </div>
-        
-        <div id="english" class="section">
-          <h2 class="title" style="background: linear-gradient(to right, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🎓 Ca'mon - Aprende Inglés</h2>
-          <div class="card">
-            <p>Haz clic para abrir Ca'mon en una nueva pestaña:</p>
-            <button onclick="window.open('/english', '_blank')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; font-size: 16px;">Abrir Ca'mon</button>
-          </div>
         </div>
         
         <div id="mensajes" class="section">
