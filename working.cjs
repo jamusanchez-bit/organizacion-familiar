@@ -33,161 +33,342 @@ let privateMessages = {};
 const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url, true);
   
-  // Ruta de inglés - PRIMERA PRIORIDAD
+  // Ruta de inglés - CA'MON COMPLETO
   if (parsedUrl.pathname === '/english' || parsedUrl.pathname === '/english/') {
+    const user = parsedUrl.query.user || 'Usuario';
+    
     const englishHTML = `<!DOCTYPE html>
 <html>
 <head>
-  <title>Ca'mon English</title>
+  <title>Ca'mon English - ${user}</title>
   <style>
     * { font-family: Arial, sans-serif; margin: 0; padding: 0; }
     body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
     .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
     .header { text-align: center; color: white; margin-bottom: 40px; }
     .card { background: white; border-radius: 12px; padding: 30px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    .btn { background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; }
-    .btn:hover { background: #5a67d8; }
-    .level-badge { background: #10b981; color: white; padding: 4px 12px; border-radius: 20px; font-size: 14px; }
+    .btn { background: #667eea; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; transition: all 0.3s; }
+    .btn:hover { background: #5a67d8; transform: translateY(-2px); }
+    .level-badge { background: #10b981; color: white; padding: 8px 16px; border-radius: 20px; font-size: 16px; font-weight: bold; }
     .exercise { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 15px 0; }
-    input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin: 5px 0; }
-    .chat-area { height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; background: #f9f9f9; border-radius: 8px; }
-    .message { margin: 10px 0; padding: 10px; border-radius: 8px; }
+    .chat-area { height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 20px; background: #f9f9f9; border-radius: 8px; }
+    .message { margin: 15px 0; padding: 12px; border-radius: 8px; }
     .user-message { background: #e3f2fd; text-align: right; }
     .ai-message { background: #f0f4f8; }
+    .timer { font-size: 24px; font-weight: bold; color: #667eea; text-align: center; margin: 20px 0; }
+    .voice-btn { background: #dc2626; }
+    .voice-btn.recording { background: #10b981; animation: pulse 1s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    .section { display: none; }
+    .section.active { display: block; }
+    .nav-buttons { display: flex; gap: 10px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
       <h1>🎓 Ca'mon English</h1>
-      <p>Aprende inglés de forma divertida y efectiva</p>
-      <div id="user-info"></div>
+      <p>Bienvenido, <strong>${user}</strong>! Aprende inglés de forma personalizada</p>
     </div>
     
-    <div class="card">
-      <h2>📊 Tu Nivel Actual</h2>
-      <p>Nivel: <span class="level-badge" id="current-level">A1</span></p>
-      <button class="btn" onclick="startLevelTest()">🎯 Hacer Prueba de Nivel</button>
+    <div class="nav-buttons">
+      <button class="btn" onclick="showSection('level')">📊 Tu Nivel</button>
+      <button class="btn" onclick="showSection('test')">🎯 Prueba Inicial</button>
+      <button class="btn" onclick="showSection('exercises')">📚 Ejercicios Diarios</button>
+      <button class="btn" onclick="showSection('chat')">💬 Chat con Elizabeth</button>
+      <button class="btn" onclick="showSection('progress')">📈 Mi Evolución</button>
     </div>
     
-    <div class="card">
-      <h2>📚 Ejercicios Diarios</h2>
-      <div class="exercise">
-        <h3>Gramática: Presente Simple</h3>
-        <p>Completa la frase:</p>
-        <p>I _____ a student.</p>
-        <input type="text" id="grammar-answer" placeholder="Escribe tu respuesta">
-        <button class="btn" onclick="checkGrammar()">Verificar</button>
-        <div id="grammar-result"></div>
-      </div>
-      
-      <div class="exercise">
-        <h3>Comprensión Lectora</h3>
-        <p><strong>Texto:</strong> Hello, my name is Sarah. I am 25 years old and I live in London.</p>
-        <p><strong>Pregunta:</strong> How old is Sarah?</p>
-        <div>
-          <input type="radio" name="reading" value="23"> 23
-          <input type="radio" name="reading" value="24"> 24
-          <input type="radio" name="reading" value="25"> 25
-          <input type="radio" name="reading" value="26"> 26
-        </div>
-        <button class="btn" onclick="checkReading()">Verificar</button>
-        <div id="reading-result"></div>
-      </div>
-    </div>
-    
-    <div class="card">
-      <h2>💬 Chat con Elizabeth (Tu Profesora)</h2>
-      <div class="chat-area" id="chat-area">
-        <div class="message ai-message">
-          <strong>Elizabeth:</strong> Hello! I'm Elizabeth, your English teacher. How are you today?
+    <!-- SECCIÓN: TU NIVEL -->
+    <div id="level" class="section active">
+      <div class="card">
+        <h2>📊 Tu Nivel Actual</h2>
+        <p style="text-align: center; margin: 20px 0;">
+          Nivel: <span class="level-badge" id="current-level">A1.1</span>
+        </p>
+        <div style="text-align: center;">
+          <p>¡Perfecto para empezar tu aventura en inglés!</p>
+          <button class="btn" onclick="showSection('test')">🎯 Hacer Prueba de Nivel</button>
+          <button class="btn" onclick="showSection('exercises')">📚 Comenzar Ejercicios</button>
         </div>
       </div>
-      <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <input type="text" id="chat-input" placeholder="Escribe tu mensaje en inglés..." style="flex: 1;">
-        <button class="btn" onclick="sendMessage()">Enviar</button>
+    </div>
+    
+    <!-- SECCIÓN: PRUEBA INICIAL -->
+    <div id="test" class="section">
+      <div class="card">
+        <h2>🎯 Prueba de Nivel Cambridge</h2>
+        <p>Esta prueba tiene 25 preguntas para determinar tu nivel exacto (A1.1 - C2.5)</p>
+        <div id="test-content">
+          <div style="text-align: center; margin: 30px 0;">
+            <button class="btn" onclick="startLevelTest()">Comenzar Prueba</button>
+          </div>
+        </div>
       </div>
     </div>
     
-    <div class="card">
-      <h2>📈 Tu Progreso</h2>
-      <p>Ejercicios completados hoy: <strong>0/2</strong></p>
-      <p>Racha actual: <strong>1 día</strong></p>
-      <p>Puntuación promedio: <strong>--</strong></p>
+    <!-- SECCIÓN: EJERCICIOS DIARIOS -->
+    <div id="exercises" class="section">
+      <div class="card">
+        <h2>📚 Ejercicios Diarios</h2>
+        <p>Completa los 3 ejercicios para marcar el día como completado:</p>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 30px 0;">
+          <div class="exercise">
+            <h3>📝 Gramática</h3>
+            <p>Ejercicios de escritura adaptados a tu nivel</p>
+            <button class="btn" onclick="startGrammar()">Comenzar</button>
+          </div>
+          
+          <div class="exercise">
+            <h3>📖 Reading</h3>
+            <p>Comprensión lectora con textos Cambridge</p>
+            <button class="btn" onclick="startReading()">Comenzar</button>
+          </div>
+          
+          <div class="exercise">
+            <h3>🗣️ Chat con Elizabeth</h3>
+            <p>Conversación de voz mínimo 10 minutos</p>
+            <button class="btn" onclick="showSection('chat')">Comenzar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- SECCIÓN: CHAT CON ELIZABETH -->
+    <div id="chat" class="section">
+      <div class="card">
+        <h2>💬 Chat con Elizabeth - Tu Profesora Personal</h2>
+        <div class="timer" id="chat-timer">⏱️ 00:00</div>
+        
+        <div class="chat-area" id="chat-area">
+          <div class="message ai-message">
+            <strong>Elizabeth:</strong> Hello! I'm Elizabeth, your personal English teacher. I'm here to help you practice and improve your English. How are you feeling today?
+          </div>
+        </div>
+        
+        <div style="display: flex; gap: 10px; justify-content: center; margin: 20px 0;">
+          <button class="btn voice-btn" id="record-btn" onclick="toggleRecording()">🎤 Mantén para Hablar</button>
+          <button class="btn" onclick="toggleTextInput()">💬 Escribir</button>
+        </div>
+        
+        <input type="text" id="chat-input" placeholder="Escribe tu mensaje en inglés..." style="display: none; width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px;">
+      </div>
+    </div>
+    
+    <!-- SECCIÓN: MI EVOLUCIÓN -->
+    <div id="progress" class="section">
+      <div class="card">
+        <h2>📈 Mi Evolución</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+          <div class="exercise">
+            <h3>📊 Estadísticas</h3>
+            <p><strong>Nivel actual:</strong> A1.1</p>
+            <p><strong>Días completados:</strong> 0</p>
+            <p><strong>Racha actual:</strong> 0 días</p>
+            <p><strong>Promedio:</strong> --</p>
+          </div>
+          
+          <div class="exercise">
+            <h3>📅 Historial Reciente</h3>
+            <p style="color: #6b7280;">Completa tus primeros ejercicios para ver tu progreso aquí</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const userName = urlParams.get('user') || 'Usuario';
-    document.getElementById('user-info').innerHTML = \`<p>Bienvenido, \${userName}!</p>\`;
+    const userName = '${user}';
+    let chatTimer = 0;
+    let chatInterval = null;
+    let isRecording = false;
+    let recognition = null;
     
-    function startLevelTest() {
-      alert('Prueba de nivel iniciada. Esta funcionalidad se implementará próximamente.');
+    // Inicializar reconocimiento de voz
+    if ('webkitSpeechRecognition' in window) {
+      recognition = new webkitSpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+      
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        sendVoiceMessage(transcript);
+      };
+      
+      recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+        stopRecording();
+      };
+      
+      recognition.onend = function() {
+        stopRecording();
+      };
     }
     
-    function checkGrammar() {
-      const answer = document.getElementById('grammar-answer').value.toLowerCase().trim();
-      const result = document.getElementById('grammar-result');
+    function showSection(section) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById(section).classList.add('active');
       
-      if (answer === 'am') {
-        result.innerHTML = '<p style="color: green;">✅ ¡Correcto! "I am a student."</p>';
+      if (section === 'chat') {
+        startChatTimer();
       } else {
-        result.innerHTML = '<p style="color: red;">❌ Incorrecto. La respuesta correcta es "am".</p>';
+        stopChatTimer();
       }
     }
     
-    function checkReading() {
-      const selected = document.querySelector('input[name="reading"]:checked');
-      const result = document.getElementById('reading-result');
-      
-      if (selected && selected.value === '25') {
-        result.innerHTML = '<p style="color: green;">✅ ¡Correcto! Sarah tiene 25 años.</p>';
-      } else {
-        result.innerHTML = '<p style="color: red;">❌ Incorrecto. Sarah tiene 25 años.</p>';
+    function startChatTimer() {
+      if (chatInterval) return;
+      chatInterval = setInterval(() => {
+        chatTimer++;
+        const minutes = Math.floor(chatTimer / 60);
+        const seconds = chatTimer % 60;
+        document.getElementById('chat-timer').textContent = 
+          \`⏱️ \${minutes.toString().padStart(2, '0')}:\${seconds.toString().padStart(2, '0')}\`;
+      }, 1000);
+    }
+    
+    function stopChatTimer() {
+      if (chatInterval) {
+        clearInterval(chatInterval);
+        chatInterval = null;
       }
     }
     
-    function sendMessage() {
+    function toggleRecording() {
+      if (!recognition) {
+        alert('Tu navegador no soporta reconocimiento de voz. Usa Chrome o Safari.');
+        return;
+      }
+      
+      if (isRecording) {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    }
+    
+    function startRecording() {
+      isRecording = true;
+      document.getElementById('record-btn').textContent = '🔴 Grabando...';
+      document.getElementById('record-btn').classList.add('recording');
+      recognition.start();
+    }
+    
+    function stopRecording() {
+      isRecording = false;
+      document.getElementById('record-btn').textContent = '🎤 Mantén para Hablar';
+      document.getElementById('record-btn').classList.remove('recording');
+      if (recognition) {
+        recognition.stop();
+      }
+    }
+    
+    function toggleTextInput() {
       const input = document.getElementById('chat-input');
+      if (input.style.display === 'none') {
+        input.style.display = 'block';
+        input.focus();
+      } else {
+        sendTextMessage();
+      }
+    }
+    
+    function sendVoiceMessage(transcript) {
       const chatArea = document.getElementById('chat-area');
-      const message = input.value.trim();
       
+      chatArea.innerHTML += \`
+        <div class="message user-message">
+          <strong>\${userName}:</strong> \${transcript}
+        </div>
+      \`;
+      
+      sendToOpenAI(transcript);
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+    
+    function sendTextMessage() {
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
       if (!message) return;
       
+      const chatArea = document.getElementById('chat-area');
       chatArea.innerHTML += \`
         <div class="message user-message">
           <strong>\${userName}:</strong> \${message}
         </div>
       \`;
       
-      setTimeout(() => {
-        const responses = [
-          "That's great! Tell me more about it.",
-          "Interesting! What do you think about that?",
-          "I see. How does that make you feel?",
-          "That sounds wonderful! What happened next?",
-          "Really? That's quite fascinating!"
-        ];
-        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-        
-        chatArea.innerHTML += \`
-          <div class="message ai-message">
-            <strong>Elizabeth:</strong> \${randomResponse}
-          </div>
-        \`;
-        chatArea.scrollTop = chatArea.scrollHeight;
-      }, 1000);
-      
+      sendToOpenAI(message);
       input.value = '';
+      input.style.display = 'none';
       chatArea.scrollTop = chatArea.scrollHeight;
     }
     
+    async function sendToOpenAI(message) {
+      const chatArea = document.getElementById('chat-area');
+      
+      try {
+        const response = await fetch('/api/chat-elizabeth', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            user: userName,
+            message: message,
+            level: 'A1.1'
+          })
+        });
+        
+        const data = await response.json();
+        
+        chatArea.innerHTML += \`
+          <div class="message ai-message">
+            <strong>Elizabeth:</strong> \${data.response}
+          </div>
+        \`;
+        
+        // Reproducir respuesta de voz
+        if ('speechSynthesis' in window) {
+          const utterance = new SpeechSynthesisUtterance(data.response);
+          utterance.lang = 'en-US';
+          utterance.rate = 0.9;
+          speechSynthesis.speak(utterance);
+        }
+        
+      } catch (error) {
+        console.error('Error:', error);
+        chatArea.innerHTML += \`
+          <div class="message ai-message">
+            <strong>Elizabeth:</strong> I'm sorry, I'm having trouble connecting right now. Please try again.
+          </div>
+        \`;
+      }
+      
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+    
+    function startLevelTest() {
+      alert('Iniciando prueba de nivel Cambridge. Esta funcionalidad se completará próximamente con 25 preguntas personalizadas.');
+    }
+    
+    function startGrammar() {
+      alert('Iniciando ejercicios de gramática adaptados a tu nivel A1.1');
+    }
+    
+    function startReading() {
+      alert('Iniciando ejercicios de comprensión lectora con contenido Cambridge');
+    }
+    
+    // Event listeners
     document.getElementById('chat-input').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
-        sendMessage();
+        sendTextMessage();
       }
     });
+    
+    // Inicializar
+    showSection('level');
   </script>
 </body>
 </html>`;
@@ -386,6 +567,62 @@ const server = http.createServer((req, res) => {
       adminSuggestions: adminSuggestions,
       privateMessages: privateMessages
     }));
+    return;
+  }
+  
+  // API Chat con Elizabeth (OpenAI)
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/chat-elizabeth') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const data = JSON.parse(body);
+        const { user, message, level } = data;
+        
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            messages: [
+              {
+                role: 'system',
+                content: `You are Elizabeth, a friendly and patient English teacher. You're helping ${user} who is at level ${level}. Keep conversations natural, educational, and encouraging. Correct mistakes gently and provide helpful feedback. Adapt your language complexity to their level.`
+              },
+              {
+                role: 'user',
+                content: message
+              }
+            ],
+            max_tokens: 150,
+            temperature: 0.7
+          })
+        });
+        
+        const openaiData = await response.json();
+        
+        if (openaiData.choices && openaiData.choices[0]) {
+          res.writeHead(200, {'Content-Type': 'application/json'});
+          res.end(JSON.stringify({
+            response: openaiData.choices[0].message.content,
+            audio: true
+          }));
+        } else {
+          throw new Error('Invalid OpenAI response');
+        }
+        
+      } catch (error) {
+        console.error('OpenAI Error:', error);
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify({
+          response: "I'm sorry, I'm having some technical difficulties right now. Could you please try again?",
+          audio: false
+        }));
+      }
+    });
     return;
   }
   
@@ -755,7 +992,7 @@ function getUserPage(username) {
         <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
         <button class="btn" onclick="showSection('compras')">🛒 Lista de la compra</button>
         <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
-        <button class="btn" onclick="window.location.href='/english'">🎓 Ca'mon</button>
+        <button class="btn" onclick="window.location.href='/english?user=${user.name}'">🎓 Ca'mon</button>
       </div>
       <div class="user">
         <span style="font-size: 12px; font-weight: 500;">${user.name}</span>
