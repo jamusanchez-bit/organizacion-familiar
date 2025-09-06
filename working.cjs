@@ -439,7 +439,7 @@ const server = http.createServer((req, res) => {
   
   
   res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
-  res.end('<h1>Organización Familiar</h1><p>Accede con tu enlace personal</p>');
+  res.end('<h1>Organización Familiar - ACTUALIZADO ' + new Date().toISOString() + '</h1><p>Accede con tu enlace personal</p>');
 });
 
 function getUserPage(username) {
