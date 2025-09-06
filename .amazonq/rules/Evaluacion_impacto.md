@@ -27,3 +27,6 @@ Antes de implementar CUALQUIER cambio, SIEMPRE evaluar:
 ## RECORDATORIO:
 La sencillez es más importante que la perfección.
 Un sistema que funciona es mejor que uno "perfecto" roto.
+
+## APLICACIÓN:
+Consultar SIEMPRE estas reglas antes de cualquier cambio
