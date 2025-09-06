@@ -12,62 +12,18 @@ const USERS = {
   javi_administrador: { id: 'javi_administrador', name: 'Javi (Admin)', password: 'admin123' }
 };
 
-let activities = [
-  // Actividades de ejemplo
-  { id: 1, user: 'javier', title: 'Ejercicio matutino', time: '07:00', duration: 30, repeat: 'daily', repeatDays: ['lunes','martes','miercoles','jueves','viernes'], date: new Date().toDateString(), completed: false },
-  { id: 2, user: 'raquel', title: 'Yoga', time: '18:00', duration: 45, repeat: 'daily', repeatDays: ['lunes','miercoles','viernes'], date: new Date().toDateString(), completed: false },
-  { id: 3, user: 'mario', title: 'Estudiar inglés', time: '16:00', duration: 60, repeat: 'daily', repeatDays: ['lunes','martes','miercoles','jueves','viernes'], date: new Date().toDateString(), completed: false },
-  { id: 4, user: 'alba', title: 'Leer', time: '20:00', duration: 30, repeat: 'daily', repeatDays: ['todos'], date: new Date().toDateString(), completed: false }
-];
-let mealPlan = {
-  // Semana 1 - Ejemplo
-  '1-lunes-desayuno-alba-mario': 'Tostadas con mermelada',
-  '1-lunes-desayuno-raquel-javier': 'Café con tostadas',
-  '1-lunes-comida': 'Lubina sobre cama de verduras',
-  '1-lunes-cena': 'Pasta con tomate',
-  '1-martes-comida': 'Pollo al horno',
-  '1-martes-cena': 'Merluza a la plancha'
-};
+let activities = [];
+let mealPlan = {};
 let inventory = [
-  // Carne
-  { id: '1', name: 'Jamón serrano', category: 'carne', shop: 'Carne internet', unit: 'paquetes', quantity: 2 },
-  { id: '2', name: 'Pollo entero', category: 'carne', shop: 'Carne internet', unit: 'unidades', quantity: 1 },
-  { id: '3', name: 'Ternera filetes', category: 'carne', shop: 'Carne internet', unit: 'paquetes', quantity: 0 },
-  // Pescado
-  { id: '4', name: 'Salmón fresco', category: 'pescado', shop: 'Pescadería', unit: 'unidades', quantity: 1 },
-  { id: '5', name: 'Lubina', category: 'pescado', shop: 'Pescadería', unit: 'unidades', quantity: 2 },
-  { id: '6', name: 'Merluza', category: 'pescado', shop: 'Pescadería', unit: 'unidades', quantity: 0 },
-  // Verdura
-  { id: '7', name: 'Tomates', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 5 },
-  { id: '8', name: 'Ajo', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 3 },
-  { id: '9', name: 'Cebolla', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 2 },
-  { id: '10', name: 'Pimientos', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 0 },
-  // Fruta
-  { id: '11', name: 'Manzanas', category: 'fruta', shop: 'Alcampo', unit: 'unidades', quantity: 8 },
-  { id: '12', name: 'Plátanos', category: 'fruta', shop: 'Alcampo', unit: 'unidades', quantity: 6 },
-  { id: '13', name: 'Naranjas', category: 'fruta', shop: 'Alcampo', unit: 'unidades', quantity: 1 },
-  // Frutos secos
-  { id: '14', name: 'Almendras', category: 'frutos secos', shop: 'Internet', unit: 'botes', quantity: 1 },
-  { id: '15', name: 'Nueces', category: 'frutos secos', shop: 'Internet', unit: 'botes', quantity: 0 },
-  // Productos limpieza
-  { id: '16', name: 'Detergente', category: 'productos limpieza/hogar', shop: 'Alcampo', unit: 'botes', quantity: 1 },
-  { id: '17', name: 'Papel higiénico', category: 'productos limpieza/hogar', shop: 'Alcampo', unit: 'paquetes', quantity: 2 },
-  // Otros
-  { id: '18', name: 'Aceite oliva', category: 'otros', shop: 'Alcampo', unit: 'litros', quantity: 1 },
-  { id: '19', name: 'Arroz', category: 'otros', shop: 'Alcampo', unit: 'paquetes', quantity: 3 },
-  { id: '20', name: 'Pasta', category: 'otros', shop: 'Alcampo', unit: 'paquetes', quantity: 0 }
+  { id: '1', name: 'Jamón', category: 'carne', shop: 'Carne internet', unit: 'paquetes', quantity: 0 },
+  { id: '2', name: 'Salmón fresco', category: 'pescado', shop: 'Pescadería', unit: 'unidades', quantity: 0 },
+  { id: '3', name: 'Ajo', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 0 },
+  { id: '4', name: 'Aceite oliva', category: 'otros', shop: 'Alcampo', unit: 'litros', quantity: 0 }
 ];
 
 let recipes = [
-  // Comidas
-  { id: '1', name: 'Lubina sobre cama de verduras', category: 'comidas', ingredients: [{'Lubina': 1}, {'Ajo': 2}, {'Tomates': 2}, {'Cebolla': 1}], time: 0.5, servings: 4 },
-  { id: '2', name: 'Salmón en papillote', category: 'comidas', ingredients: [{'Salmón fresco': 1}, {'Ajo': 1}, {'Pimientos': 1}], time: 0.75, servings: 4 },
-  { id: '3', name: 'Pollo al horno', category: 'comidas', ingredients: [{'Pollo entero': 1}, {'Ajo': 3}, {'Tomates': 3}], time: 1.5, servings: 4 },
-  { id: '4', name: 'Arroz con verduras', category: 'comidas', ingredients: [{'Arroz': 1}, {'Tomates': 2}, {'Cebolla': 1}, {'Pimientos': 2}], time: 0.5, servings: 4 },
-  // Cenas
-  { id: '5', name: 'Merluza a la plancha', category: 'cenas', ingredients: [{'Merluza': 1}, {'Ajo': 2}, {'Aceite oliva': 0.1}], time: 0.25, servings: 4 },
-  { id: '6', name: 'Pasta con tomate', category: 'cenas', ingredients: [{'Pasta': 1}, {'Tomates': 3}, {'Ajo': 2}, {'Aceite oliva': 0.1}], time: 0.33, servings: 4 },
-  { id: '7', name: 'Ternera con verduras', category: 'cenas', ingredients: [{'Ternera filetes': 1}, {'Cebolla': 1}, {'Pimientos': 2}], time: 0.5, servings: 4 }
+  { id: '1', name: 'Lubina sobre cama de verduras', category: 'comidas', ingredients: [{'Lubina': 1}, {'Ajo': 2}], time: 0.5, servings: 4 },
+  { id: '2', name: 'Salmón en papillote', category: 'comidas', ingredients: [{'Salmón fresco': 1}, {'Ajo': 1}], time: 0.75, servings: 4 }
 ];
 
 let forumMessages = [];
@@ -591,7 +547,7 @@ const server = http.createServer((req, res) => {
         timestamp: Date.now()
       };
       
-      if (data.type === 'group') {
+      if (data.type === 'forum') {
         forumMessages.push(message);
       } else if (data.type === 'admin') {
         adminSuggestions.push(message);
@@ -1037,9 +993,6 @@ function getUserPage(username) {
       <div class="header">
         <div class="icon">🏠</div>
       </div>
-      <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; margin-bottom: 16px;">
-        <div id="daily-phrase" style="font-size: 11px; color: #6b7280; text-align: center; line-height: 1.3;"></div>
-      </div>
       <div class="nav">
         <button class="btn active" onclick="showSection('actividades')">📅 Actividades</button>
         <button class="btn" onclick="showSection('comidas')">🍽️ Comidas</button>
@@ -1078,14 +1031,14 @@ function getUserPage(username) {
           
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <button onclick="changeWeek(-1)">← Semana Anterior</button>
-            <h3 id="current-week">Semana 1 (1-7 Septiembre 2025)</h3>
+            <h3 id="current-week">Semana del 1 al 7 de Septiembre 2025</h3>
             <button onclick="changeWeek(1)">Semana Siguiente →</button>
           </div>
           
           <table class="meal-table" id="meal-table">
             <thead>
               <tr>
-                <th style="width: 200px;"></th>
+                <th></th>
                 <th>Lunes</th>
                 <th>Martes</th>
                 <th>Miércoles</th>
@@ -1095,86 +1048,46 @@ function getUserPage(username) {
                 <th>Domingo</th>
               </tr>
             </thead>
-            <tbody id="meal-table-body">
+            <tbody>
               <tr>
                 <td class="meal-label">Desayuno Alba y Mario</td>
-                <td id="cell-1-lunes-desayuno-alba-mario" onclick="handleMealClick('1', 'lunes', 'desayuno-alba-mario')"></td>
-                <td id="cell-1-martes-desayuno-alba-mario" onclick="handleMealClick('1', 'martes', 'desayuno-alba-mario')"></td>
-                <td id="cell-1-miercoles-desayuno-alba-mario" onclick="handleMealClick('1', 'miercoles', 'desayuno-alba-mario')"></td>
-                <td id="cell-1-jueves-desayuno-alba-mario" onclick="handleMealClick('1', 'jueves', 'desayuno-alba-mario')"></td>
-                <td id="cell-1-viernes-desayuno-alba-mario" onclick="handleMealClick('1', 'viernes', 'desayuno-alba-mario')"></td>
-                <td id="cell-1-sabado-desayuno-alba-mario" onclick="handleMealClick('1', 'sabado', 'desayuno-alba-mario')"></td>
-                <td id="cell-1-domingo-desayuno-alba-mario" onclick="handleMealClick('1', 'domingo', 'desayuno-alba-mario')"></td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'lunes')"></td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'martes')"></td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'miercoles')"></td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'jueves')"></td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'viernes')"></td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'sabado')"></td>
+                <td onclick="markMealDone('desayuno-alba-mario', 'domingo')"></td>
               </tr>
               <tr>
                 <td class="meal-label">Desayuno Raquel y Javier</td>
-                <td id="cell-1-lunes-desayuno-raquel-javier" onclick="handleMealClick('1', 'lunes', 'desayuno-raquel-javier')"></td>
-                <td id="cell-1-martes-desayuno-raquel-javier" onclick="handleMealClick('1', 'martes', 'desayuno-raquel-javier')"></td>
-                <td id="cell-1-miercoles-desayuno-raquel-javier" onclick="handleMealClick('1', 'miercoles', 'desayuno-raquel-javier')"></td>
-                <td id="cell-1-jueves-desayuno-raquel-javier" onclick="handleMealClick('1', 'jueves', 'desayuno-raquel-javier')"></td>
-                <td id="cell-1-viernes-desayuno-raquel-javier" onclick="handleMealClick('1', 'viernes', 'desayuno-raquel-javier')"></td>
-                <td id="cell-1-sabado-desayuno-raquel-javier" onclick="handleMealClick('1', 'sabado', 'desayuno-raquel-javier')"></td>
-                <td id="cell-1-domingo-desayuno-raquel-javier" onclick="handleMealClick('1', 'domingo', 'desayuno-raquel-javier')"></td>
-              </tr>
-              <tr>
-                <td class="meal-label">Almuerzo Alba y Mario</td>
-                <td id="cell-1-lunes-almuerzo-alba-mario" onclick="handleMealClick('1', 'lunes', 'almuerzo-alba-mario')"></td>
-                <td id="cell-1-martes-almuerzo-alba-mario" onclick="handleMealClick('1', 'martes', 'almuerzo-alba-mario')"></td>
-                <td id="cell-1-miercoles-almuerzo-alba-mario" onclick="handleMealClick('1', 'miercoles', 'almuerzo-alba-mario')"></td>
-                <td id="cell-1-jueves-almuerzo-alba-mario" onclick="handleMealClick('1', 'jueves', 'almuerzo-alba-mario')"></td>
-                <td id="cell-1-viernes-almuerzo-alba-mario" onclick="handleMealClick('1', 'viernes', 'almuerzo-alba-mario')"></td>
-                <td id="cell-1-sabado-almuerzo-alba-mario" onclick="handleMealClick('1', 'sabado', 'almuerzo-alba-mario')"></td>
-                <td id="cell-1-domingo-almuerzo-alba-mario" onclick="handleMealClick('1', 'domingo', 'almuerzo-alba-mario')"></td>
-              </tr>
-              <tr>
-                <td class="meal-label">Almuerzo Raquel y Javier</td>
-                <td id="cell-1-lunes-almuerzo-raquel-javier" onclick="handleMealClick('1', 'lunes', 'almuerzo-raquel-javier')"></td>
-                <td id="cell-1-martes-almuerzo-raquel-javier" onclick="handleMealClick('1', 'martes', 'almuerzo-raquel-javier')"></td>
-                <td id="cell-1-miercoles-almuerzo-raquel-javier" onclick="handleMealClick('1', 'miercoles', 'almuerzo-raquel-javier')"></td>
-                <td id="cell-1-jueves-almuerzo-raquel-javier" onclick="handleMealClick('1', 'jueves', 'almuerzo-raquel-javier')"></td>
-                <td id="cell-1-viernes-almuerzo-raquel-javier" onclick="handleMealClick('1', 'viernes', 'almuerzo-raquel-javier')"></td>
-                <td id="cell-1-sabado-almuerzo-raquel-javier" onclick="handleMealClick('1', 'sabado', 'almuerzo-raquel-javier')"></td>
-                <td id="cell-1-domingo-almuerzo-raquel-javier" onclick="handleMealClick('1', 'domingo', 'almuerzo-raquel-javier')"></td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'lunes')"></td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'martes')"></td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'miercoles')"></td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'jueves')"></td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'viernes')"></td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'sabado')"></td>
+                <td onclick="markMealDone('desayuno-raquel-javier', 'domingo')"></td>
               </tr>
               <tr>
                 <td class="meal-label">Comida</td>
-                <td id="cell-1-lunes-comida" onclick="handleMealClick('1', 'lunes', 'comida')"></td>
-                <td id="cell-1-martes-comida" onclick="handleMealClick('1', 'martes', 'comida')"></td>
-                <td id="cell-1-miercoles-comida" onclick="handleMealClick('1', 'miercoles', 'comida')"></td>
-                <td id="cell-1-jueves-comida" onclick="handleMealClick('1', 'jueves', 'comida')"></td>
-                <td id="cell-1-viernes-comida" onclick="handleMealClick('1', 'viernes', 'comida')"></td>
-                <td id="cell-1-sabado-comida" onclick="handleMealClick('1', 'sabado', 'comida')"></td>
-                <td id="cell-1-domingo-comida" onclick="handleMealClick('1', 'domingo', 'comida')"></td>
-              </tr>
-              <tr>
-                <td class="meal-label">Merienda Alba y Mario</td>
-                <td id="cell-1-lunes-merienda-alba-mario" onclick="handleMealClick('1', 'lunes', 'merienda-alba-mario')"></td>
-                <td id="cell-1-martes-merienda-alba-mario" onclick="handleMealClick('1', 'martes', 'merienda-alba-mario')"></td>
-                <td id="cell-1-miercoles-merienda-alba-mario" onclick="handleMealClick('1', 'miercoles', 'merienda-alba-mario')"></td>
-                <td id="cell-1-jueves-merienda-alba-mario" onclick="handleMealClick('1', 'jueves', 'merienda-alba-mario')"></td>
-                <td id="cell-1-viernes-merienda-alba-mario" onclick="handleMealClick('1', 'viernes', 'merienda-alba-mario')"></td>
-                <td id="cell-1-sabado-merienda-alba-mario" onclick="handleMealClick('1', 'sabado', 'merienda-alba-mario')"></td>
-                <td id="cell-1-domingo-merienda-alba-mario" onclick="handleMealClick('1', 'domingo', 'merienda-alba-mario')"></td>
-              </tr>
-              <tr>
-                <td class="meal-label">Merienda Raquel y Javier</td>
-                <td id="cell-1-lunes-merienda-raquel-javier" onclick="handleMealClick('1', 'lunes', 'merienda-raquel-javier')"></td>
-                <td id="cell-1-martes-merienda-raquel-javier" onclick="handleMealClick('1', 'martes', 'merienda-raquel-javier')"></td>
-                <td id="cell-1-miercoles-merienda-raquel-javier" onclick="handleMealClick('1', 'miercoles', 'merienda-raquel-javier')"></td>
-                <td id="cell-1-jueves-merienda-raquel-javier" onclick="handleMealClick('1', 'jueves', 'merienda-raquel-javier')"></td>
-                <td id="cell-1-viernes-merienda-raquel-javier" onclick="handleMealClick('1', 'viernes', 'merienda-raquel-javier')"></td>
-                <td id="cell-1-sabado-merienda-raquel-javier" onclick="handleMealClick('1', 'sabado', 'merienda-raquel-javier')"></td>
-                <td id="cell-1-domingo-merienda-raquel-javier" onclick="handleMealClick('1', 'domingo', 'merienda-raquel-javier')"></td>
+                <td onclick="markMealDone('comida', 'lunes')"></td>
+                <td onclick="markMealDone('comida', 'martes')"></td>
+                <td onclick="markMealDone('comida', 'miercoles')"></td>
+                <td onclick="markMealDone('comida', 'jueves')"></td>
+                <td onclick="markMealDone('comida', 'viernes')"></td>
+                <td onclick="markMealDone('comida', 'sabado')"></td>
+                <td onclick="markMealDone('comida', 'domingo')"></td>
               </tr>
               <tr>
                 <td class="meal-label">Cena</td>
-                <td id="cell-1-lunes-cena" onclick="handleMealClick('1', 'lunes', 'cena')"></td>
-                <td id="cell-1-martes-cena" onclick="handleMealClick('1', 'martes', 'cena')"></td>
-                <td id="cell-1-miercoles-cena" onclick="handleMealClick('1', 'miercoles', 'cena')"></td>
-                <td id="cell-1-jueves-cena" onclick="handleMealClick('1', 'jueves', 'cena')"></td>
-                <td id="cell-1-viernes-cena" onclick="handleMealClick('1', 'viernes', 'cena')"></td>
-                <td id="cell-1-sabado-cena" onclick="handleMealClick('1', 'sabado', 'cena')"></td>
-                <td id="cell-1-domingo-cena" onclick="handleMealClick('1', 'domingo', 'cena')"></td>
+                <td onclick="markMealDone('cena', 'lunes')"></td>
+                <td onclick="markMealDone('cena', 'martes')"></td>
+                <td onclick="markMealDone('cena', 'miercoles')"></td>
+                <td onclick="markMealDone('cena', 'jueves')"></td>
+                <td onclick="markMealDone('cena', 'viernes')"></td>
+                <td onclick="markMealDone('cena', 'sabado')"></td>
+                <td onclick="markMealDone('cena', 'domingo')"></td>
               </tr>
             </tbody>
           </table>
@@ -1204,45 +1117,37 @@ function getUserPage(username) {
         <div id="mensajes" class="section">
           <h2 class="title" style="background: linear-gradient(to right, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Mensajes</h2>
           
-          <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <button class="btn" onclick="showMessageSection('group')" id="btn-group">💬 Chat Grupal</button>
-            <button class="btn" onclick="showMessageSection('private')" id="btn-private">👥 Chats Privados</button>
-            <button class="btn" onclick="showMessageSection('admin')" id="btn-admin">📝 Sugerencias Admin</button>
-          </div>
-          
-          <!-- CHAT GRUPAL -->
-          <div id="message-group" class="card" style="display: block;">
-            <h3>💬 Chat Familiar</h3>
-            <div id="group-messages" style="max-height: 400px; overflow-y: auto; margin: 15px 0; padding: 10px; background: #f9f9f9; border-radius: 8px;"></div>
+          <div class="card">
+            <h3>Esta semana quiero que hablemos de:</h3>
+            <div id="forum-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
             <div style="display: flex; gap: 10px;">
-              <input type="text" id="group-input" placeholder="Escribe tu mensaje..." style="flex: 1; padding: 12px; border-radius: 20px; border: 1px solid #ddd;">
-              <button onclick="sendMessage('group')" style="border-radius: 50%; width: 50px; height: 50px;">📤</button>
+              <input type="text" id="forum-input" placeholder="Escribe tu mensaje..." style="flex: 1;">
+              <button onclick="sendMessage('forum')">Enviar</button>
             </div>
           </div>
           
-          <!-- CHATS PRIVADOS -->
-          <div id="message-private" class="card" style="display: none;">
-            <h3>👥 Chats Privados</h3>
-            <div style="display: flex; gap: 10px; margin: 15px 0;">
-              <button class="btn" onclick="selectPrivateChat('javier')" id="chat-javier">Javier</button>
-              <button class="btn" onclick="selectPrivateChat('raquel')" id="chat-raquel">Raquel</button>
-              <button class="btn" onclick="selectPrivateChat('mario')" id="chat-mario">Mario</button>
-              <button class="btn" onclick="selectPrivateChat('alba')" id="chat-alba">Alba</button>
-            </div>
-            <div id="private-messages" style="max-height: 400px; overflow-y: auto; margin: 15px 0; padding: 10px; background: #f9f9f9; border-radius: 8px;"></div>
+          <div class="card">
+            <h3>Sugerencias para el administrador</h3>
+            <div id="admin-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
             <div style="display: flex; gap: 10px;">
-              <input type="text" id="private-input" placeholder="Selecciona un chat primero..." style="flex: 1; padding: 12px; border-radius: 20px; border: 1px solid #ddd;" disabled>
-              <button onclick="sendMessage('private')" style="border-radius: 50%; width: 50px; height: 50px;" disabled id="private-send-btn">📤</button>
+              <input type="text" id="admin-input" placeholder="Escribe tu sugerencia..." style="flex: 1;">
+              <button onclick="sendMessage('admin')">Enviar</button>
             </div>
           </div>
           
-          <!-- SUGERENCIAS ADMIN -->
-          <div id="message-admin" class="card" style="display: none;">
-            <h3>📝 Sugerencias para el Administrador</h3>
-            <div id="admin-messages" style="max-height: 400px; overflow-y: auto; margin: 15px 0; padding: 10px; background: #f9f9f9; border-radius: 8px;"></div>
+          <div class="card">
+            <h3>Mensaje privado a:</h3>
+            <select id="private-to" style="margin-bottom: 10px;">
+              <option value="">Seleccionar destinatario</option>
+              <option value="javier">Javier</option>
+              <option value="raquel">Raquel</option>
+              <option value="mario">Mario</option>
+              <option value="alba">Alba</option>
+            </select>
+            <div id="private-messages" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
             <div style="display: flex; gap: 10px;">
-              <input type="text" id="admin-input" placeholder="Escribe tu sugerencia..." style="flex: 1; padding: 12px; border-radius: 20px; border: 1px solid #ddd;">
-              <button onclick="sendMessage('admin')" style="border-radius: 50%; width: 50px; height: 50px;">📤</button>
+              <input type="text" id="private-input" placeholder="Escribe tu mensaje privado..." style="flex: 1;">
+              <button onclick="sendMessage('private')">Enviar</button>
             </div>
           </div>
         </div>
@@ -1346,89 +1251,39 @@ function getUserPage(username) {
       // Cargar plan de comidas en la tabla
     }
     
-    function loadMessagesData(data = null) {
-      if (!data) {
-        fetch('/api/data')
-          .then(r => r.json())
-          .then(data => loadMessagesData(data));
-        return;
-      }
+    function loadMessagesData(data) {
+      document.getElementById('forum-messages').innerHTML = data.forumMessages.map(msg => 
+        '<div style="padding: 8px; margin: 5px 0; background: #f0f9ff; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
+      ).join('') || '<p style="color: #6b7280;">No hay mensajes aún</p>';
       
-      // Chat grupal
-      if (currentMessageSection === 'group') {
-        document.getElementById('group-messages').innerHTML = data.forumMessages.map(msg => 
-          `<div style="padding: 10px; margin: 8px 0; background: ${msg.user === username ? '#dcf8c6' : 'white'}; border-radius: 12px; max-width: 80%; ${msg.user === username ? 'margin-left: auto;' : ''}">
-            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">${msg.user} - ${msg.time}</div>
-            <div>${msg.text}</div>
-          </div>`
-        ).join('') || '<p style="color: #6b7280; text-align: center;">No hay mensajes aún</p>';
-      }
+      document.getElementById('admin-messages').innerHTML = data.adminSuggestions.map(msg => 
+        '<div style="padding: 8px; margin: 5px 0; background: #fef3c7; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
+      ).join('') || '<p style="color: #6b7280;">No hay sugerencias aún</p>';
       
-      // Sugerencias admin
-      if (currentMessageSection === 'admin') {
-        document.getElementById('admin-messages').innerHTML = data.adminSuggestions.map(msg => 
-          `<div style="padding: 10px; margin: 8px 0; background: #fef3c7; border-radius: 12px;">
-            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">${msg.user} - ${msg.time}</div>
-            <div>${msg.text}</div>
-          </div>`
-        ).join('') || '<p style="color: #6b7280; text-align: center;">No hay sugerencias aún</p>';
-      }
-      
-      // Chat privado
-      if (currentMessageSection === 'private' && currentPrivateChat) {
-        const key = [username, currentPrivateChat].sort().join('-');
+      const selectedUser = document.getElementById('private-to').value;
+      if (selectedUser) {
+        const key = [username, selectedUser].sort().join('-');
         const privateMessages = data.privateMessages[key] || [];
         document.getElementById('private-messages').innerHTML = privateMessages.map(msg => 
-          `<div style="padding: 10px; margin: 8px 0; background: ${msg.user === username ? '#dcf8c6' : 'white'}; border-radius: 12px; max-width: 80%; ${msg.user === username ? 'margin-left: auto;' : ''}">
-            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">${msg.user} - ${msg.time}</div>
-            <div>${msg.text}</div>
-          </div>`
-        ).join('') || '<p style="color: #6b7280; text-align: center;">No hay mensajes aún</p>';
+          '<div style="padding: 8px; margin: 5px 0; background: ' + (msg.user === username ? '#e0f2fe' : '#f0fdf4') + '; border-radius: 4px;"><strong>' + msg.user + '</strong> (' + msg.time + '):<br>' + msg.text + '</div>'
+        ).join('') || '<p style="color: #6b7280;">No hay mensajes privados aún</p>';
       }
-    }
-    
-    let currentPrivateChat = null;
-    let currentMessageSection = 'group';
-    
-    function showMessageSection(section) {
-      currentMessageSection = section;
-      document.querySelectorAll('[id^="message-"]').forEach(el => el.style.display = 'none');
-      document.getElementById(`message-${section}`).style.display = 'block';
-      
-      document.querySelectorAll('[id^="btn-"]').forEach(btn => btn.classList.remove('active'));
-      document.getElementById(`btn-${section}`).classList.add('active');
-      
-      loadMessagesData();
-    }
-    
-    function selectPrivateChat(user) {
-      if (user === username) return; // No chat consigo mismo
-      currentPrivateChat = user;
-      
-      document.querySelectorAll('[id^="chat-"]').forEach(btn => btn.classList.remove('active'));
-      document.getElementById(`chat-${user}`).classList.add('active');
-      
-      document.getElementById('private-input').disabled = false;
-      document.getElementById('private-input').placeholder = `Mensaje para ${user}...`;
-      document.getElementById('private-send-btn').disabled = false;
-      
-      loadMessagesData();
     }
     
     function sendMessage(type) {
       let text, to;
       
-      if (type === 'group') {
-        text = document.getElementById('group-input').value.trim();
-        document.getElementById('group-input').value = '';
+      if (type === 'forum') {
+        text = document.getElementById('forum-input').value.trim();
+        document.getElementById('forum-input').value = '';
       } else if (type === 'admin') {
         text = document.getElementById('admin-input').value.trim();
         document.getElementById('admin-input').value = '';
       } else if (type === 'private') {
         text = document.getElementById('private-input').value.trim();
-        to = currentPrivateChat;
+        to = document.getElementById('private-to').value;
         if (!to) {
-          alert('Selecciona un chat primero');
+          alert('Selecciona un destinatario');
           return;
         }
         document.getElementById('private-input').value = '';
@@ -1440,7 +1295,7 @@ function getUserPage(username) {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({type, user: username, text, to})
-      }).then(() => loadMessagesData());
+      }).then(() => loadData());
     }
     
     function toggleActivity(id, completed) {
@@ -1467,54 +1322,7 @@ function getUserPage(username) {
     
     function changeWeek(direction) {
       currentWeek += direction;
-      if (currentWeek < 1) currentWeek = 1;
-      document.getElementById('current-week').textContent = 'Semana ' + currentWeek + ' (Septiembre 2025)';
-      loadMealPlan();
-    }
-    
-    function handleMealClick(week, day, meal) {
-      if (username === 'javi_administrador') {
-        // Admin puede editar
-        const currentContent = document.getElementById(`cell-${week}-${day}-${meal}`).textContent;
-        const newContent = prompt('Contenido de la comida:', currentContent);
-        if (newContent !== null) {
-          saveMealPlan(week, day, meal, newContent);
-        }
-      } else {
-        // Usuario solo puede marcar como hecho
-        if (confirm('¿Marcar como hecho?')) {
-          const cell = document.getElementById(`cell-${week}-${day}-${meal}`);
-          cell.style.background = '#f0fdf4';
-          cell.innerHTML += ' ✓';
-        }
-      }
-    }
-    
-    function saveMealPlan(week, day, meal, content) {
-      fetch('/api/meal-plan', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({week, day, meal, content})
-      }).then(() => loadData());
-    }
-    
-    function loadMealPlan() {
-      fetch('/api/data')
-        .then(r => r.json())
-        .then(data => {
-          const meals = ['desayuno-alba-mario', 'desayuno-raquel-javier', 'almuerzo-alba-mario', 'almuerzo-raquel-javier', 'comida', 'merienda-alba-mario', 'merienda-raquel-javier', 'cena'];
-          const days = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
-          
-          meals.forEach(meal => {
-            days.forEach(day => {
-              const key = `${currentWeek}-${day}-${meal}`;
-              const cell = document.getElementById(`cell-${currentWeek}-${day}-${meal}`);
-              if (cell && data.mealPlan[key]) {
-                cell.textContent = data.mealPlan[key];
-              }
-            });
-          });
-        });
+      document.getElementById('current-week').textContent = 'Semana ' + currentWeek + ' de Septiembre 2025';
     }
     
     function showRecipeCategory(category) {
@@ -1554,33 +1362,7 @@ function getUserPage(username) {
     
 
     
-    // Cargar frase motivadora diaria
-    function loadDailyPhrase() {
-      const phrases = [
-        'Cuando eliges pensamientos de amor, todo tu mundo se ordena. (Wayne Dyer)',
-        'Tu mente es la semilla, tu vida es la cosecha. (Joe Dispenza)',
-        'Nada real puede ser amenazado; nada irreal existe. (Un curso de milagros)',
-        'El dinero es energía, y se mueve hacia quien le da dirección. (Raimón Samsó)',
-        'El futuro no está escrito, se crea en tu mente. (Wayne Dyer)'
-      ];
-      
-      const today = new Date();
-      const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
-      const phraseIndex = (dayOfYear - 1) % phrases.length;
-      
-      const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-      const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-      
-      const dateStr = `${days[today.getDay()]} ${today.getDate()} de ${months[today.getMonth()]} de ${today.getFullYear()}`;
-      
-      document.getElementById('daily-phrase').innerHTML = `
-        <div style="font-weight: bold; margin-bottom: 4px;">${dateStr}</div>
-        <div>${phrases[phraseIndex]}</div>
-      `;
-    }
-    
     loadData();
-    loadDailyPhrase();
     setInterval(loadData, 10000);
   </script>
 </body>
