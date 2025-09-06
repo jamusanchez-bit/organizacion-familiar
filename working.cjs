@@ -437,9 +437,264 @@ const server = http.createServer((req, res) => {
     return;
   }
   
+  // Verificar si es la ruta de inglés antes de la página por defecto
+  if (parsedUrl.pathname === '/english' || parsedUrl.pathname === '/english/') {
+    const englishHTML = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Ca'mon English</title>
+  <style>
+    * { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .header { text-align: center; color: white; margin-bottom: 40px; }
+    .card { background: white; border-radius: 12px; padding: 30px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .btn { background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; }
+    .btn:hover { background: #5a67d8; }
+    .level-badge { background: #10b981; color: white; padding: 4px 12px; border-radius: 20px; font-size: 14px; }
+    .exercise { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 15px 0; }
+    input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin: 5px 0; }
+    .chat-area { height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; background: #f9f9f9; border-radius: 8px; }
+    .message { margin: 10px 0; padding: 10px; border-radius: 8px; }
+    .user-message { background: #e3f2fd; text-align: right; }
+    .ai-message { background: #f0f4f8; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎓 Ca'mon English</h1>
+      <p>Aprende inglés de forma divertida y efectiva</p>
+      <div id="user-info"></div>
+    </div>
+    
+    <div class="card">
+      <h2>📊 Tu Nivel Actual</h2>
+      <p>Nivel: <span class="level-badge" id="current-level">A1</span></p>
+      <button class="btn" onclick="startLevelTest()">🎯 Hacer Prueba de Nivel</button>
+    </div>
+    
+    <div class="card">
+      <h2>📚 Ejercicios Diarios</h2>
+      <div class="exercise">
+        <h3>Gramática: Presente Simple</h3>
+        <p>Completa la frase:</p>
+        <p>I _____ a student.</p>
+        <input type="text" id="grammar-answer" placeholder="Escribe tu respuesta">
+        <button class="btn" onclick="checkGrammar()">Verificar</button>
+        <div id="grammar-result"></div>
+      </div>
+      
+      <div class="exercise">
+        <h3>Comprensión Lectora</h3>
+        <p><strong>Texto:</strong> Hello, my name is Sarah. I am 25 years old and I live in London.</p>
+        <p><strong>Pregunta:</strong> How old is Sarah?</p>
+        <div>
+          <input type="radio" name="reading" value="23"> 23
+          <input type="radio" name="reading" value="24"> 24
+          <input type="radio" name="reading" value="25"> 25
+          <input type="radio" name="reading" value="26"> 26
+        </div>
+        <button class="btn" onclick="checkReading()">Verificar</button>
+        <div id="reading-result"></div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>💬 Chat con Elizabeth (Tu Profesora)</h2>
+      <div class="chat-area" id="chat-area">
+        <div class="message ai-message">
+          <strong>Elizabeth:</strong> Hello! I'm Elizabeth, your English teacher. How are you today?
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <input type="text" id="chat-input" placeholder="Escribe tu mensaje en inglés..." style="flex: 1;">
+        <button class="btn" onclick="sendMessage()">Enviar</button>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>📈 Tu Progreso</h2>
+      <p>Ejercicios completados hoy: <strong>0/2</strong></p>
+      <p>Racha actual: <strong>1 día</strong></p>
+      <p>Puntuación promedio: <strong>--</strong></p>
+    </div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const userName = urlParams.get('user') || 'Usuario';
+    document.getElementById('user-info').innerHTML = \`<p>Bienvenido, \${userName}!</p>\`;
+    
+    function startLevelTest() {
+      alert('Prueba de nivel iniciada. Esta funcionalidad se implementará próximamente.');
+    }
+    
+    function checkGrammar() {
+      const answer = document.getElementById('grammar-answer').value.toLowerCase().trim();
+      const result = document.getElementById('grammar-result');
+      
+      if (answer === 'am') {
+        result.innerHTML = '<p style="color: green;">✅ ¡Correcto! "I am a student."</p>';
+      } else {
+        result.innerHTML = '<p style="color: red;">❌ Incorrecto. La respuesta correcta es "am".</p>';
+      }
+    }
+    
+    function checkReading() {
+      const selected = document.querySelector('input[name="reading"]:checked');
+      const result = document.getElementById('reading-result');
+      
+      if (selected && selected.value === '25') {
+        result.innerHTML = '<p style="color: green;">✅ ¡Correcto! Sarah tiene 25 años.</p>';
+      } else {
+        result.innerHTML = '<p style="color: red;">❌ Incorrecto. Sarah tiene 25 años.</p>';
+      }
+    }
+    
+    function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const chatArea = document.getElementById('chat-area');
+      const message = input.value.trim();
+      
+      if (!message) return;
+      
+      chatArea.innerHTML += \`
+        <div class="message user-message">
+          <strong>\${userName}:</strong> \${message}
+        </div>
+      \`;
+      
+      setTimeout(() => {
+        const responses = [
+          "That's great! Tell me more about it.",
+          "Interesting! What do you think about that?",
+          "I see. How does that make you feel?",
+          "That sounds wonderful! What happened next?",
+          "Really? That's quite fascinating!"
+        ];
+        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+        
+        chatArea.innerHTML += \`
+          <div class="message ai-message">
+            <strong>Elizabeth:</strong> \${randomResponse}
+          </div>
+        \`;
+        chatArea.scrollTop = chatArea.scrollHeight;
+      }, 1000);
+      
+      input.value = '';
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+    
+    document.getElementById('chat-input').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>`;
+    res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
+    res.end(englishHTML);
+    return;
+  }
   
-  res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
-  res.end('<h1>Organización Familiar - ACTUALIZADO ' + new Date().toISOString() + '</h1><p>Accede con tu enlace personal</p>');
+  // Ruta de inglés - PRIMERA PRIORIDAD
+  if (parsedUrl.pathname === '/english' || parsedUrl.pathname === '/english/') {
+    const englishHTML = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Ca'mon English</title>
+  <style>
+    * { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .header { text-align: center; color: white; margin-bottom: 40px; }
+    .card { background: white; border-radius: 12px; padding: 30px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .btn { background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; }
+    .btn:hover { background: #5a67d8; }
+    .level-badge { background: #10b981; color: white; padding: 4px 12px; border-radius: 20px; font-size: 14px; }
+    .exercise { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 15px 0; }
+    input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin: 5px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎓 Ca'mon English</h1>
+      <p>Aprende inglés de forma divertida y efectiva</p>
+    </div>
+    
+    <div class="card">
+      <h2>📊 Tu Nivel Actual</h2>
+      <p>Nivel: <span class="level-badge">A1</span></p>
+      <button class="btn" onclick="startLevelTest()">🎯 Hacer Prueba de Nivel</button>
+    </div>
+    
+    <div class="card">
+      <h2>📚 Ejercicios Diarios</h2>
+      <div class="exercise">
+        <h3>Gramática: Presente Simple</h3>
+        <p>Completa la frase:</p>
+        <p>I _____ a student.</p>
+        <input type="text" id="grammar-answer" placeholder="Escribe tu respuesta">
+        <button class="btn" onclick="checkGrammar()">Verificar</button>
+        <div id="grammar-result"></div>
+      </div>
+      
+      <div class="exercise">
+        <h3>Comprensión Lectora</h3>
+        <p><strong>Texto:</strong> Hello, my name is Sarah. I am 25 years old and I live in London.</p>
+        <p><strong>Pregunta:</strong> How old is Sarah?</p>
+        <div>
+          <input type="radio" name="reading" value="23"> 23
+          <input type="radio" name="reading" value="24"> 24
+          <input type="radio" name="reading" value="25"> 25
+          <input type="radio" name="reading" value="26"> 26
+        </div>
+        <button class="btn" onclick="checkReading()">Verificar</button>
+        <div id="reading-result"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function startLevelTest() {
+      alert('Prueba de nivel iniciada. Esta funcionalidad se implementará próximamente.');
+    }
+    
+    function checkGrammar() {
+      const answer = document.getElementById('grammar-answer').value.toLowerCase().trim();
+      const result = document.getElementById('grammar-result');
+      
+      if (answer === 'am') {
+        result.innerHTML = '<p style="color: green;">✅ ¡Correcto! "I am a student."</p>';
+      } else {
+        result.innerHTML = '<p style="color: red;">❌ Incorrecto. La respuesta correcta es "am".</p>';
+      }
+    }
+    
+    function checkReading() {
+      const selected = document.querySelector('input[name="reading"]:checked');
+      const result = document.getElementById('reading-result');
+      
+      if (selected && selected.value === '25') {
+        result.innerHTML = '<p style="color: green;">✅ ¡Correcto! Sarah tiene 25 años.</p>';
+      } else {
+        result.innerHTML = '<p style="color: red;">❌ Incorrecto. Sarah tiene 25 años.</p>';
+      }
+    }
+  </script>
+</body>
+</html>`;
+    res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
+    res.end(englishHTML);
+    return;
+  }
+  
+  res.writeHead(200, {'Content-Type': 'text/html'});
+  res.end('<h1>Organización Familiar</h1><p>Accede con tu enlace personal</p>');
 });
 
 function getUserPage(username) {
@@ -500,7 +755,7 @@ function getUserPage(username) {
         <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
         <button class="btn" onclick="showSection('compras')">🛒 Lista de la compra</button>
         <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
-        <button class="btn" onclick="window.open('/english', '_blank')">🎓 Ca'mon</button>
+        <button class="btn" onclick="showSection('english')">🎓 Ca'mon</button>
       </div>
       <div class="user">
         <span style="font-size: 12px; font-weight: 500;">${user.name}</span>
@@ -612,6 +867,14 @@ function getUserPage(username) {
         <div id="compras" class="section">
           <h2 class="title" style="background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Lista de la Compra</h2>
           <div id="shopping-lists"></div>
+        </div>
+        
+        <div id="english" class="section">
+          <h2 class="title" style="background: linear-gradient(to right, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🎓 Ca'mon - Aprende Inglés</h2>
+          <div class="card">
+            <p>Haz clic para abrir Ca'mon en una nueva pestaña:</p>
+            <button onclick="window.open('/english', '_blank')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; font-size: 16px;">Abrir Ca'mon</button>
+          </div>
         </div>
         
         <div id="mensajes" class="section">
@@ -860,6 +1123,8 @@ function getUserPage(username) {
       }
     });
     
+
+    
     loadData();
     setInterval(loadData, 10000);
   </script>
@@ -873,5 +1138,5 @@ function getAdminPage() {
 
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto ${PORT} - v2`);
+  console.log(`Servidor corriendo en puerto ${PORT}`);
 });
