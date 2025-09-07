@@ -1495,5 +1495,5 @@ function getAdminPage() {
 
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto ${PORT}`);
+  console.log(`Servidor corriendo en puerto ${PORT} - ACTUALIZADO ${new Date().toISOString()}`);
 });
