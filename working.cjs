@@ -87,10 +87,10 @@ function getUserPage(username) {
       </div>
       <div class="content">
         <div id="actividades" class="section active">
-          <h2 class="title">Mis Actividades</h2>
+          <h2 class="title">Mis Actividades - ACTUALIZADO</h2>
           <div class="card">
-            <h3>Actividades de Hoy</h3>
-            <p>Sistema de actividades funcionando</p>
+            <h3>Actividades de Hoy - VERSION NUEVA</h3>
+            <p>Sistema de actividades funcionando - CAMBIO VISIBLE</p>
           </div>
         </div>
         
