@@ -15,33 +15,10 @@ const USERS = {
 let activities = [];
 let mealPlan = {};
 let inventory = [
-  // Carne
-  { id: '1', name: 'Jamón serrano', category: 'carne', shop: 'Carne internet', unit: 'paquetes', quantity: 2 },
-  { id: '2', name: 'Pollo entero', category: 'carne', shop: 'Carne internet', unit: 'unidades', quantity: 1 },
-  { id: '3', name: 'Ternera filetes', category: 'carne', shop: 'Carne internet', unit: 'paquetes', quantity: 0 },
-  // Pescado
-  { id: '4', name: 'Salmón fresco', category: 'pescado', shop: 'Pescadería', unit: 'unidades', quantity: 1 },
-  { id: '5', name: 'Lubina', category: 'pescado', shop: 'Pescadería', unit: 'unidades', quantity: 2 },
-  { id: '6', name: 'Merluza', category: 'pescado', shop: 'Pescadería', unit: 'unidades', quantity: 0 },
-  // Verdura
-  { id: '7', name: 'Tomates', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 5 },
-  { id: '8', name: 'Ajo', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 3 },
-  { id: '9', name: 'Cebolla', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 2 },
-  { id: '10', name: 'Pimientos', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 0 },
-  // Fruta
-  { id: '11', name: 'Manzanas', category: 'fruta', shop: 'Alcampo', unit: 'unidades', quantity: 8 },
-  { id: '12', name: 'Plátanos', category: 'fruta', shop: 'Alcampo', unit: 'unidades', quantity: 6 },
-  { id: '13', name: 'Naranjas', category: 'fruta', shop: 'Alcampo', unit: 'unidades', quantity: 1 },
-  // Frutos secos
-  { id: '14', name: 'Almendras', category: 'frutos secos', shop: 'Internet', unit: 'botes', quantity: 1 },
-  { id: '15', name: 'Nueces', category: 'frutos secos', shop: 'Internet', unit: 'botes', quantity: 0 },
-  // Productos limpieza
-  { id: '16', name: 'Detergente', category: 'productos limpieza/hogar', shop: 'Alcampo', unit: 'botes', quantity: 1 },
-  { id: '17', name: 'Papel higiénico', category: 'productos limpieza/hogar', shop: 'Alcampo', unit: 'paquetes', quantity: 2 },
-  // Otros
-  { id: '18', name: 'Aceite oliva', category: 'otros', shop: 'Alcampo', unit: 'litros', quantity: 1 },
-  { id: '19', name: 'Arroz', category: 'otros', shop: 'Alcampo', unit: 'paquetes', quantity: 3 },
-  { id: '20', name: 'Pasta', category: 'otros', shop: 'Alcampo', unit: 'paquetes', quantity: 0 }
+  { id: '1', name: 'Jamón', category: 'carne', shop: 'Carne internet', unit: 'paquetes', quantity: 0 },
+  { id: '2', name: 'Salmón fresco', category: 'pescado', shop: 'Pescadería', unit: 'unidades', quantity: 0 },
+  { id: '3', name: 'Ajo', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 0 },
+  { id: '4', name: 'Aceite oliva', category: 'otros', shop: 'Alcampo', unit: 'litros', quantity: 0 }
 ];
 
 let recipes = [
@@ -95,9 +72,6 @@ function getUserPage(username) {
         <button class="btn" onclick="showSection('compras')">🛒 Lista de la compra</button>
         <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
         <button class="btn" onclick="window.location.href='/english?user=${user.name}'">🎓 Ca'mon</button>
-      </div>
-      <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; margin-bottom: 16px;">
-        <div id="daily-phrase" style="font-size: 11px; color: #6b7280; text-align: center; line-height: 1.3;"></div>
       </div>
       <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 12px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
         <span style="font-size: 12px; font-weight: 500;">${user.name}</span>
@@ -1508,33 +1482,7 @@ function getUserPage(username) {
     
 
     
-    // Cargar frase motivadora diaria
-    function loadDailyPhrase() {
-      const phrases = [
-        'Cuando eliges pensamientos de amor, todo tu mundo se ordena. (Wayne Dyer)',
-        'Tu mente es la semilla, tu vida es la cosecha. (Joe Dispenza)',
-        'Nada real puede ser amenazado; nada irreal existe. (Un curso de milagros)',
-        'El dinero es energía, y se mueve hacia quien le da dirección. (Raimón Samsó)',
-        'El futuro no está escrito, se crea en tu mente. (Wayne Dyer)'
-      ];
-      
-      const today = new Date();
-      const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
-      const phraseIndex = (dayOfYear - 1) % phrases.length;
-      
-      const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-      const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-      
-      const dateStr = `${days[today.getDay()]} ${today.getDate()} de ${months[today.getMonth()]} de ${today.getFullYear()}`;
-      
-      document.getElementById('daily-phrase').innerHTML = `
-        <div style="font-weight: bold; margin-bottom: 4px;">${dateStr}</div>
-        <div>${phrases[phraseIndex]}</div>
-      `;
-    }
-    
     loadData();
-    loadDailyPhrase();
     setInterval(loadData, 10000);
   </script>
 </body>
