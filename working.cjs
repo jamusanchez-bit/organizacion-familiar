@@ -15,10 +15,33 @@ const USERS = {
 let activities = [];
 let mealPlan = {};
 let inventory = [
-  { id: '1', name: 'Jamón', category: 'carne', shop: 'Carne internet', unit: 'paquetes', quantity: 0 },
-  { id: '2', name: 'Salmón fresco', category: 'pescado', shop: 'Pescadería', unit: 'unidades', quantity: 0 },
-  { id: '3', name: 'Ajo', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 0 },
-  { id: '4', name: 'Aceite oliva', category: 'otros', shop: 'Alcampo', unit: 'litros', quantity: 0 }
+  // Carne
+  { id: '1', name: 'Jamón serrano', category: 'carne', shop: 'Carne internet', unit: 'paquetes', quantity: 2 },
+  { id: '2', name: 'Pollo entero', category: 'carne', shop: 'Carne internet', unit: 'unidades', quantity: 1 },
+  { id: '3', name: 'Ternera filetes', category: 'carne', shop: 'Carne internet', unit: 'paquetes', quantity: 0 },
+  // Pescado
+  { id: '4', name: 'Salmón fresco', category: 'pescado', shop: 'Pescadería', unit: 'unidades', quantity: 1 },
+  { id: '5', name: 'Lubina', category: 'pescado', shop: 'Pescadería', unit: 'unidades', quantity: 2 },
+  { id: '6', name: 'Merluza', category: 'pescado', shop: 'Pescadería', unit: 'unidades', quantity: 0 },
+  // Verdura
+  { id: '7', name: 'Tomates', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 5 },
+  { id: '8', name: 'Ajo', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 3 },
+  { id: '9', name: 'Cebolla', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 2 },
+  { id: '10', name: 'Pimientos', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 0 },
+  // Fruta
+  { id: '11', name: 'Manzanas', category: 'fruta', shop: 'Alcampo', unit: 'unidades', quantity: 8 },
+  { id: '12', name: 'Plátanos', category: 'fruta', shop: 'Alcampo', unit: 'unidades', quantity: 6 },
+  { id: '13', name: 'Naranjas', category: 'fruta', shop: 'Alcampo', unit: 'unidades', quantity: 1 },
+  // Frutos secos
+  { id: '14', name: 'Almendras', category: 'frutos secos', shop: 'Internet', unit: 'botes', quantity: 1 },
+  { id: '15', name: 'Nueces', category: 'frutos secos', shop: 'Internet', unit: 'botes', quantity: 0 },
+  // Productos limpieza
+  { id: '16', name: 'Detergente', category: 'productos limpieza/hogar', shop: 'Alcampo', unit: 'botes', quantity: 1 },
+  { id: '17', name: 'Papel higiénico', category: 'productos limpieza/hogar', shop: 'Alcampo', unit: 'paquetes', quantity: 2 },
+  // Otros
+  { id: '18', name: 'Aceite oliva', category: 'otros', shop: 'Alcampo', unit: 'litros', quantity: 1 },
+  { id: '19', name: 'Arroz', category: 'otros', shop: 'Alcampo', unit: 'paquetes', quantity: 3 },
+  { id: '20', name: 'Pasta', category: 'otros', shop: 'Alcampo', unit: 'paquetes', quantity: 0 }
 ];
 
 let recipes = [
