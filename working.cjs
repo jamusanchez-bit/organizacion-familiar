@@ -30,6 +30,126 @@ let forumMessages = [];
 let adminSuggestions = [];
 let privateMessages = {};
 
+// Función para generar páginas de usuario
+function getUserPage(username) {
+  const user = USERS[username];
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <title>Organización Familiar - ${user.name}</title>
+  <style>
+    * { font-family: Verdana, Geneva, sans-serif; margin: 0; padding: 0; }
+    body { background: #f9fafb; }
+    .container { display: flex; min-height: 100vh; }
+    .sidebar { width: 256px; background: #f9fafb; border-right: 1px solid #e5e7eb; position: fixed; height: 100vh; z-index: 10; }
+    .header { height: 48px; padding: 0 16px; display: flex; align-items: center; }
+    .icon { width: 28px; height: 28px; background: linear-gradient(135deg, #10b981, #3b82f6); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; }
+    .nav { margin-top: 16px; padding: 0 12px; }
+    .btn { width: 100%; display: flex; align-items: center; padding: 12px 16px; margin-bottom: 8px; border: none; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+    .btn.active { background: #10b981; color: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .btn:not(.active) { background: transparent; color: #374151; }
+    .btn:hover:not(.active) { background: #f3f4f6; }
+    .main { flex: 1; margin-left: 256px; }
+    .top { height: 64px; padding: 0 32px; border-bottom: 1px solid #f3f4f6; background: white; display: flex; align-items: center; }
+    .content { padding: 32px; }
+    .title { font-size: 24px; font-weight: bold; margin-bottom: 24px; }
+    .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    .section { display: none; }
+    .section.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <div class="header">
+        <div class="icon">🏠</div>
+      </div>
+      <div class="nav">
+        <button class="btn active" onclick="showSection('actividades')">📅 Actividades</button>
+        <button class="btn" onclick="showSection('comidas')">🍽️ Comidas</button>
+        <button class="btn" onclick="showSection('recetas')">👨🍳 Recetas</button>
+        <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
+        <button class="btn" onclick="showSection('compras')">🛒 Lista de la compra</button>
+        <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
+        <button class="btn" onclick="window.location.href='/english?user=${user.name}'">🎓 Ca'mon</button>
+      </div>
+      <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 12px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 12px; font-weight: 500;">${user.name}</span>
+        <span>👤</span>
+      </div>
+    </div>
+    <div class="main">
+      <div class="top">
+        <h1 style="font-size: 28px; font-weight: bold;">¡Hola, ${user.name}! 👋</h1>
+      </div>
+      <div class="content">
+        <div id="actividades" class="section active">
+          <h2 class="title">Mis Actividades</h2>
+          <div class="card">
+            <h3>Actividades de Hoy</h3>
+            <p>Sistema de actividades funcionando</p>
+          </div>
+        </div>
+        
+        <div id="comidas" class="section">
+          <h2 class="title">Planificación de Comidas</h2>
+          <div class="card">
+            <h3>Planning Semanal</h3>
+            <p>Sistema de comidas funcionando</p>
+          </div>
+        </div>
+        
+        <div id="recetas" class="section">
+          <h2 class="title">Recetas</h2>
+          <div class="card">
+            <h3>Mis Recetas</h3>
+            <p>Sistema de recetas funcionando</p>
+          </div>
+        </div>
+        
+        <div id="inventario" class="section">
+          <h2 class="title">Inventario</h2>
+          <div class="card">
+            <h3>Control de Stock</h3>
+            <p>Sistema de inventario funcionando</p>
+          </div>
+        </div>
+        
+        <div id="compras" class="section">
+          <h2 class="title">Lista de la Compra</h2>
+          <div class="card">
+            <h3>Productos Necesarios</h3>
+            <p>Sistema de compras funcionando</p>
+          </div>
+        </div>
+        
+        <div id="mensajes" class="section">
+          <h2 class="title">Mensajes</h2>
+          <div class="card">
+            <h3>Chat Familiar</h3>
+            <p>Sistema de mensajes funcionando</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showSection(section) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(section).classList.add('active');
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>`;
+}
+
+function getAdminPage() {
+  return getUserPage('javi_administrador');
+}
+
 const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url, true);
   
