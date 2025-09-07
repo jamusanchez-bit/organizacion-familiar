@@ -73,6 +73,9 @@ function getUserPage(username) {
         <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
         <button class="btn" onclick="window.location.href='/english?user=${user.name}'">🎓 Ca'mon</button>
       </div>
+      <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; margin-bottom: 16px;">
+        <div id="daily-phrase" style="font-size: 11px; color: #6b7280; text-align: center; line-height: 1.3;"></div>
+      </div>
       <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 12px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
         <span style="font-size: 12px; font-weight: 500;">${user.name}</span>
         <span>👤</span>
@@ -1482,7 +1485,33 @@ function getUserPage(username) {
     
 
     
+    // Cargar frase motivadora diaria
+    function loadDailyPhrase() {
+      const phrases = [
+        'Cuando eliges pensamientos de amor, todo tu mundo se ordena. (Wayne Dyer)',
+        'Tu mente es la semilla, tu vida es la cosecha. (Joe Dispenza)',
+        'Nada real puede ser amenazado; nada irreal existe. (Un curso de milagros)',
+        'El dinero es energía, y se mueve hacia quien le da dirección. (Raimón Samsó)',
+        'El futuro no está escrito, se crea en tu mente. (Wayne Dyer)'
+      ];
+      
+      const today = new Date();
+      const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+      const phraseIndex = (dayOfYear - 1) % phrases.length;
+      
+      const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+      const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+      
+      const dateStr = `${days[today.getDay()]} ${today.getDate()} de ${months[today.getMonth()]} de ${today.getFullYear()}`;
+      
+      document.getElementById('daily-phrase').innerHTML = `
+        <div style="font-weight: bold; margin-bottom: 4px;">${dateStr}</div>
+        <div>${phrases[phraseIndex]}</div>
+      `;
+    }
+    
     loadData();
+    loadDailyPhrase();
     setInterval(loadData, 10000);
   </script>
 </body>
