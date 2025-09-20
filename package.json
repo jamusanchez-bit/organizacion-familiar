@@ -8,8 +8,9 @@
     "dev": "node working.cjs"
   },
   "dependencies": {
+    "dotenv": "^16.3.1",
     "pg": "^8.11.3",
-    "dotenv": "^16.3.1"
+    "puppeteer": "^24.22.0"
   },
   "engines": {
     "node": ">=18.0.0"

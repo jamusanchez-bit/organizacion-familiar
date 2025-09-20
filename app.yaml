@@ -1,0 +1,28 @@
+# DigitalOcean App Platform spec template
+# Replace placeholder values in env and repo with your real values before using doctl.
+name: organizacion-familiar-app
+services:
+  - name: web
+    github:
+      repo: "<GITHUB_USER>/<REPO>"
+      branch: "main"
+      deploy_on_push: true
+    dockerfile_path: Dockerfile
+    run_command: "node working.cjs"
+    instance_size_slug: "basic-xxs"
+    instance_count: 1
+    envs:
+      - key: API_KEY
+        scope: RUN_AND_BUILD
+        value: "${API_KEY}"
+      - key: SESSION_SECRET
+        scope: RUN_AND_BUILD
+        value: "${SESSION_SECRET}"
+      - key: CAMON_SECRET
+        scope: RUN_AND_BUILD
+        value: "${CAMON_SECRET}"
+    http_port: 10000
+    routes:
+      - path: /
+
+# Note: replace <GITHUB_USER>/<REPO> and provide secrets via doctl or the web UI.

@@ -19,6 +19,17 @@ const isAuthenticated = (req: any, res: Response, next: NextFunction) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   // await setupAuth(app); // Replit auth setup disabled
+  // --- Dev convenience: auto-login in non-production to simplify testing ---
+  app.use((req: any, res: any, next: NextFunction) => {
+    try {
+      if (!req.session) req.session = {};
+      if (!req.session.user && process.env.NODE_ENV !== 'production') {
+        // Inject a simple dev user
+        req.session.user = { claims: { sub: 'javier' } };
+      }
+    } catch (e) {}
+    next();
+  });
   
   // Simple auth routes (for independent deployment)
   app.use(authRoutes);
@@ -64,6 +75,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Dev logging endpoint: collects simple events for debugging (no-auth in dev)
+  app.post('/api/dev/log', async (req: any, res) => {
+    try {
+      const payload = req.body || {};
+      console.log('DEV LOG:', JSON.stringify(payload));
+      res.json({ ok: true });
+    } catch (e) {
+      console.error('Error in /api/dev/log', e);
+      res.status(500).json({ ok: false });
     }
   });
 

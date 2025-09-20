@@ -1,0 +1,39 @@
+{
+  "results": {
+    "raquel": [
+      {
+        "date": "2025-09-13T22:31:11.836Z",
+        "score": 20,
+        "total": 25,
+        "assignedLevel": "B2.5"
+      },
+      {
+        "date": "2025-09-14T15:10:00.000Z",
+        "score": 18,
+        "total": 25,
+        "assignedLevel": "B2.3"
+      },
+      {
+        "date": "2025-09-14T15:12:00.000Z",
+        "score": 10,
+        "total": 25,
+        "assignedLevel": "B1.1"
+      },
+      {
+        "date": "2025-09-14T15:20:00.000Z",
+        "score": 22,
+        "total": 25,
+        "assignedLevel": "B2.4"
+      }
+    ],
+    "test": [
+      {
+        "date": "2025-09-18T00:00:00Z",
+        "score": 10,
+        "total": 25,
+        "assignedLevel": "A1.3"
+      }
+    ]
+  },
+  "promotions": {}
+}

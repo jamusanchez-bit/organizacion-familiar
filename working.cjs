@@ -14,183 +14,96 @@ function getDayOfYear(date = new Date()) {
     return Math.floor(diff / oneDay);
 }
 
-// Base de datos en memoria
-const USERS = {
-  javier: { id: 'javier', name: 'Javier', password: 'password123' },
-  raquel: { id: 'raquel', name: 'Raquel', password: 'password456' },
-  mario: { id: 'mario', name: 'Mario', password: 'password789' },
-  alba: { id: 'alba', name: 'Alba', password: 'password000' },
-  javi_administrador: { id: 'javi_administrador', name: 'Javi (Admin)', password: 'admin123' }
-};
+// --- Helpers para el Calendario de Comidas ---
+function getAdminPage(query) {
+  return getUserPage('javi_administrador', query);
+}
 
-let activities = [];
-let mealPlan = {};
-let inventory = [
-  { id: '1', name: 'Jamón', category: 'carne', shop: 'Carne internet', unit: 'paquetes', quantity: 0 },
-  { id: '2', name: 'Salmón fresco', category: 'pescado', shop: 'Pescadería', unit: 'unidades', quantity: 0 },
-  { id: '3', name: 'Ajo', category: 'verdura', shop: 'Del bancal a casa', unit: 'unidades', quantity: 0 },
-  { id: '4', name: 'Aceite oliva', category: 'otros', shop: 'Alcampo', unit: 'litros', quantity: 0 }
-];
+// --- Storage for Ca'mon test results (server-side memory + disk) ---
+const CAMON_SERVER_RESULTS = {};
+const CAMON_PROMOTIONS = {};
+const CAMON_RESULTS_FILE = path.join(__dirname, 'backups', 'camon-results.json');
+const CAMON_SECRET = process.env.CAMON_SECRET || null;
+// Simple rate limit: per-user last submit timestamp
+const CAMON_LAST_SUBMIT = {};
+const CAMON_MIN_SUBMIT_INTERVAL_MS = 30 * 1000; // 30 seconds
 
-let recipes = [
-  { id: '1', name: 'Lubina sobre cama de verduras', category: 'comidas', ingredients: [{'Lubina': 1}, {'Ajo': 2}], time: 0.5, servings: 4 },
-  { id: '2', name: 'Salmón en papillote', category: 'comidas', ingredients: [{'Salmón fresco': 1}, {'Ajo': 1}], time: 0.75, servings: 4 }
-];
-
-let forumMessages = [];
-let adminSuggestions = [];
-let privateMessages = {};
-
-// Función para generar páginas de usuario
-function getUserPage(username) {
-  const user = USERS[username];
-
-  const now = new Date();
-  const dayOfYear = getDayOfYear(now);
-  const year = now.getFullYear();
-  const isLeap = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
-  let phraseIndex = dayOfYear - 1;
-
-  if (isLeap && dayOfYear >= 60) {
-      phraseIndex--;
-  }
-  if (phraseIndex < 0) phraseIndex = 0;
-  if (phraseIndex >= allPhrases.length) phraseIndex = allPhrases.length - 1;
-
-  const phrase = allPhrases[phraseIndex] || 'Frase no encontrada.';
-  const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-  const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-  const dateStr = `${days[now.getDay()]} ${now.getDate()} de ${months[now.getMonth()]} de ${now.getFullYear()}`;
-  const dailyPhraseHTML = `<div style="font-weight: bold; margin-bottom: 4px;">${dateStr}</div><div>${phrase}</div>`;
-
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <title>Organización Familiar - ${user.name}</title>
-  <style>
-    * { font-family: Verdana, Geneva, sans-serif; margin: 0; padding: 0; }
-    body { background: #f9fafb; }
-    .container { display: flex; min-height: 100vh; }
-    .sidebar { width: 256px; background: #f9fafb; border-right: 1px solid #e5e7eb; position: fixed; height: 100vh; z-index: 10; }
-    .header { height: 48px; padding: 0 16px; display: flex; align-items: center; }
-    .icon { width: 28px; height: 28px; background: linear-gradient(135deg, #10b981, #3b82f6); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; }
-    .nav { margin-top: 16px; padding: 0 12px; }
-    .btn { width: 100%; display: flex; align-items: center; padding: 12px 16px; margin-bottom: 8px; border: none; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
-    .btn.active { background: #10b981; color: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-    .btn:not(.active) { background: transparent; color: #374151; }
-    .btn:hover:not(.active) { background: #f3f4f6; }
-    .main { flex: 1; margin-left: 256px; }
-    .top { height: 64px; padding: 0 32px; border-bottom: 1px solid #f3f4f6; background: white; display: flex; align-items: center; }
-    .content { padding: 32px; }
-    .title { font-size: 24px; font-weight: bold; margin-bottom: 24px; }
-    .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
-    .section { display: none; }
-    .section.active { display: block; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="sidebar">
-      <div class="header">
-        <div class="icon">🏠</div>
-      </div>
-      <div class="nav">
-        <button class="btn active" onclick="showSection('actividades')">📅 Actividades</button>
-        <button class="btn" onclick="showSection('comidas')">🍽️ Comidas</button>
-        <button class="btn" onclick="showSection('recetas')">👨🍳 Recetas</button>
-        <button class="btn" onclick="showSection('inventario')">📦 Inventario</button>
-        <button class="btn" onclick="showSection('compras')">🛒 Lista de la compra</button>
-        <button class="btn" onclick="showSection('mensajes')">💬 Mensajes</button>
-        <button class="btn" onclick="window.location.href='/english?user=${user.name}'">🎓 Ca'mon</button>
-      </div>
-      <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; margin-bottom: 16px;">
-        <div id="daily-phrase" style="font-size: 11px; color: #6b7280; text-align: center; line-height: 1.3;">${dailyPhraseHTML}</div>
-      </div>
-      <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 12px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 12px; font-weight: 500;">${user.name}</span>
-        <span>👤</span>
-      </div>
-    </div>
-    <div class="main">
-      <div class="top">
-        <h1 style="font-size: 28px; font-weight: bold;">¡Hola, ${user.name}! 👋</h1>
-      </div>
-      <div class="content">
-        <div id="actividades" class="section active">
-          <h2 class="title">Mis Actividades</h2>
-          <div class="card">
-            <h3>Actividades de Hoy</h3>
-            <p>Aquí se mostrarán las actividades.</p>
-          </div>
-        </div>
-        
-        <div id="comidas" class="section">
-          <h2 class="title">Planificación de Comidas</h2>
-          <div class="card">
-            <h3>Planning Semanal</h3>
-            <p>Aquí se mostrará el planning de comidas.</p>
-          </div>
-        </div>
-        
-        <div id="recetas" class="section">
-          <h2 class="title">Recetas</h2>
-          <div class="card">
-            <h3>Mis Recetas</h3>
-            <p>Aquí se mostrarán las recetas.</p>
-          </div>
-        </div>
-        
-        <div id="inventario" class="section">
-          <h2 class="title">Inventario</h2>
-          <div class="card">
-            <h3>Control de Stock</h3>
-            <p>Aquí se mostrará el inventario.</p>
-          </div>
-        </div>
-        
-        <div id="compras" class="section">
-          <h2 class="title">Lista de la Compra</h2>
-          <div class="card">
-            <h3>Productos Necesarios</h3>
-            <p>Aquí se mostrará la lista de la compra.</p>
-          </div>
-        </div>
-        
-        <div id="mensajes" class="section">
-          <h2 class="title">Mensajes</h2>
-          <div class="card">
-            <h3>Chat Familiar</h3>
-            <p>Aquí se mostrarán los mensajes.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    function showSection(section) {
-      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-      document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
-      document.getElementById(section).classList.add('active');
-      event.target.classList.add('active');
+function loadCamonResultsFromDisk() {
+  try {
+    if (fs.existsSync(CAMON_RESULTS_FILE)) {
+      const raw = fs.readFileSync(CAMON_RESULTS_FILE, 'utf8');
+      const data = JSON.parse(raw || '{}');
+      if (data && data.results && data.promotions) {
+        Object.assign(CAMON_SERVER_RESULTS, data.results || {});
+        Object.assign(CAMON_PROMOTIONS, data.promotions || {});
+      } else {
+        // old format: direct map of user->results
+        Object.assign(CAMON_SERVER_RESULTS, data || {});
+      }
     }
-  </script>
-</body>
-</html>`;
+  } catch (e) {
+    console.error('Error loading CAMON results from disk:', e.message);
+  }
 }
 
-function getAdminPage() {
-  return getUserPage('javi_administrador');
+function saveCamonResultsToDisk() {
+  try {
+    fs.mkdirSync(path.dirname(CAMON_RESULTS_FILE), { recursive: true });
+    const out = { results: CAMON_SERVER_RESULTS, promotions: CAMON_PROMOTIONS };
+    fs.writeFileSync(CAMON_RESULTS_FILE, JSON.stringify(out, null, 2), 'utf8');
+  } catch (e) {
+    console.error('Error saving CAMON results to disk:', e.message);
+  }
 }
+
+function buildCamonSublevels() {
+  const letters = ['A1','A2','B1','B2','C1','C2'];
+  const arr = [];
+  letters.forEach(l => { for (let i = 1; i <= 5; i++) arr.push(l + '.' + i); });
+  return arr.slice(0,25);
+}
+
+const SERVER_CAMON_SUBLEVELS = buildCamonSublevels();
+
+function computeAssignedLevel(score, total) {
+  // Map score/total proportionally into sublevels [0..n-1]
+  if (!total || total <= 0) return SERVER_CAMON_SUBLEVELS[0];
+  const ratio = Math.max(0, Math.min(1, score / total));
+  const idx = Math.round(ratio * (SERVER_CAMON_SUBLEVELS.length - 1));
+  return SERVER_CAMON_SUBLEVELS[Math.min(SERVER_CAMON_SUBLEVELS.length - 1, Math.max(0, idx))];
+}
+
+loadCamonResultsFromDisk();
+
+// --- Simple in-memory data used by legacy handlers and dev UI ---
+// Ensure these exist so the various /api/* endpoints and front-end components work
+var activities = [];
+var meals = [];
+var inventory = [
+  { id: 'inv_1', name: 'Leche', category: 'lacteos', shop: 'Mercado', unit: 'L', quantity: 2, minimum: 1 },
+  { id: 'inv_2', name: 'Huevos', category: 'otros', shop: 'Mercado', unit: 'uds', quantity: 12, minimum: 6 },
+  { id: 'inv_3', name: 'Pan', category: 'otros', shop: 'Panaderia', unit: 'uds', quantity: 4, minimum: 2 }
+];
+var recipes = [
+  { id: 'rec_1', name: 'Tortilla', category: 'desayuno', ingredients: [{ 'Huevos': 3 }], time: 15 }
+];
+var mealPlan = {};
+var forumMessages = [ { id: 'm1', user: 'javier', text: '¿Quién cocina mañana?', time: new Date().toLocaleString('es-ES'), timestamp: Date.now() } ];
+var adminSuggestions = [ ];
+var privateMessages = {};
+var shoppingList = [ { id: 's1', name: 'Tomates', qty: 6 } ];
+
+
 
 const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url, true);
-  
+  const query = parsedUrl.query;
+
   // Ruta de inglés - CA'MON COMPLETO
   if (parsedUrl.pathname === '/english' || parsedUrl.pathname === '/english/') {
     const user = parsedUrl.query.user || 'Usuario';
     
-    const englishHTML = `<!DOCTYPE html>
+  const englishHTML = `<!DOCTYPE html>
 <html>
 <head>
   <title>Ca'mon English - ${user}</title>
@@ -225,11 +138,11 @@ const server = http.createServer((req, res) => {
     </div>
     
     <div class="nav-buttons">
-      <button class="btn" onclick="showSection('level')">📊 Tu Nivel</button>
-      <button class="btn" onclick="showSection('test')">🎯 Prueba Inicial</button>
-      <button class="btn" onclick="showSection('exercises')">📚 Ejercicios Diarios</button>
-      <button class="btn" onclick="showSection('chat')">💬 Chat con Elizabeth</button>
-      <button class="btn" onclick="showSection('progress')">📈 Mi Evolución</button>
+      <button class="btn" data-section="level">📊 Tu Nivel</button>
+      <button class="btn" data-section="test">🎯 Prueba Inicial</button>
+      <button class="btn" data-section="exercises">📚 Ejercicios Diarios</button>
+      <button class="btn" data-section="chat">💬 Chat con Elizabeth</button>
+      <button class="btn" data-section="progress">📈 Mi Evolución</button>
     </div>
     
     <!-- SECCIÓN: TU NIVEL -->
@@ -239,10 +152,13 @@ const server = http.createServer((req, res) => {
         <p style="text-align: center; margin: 20px 0;">
           Nivel: <span class="level-badge" id="current-level">A1.1</span>
         </p>
-        <div style="text-align: center;">
-          <p>¡Perfecto para empezar tu aventura en inglés!</p>
-          <button class="btn" onclick="showSection('test')">🎯 Hacer Prueba de Nivel</button>
-          <button class="btn" onclick="showSection('exercises')">📚 Comenzar Ejercicios</button>
+        <!-- Container where the Ca'mon client will render its interactive UI -->
+        <div id="camon-area" style="margin-top:16px"></div>
+        <script>window.CAMON_USERNAME = ${JSON.stringify(user)};</script>
+        <script>window.CAMON_SECRET = ${CAMON_SECRET ? JSON.stringify(CAMON_SECRET) : 'null'};</script>
+        <script src="/camon.js"></script>
+          <button class="btn" data-section="test">🎯 Hacer Prueba de Nivel</button>
+          <button class="btn" data-section="exercises">📚 Comenzar Ejercicios</button>
         </div>
       </div>
     </div>
@@ -254,7 +170,7 @@ const server = http.createServer((req, res) => {
         <p>Esta prueba tiene 25 preguntas para determinar tu nivel exacto (A1.1 - C2.5)</p>
         <div id="test-content">
           <div style="text-align: center; margin: 30px 0;">
-            <button class="btn" onclick="startLevelTest()">Comenzar Prueba</button>
+            <button class="btn" id="start-level-test">Comenzar Prueba</button>
           </div>
         </div>
       </div>
@@ -270,19 +186,19 @@ const server = http.createServer((req, res) => {
           <div class="exercise">
             <h3>📝 Gramática</h3>
             <p>Ejercicios de escritura adaptados a tu nivel</p>
-            <button class="btn" onclick="startGrammar()">Comenzar</button>
+            <button class="btn" id="start-grammar">Comenzar</button>
           </div>
           
           <div class="exercise">
             <h3>📖 Reading</h3>
             <p>Comprensión lectora con textos Cambridge</p>
-            <button class="btn" onclick="startReading()">Comenzar</button>
+            <button class="btn" id="start-reading">Comenzar</button>
           </div>
           
           <div class="exercise">
             <h3>🗣️ Chat con Elizabeth</h3>
             <p>Conversación de voz mínimo 10 minutos</p>
-            <button class="btn" onclick="showSection('chat')">Comenzar</button>
+            <button class="btn" data-section="chat">Comenzar</button>
           </div>
         </div>
       </div>
@@ -301,8 +217,8 @@ const server = http.createServer((req, res) => {
         </div>
         
         <div style="display: flex; gap: 10px; justify-content: center; margin: 20px 0;">
-          <button class="btn voice-btn" id="record-btn" onclick="toggleRecording()">🎤 Mantén para Hablar</button>
-          <button class="btn" onclick="toggleTextInput()">💬 Escribir</button>
+          <button class="btn voice-btn" id="record-btn">🎤 Mantén para Hablar</button>
+          <button class="btn" id="toggle-text-input">💬 Escribir</button>
         </div>
         
         <input type="text" id="chat-input" placeholder="Escribe tu mensaje en inglés..." style="display: none; width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px;">
@@ -486,7 +402,7 @@ const server = http.createServer((req, res) => {
         
       } catch (error) {
         console.error('Error:', error);
-        chatArea.innerHTML += '<div class="message ai-message"><strong>Elizabeth:</strong> I\'m sorry, I\'m having trouble connecting right now. Please try again.</div>';
+  chatArea.innerHTML += "<div class='message ai-message'><strong>Elizabeth:</strong> I'm sorry, I'm having trouble connecting right now. Please try again.</div>";
       }
       
       chatArea.scrollTop = chatArea.scrollHeight;
@@ -510,9 +426,251 @@ const server = http.createServer((req, res) => {
         sendTextMessage();
       }
     });
+    // Ca'mon UI
+    function showCamonPanel(panel) {
+      const area = document.getElementById('camon-area');
+      if (panel === 'level') {
+        area.innerHTML = '<div>' +
+          '<h4>Prueba inicial (demo)</h4>' +
+          '<p>Se seleccionar\u00e1n 25 preguntas aleatorias (demo con datos simulados).</p>' +
+          '<button data-demo="level" style="padding:8px 12px; background:#3b82f6; color:white; border:none; border-radius:8px;">Empezar prueba</button>' +
+          '</div>';
+      } else if (panel === 'daily') {
+        area.innerHTML = '<div>' +
+          '<h4>Ejercicios diarios</h4>' +
+          '<p>Gram\u00e1tica (10 preguntas), Reading (10 preguntas) y Chat con Elizabeth (voz) \u2014 demo.</p>' +
+          '<button data-demo="grammar" style="padding:8px 12px; background:#10b981; color:white; border:none; border-radius:8px;">Gram\u00e1tica</button>' +
+          '<button data-demo="reading" style="padding:8px 12px; background:#06b6d4; color:white; border:none; border-radius:8px; margin-left:8px;">Reading</button>' +
+          '<button data-demo="chat" style="padding:8px 12px; background:#8b5cf6; color:white; border:none; border-radius:8px; margin-left:8px;">Chat por voz</button>' +
+          '<div id="camon-daily-area" style="margin-top:12px;"></div>' +
+          '</div>';
+      } else if (panel === 'evolution') {
+        area.innerHTML = '<div>' +
+          '<h4>Mi evoluci\u00f3n</h4>' +
+          '<div id="camon-evolution-area">Cargando historial...</div>' +
+          '</div>';
+        // fetch history from server
+        try {
+          fetch('/api/camon/history?user=' + encodeURIComponent(CAMON_USERNAME))
+            .then(function(res){ return res.json(); })
+            .then(function(data){
+              var out = '<div style="background:#fff;padding:12px;border-radius:8px;">';
+              var promo = data.promotions;
+              if (promo && promo.level) {
+                out += '<p>Nivel actual: <strong>' + promo.level + '</strong></p>';
+                if (promo.history && promo.history.length) {
+                  out += '<h4>Promociones</h4><ul>';
+                  promo.history.forEach(function(p){ out += '<li>' + p.date + ': ' + p.from + ' → ' + p.to + '</li>'; });
+                  out += '</ul>';
+                }
+              } else {
+                // mostrar último resultado como nivel
+                if (data.results && data.results.length) {
+                  var last = data.results[data.results.length -1];
+                  out += '<p>Nivel asignado (último): <strong>' + last.assignedLevel + '</strong></p>';
+                } else {
+                  out += '<p>No hay datos de pruebas todavía.</p>';
+                }
+              }
+
+              if (data.results && data.results.length) {
+                out += '<h4>Historial de Pruebas</h4>';
+                out += '<table style="width:100%;border-collapse:collapse;"><thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid #eee">Fecha</th><th style="text-align:left;padding:6px;border-bottom:1px solid #eee">Puntuación</th><th style="text-align:left;padding:6px;border-bottom:1px solid #eee">Nivel asignado</th></tr></thead><tbody>';
+                data.results.forEach(function(r){
+                  out += '<tr><td style="padding:6px;border-bottom:1px solid #f3f3f3">' + r.date + '</td><td style="padding:6px;border-bottom:1px solid #f3f3f3">' + r.score + '/' + r.total + '</td><td style="padding:6px;border-bottom:1px solid #f3f3f3">' + (r.assignedLevel || '-') + '</td></tr>';
+                });
+                out += '</tbody></table>';
+              }
+
+              out += '</div>';
+              var evo = document.getElementById('camon-evolution-area');
+              if (evo) evo.innerHTML = out;
+            }).catch(function(){
+              var evo = document.getElementById('camon-evolution-area');
+              if (evo) evo.innerHTML = '<div style="background:#fff;padding:12px;border-radius:8px;color:#666;">Error al cargar historial.</div>';
+            });
+        } catch (e) {
+          var evo = document.getElementById('camon-evolution-area');
+          if (evo) evo.innerHTML = '<div style="background:#fff;padding:12px;border-radius:8px;color:#666;">Error al solicitar historial.</div>';
+        }
+      }
+    }
+
+    // --- Prueba Inicial (demo con 25 preguntas: 10 rellenar, 15 opción múltiple) ---
+    const CAMON_SUBLEVELS = (function(){
+      const letters = ['A1','A2','B1','B2','C1','C2'];
+      const arr = [];
+      letters.forEach(l => {
+        for(let i=1;i<=5;i++) arr.push(l + '.' + i);
+      });
+      return arr; // length 30? Actually 6*5=30. We only need 25; we'll slice first 25.
+    })().slice(0,25);
+
+    // Generar preguntas simuladas (una por subnivel)
+    const CAMON_QUESTIONS = CAMON_SUBLEVELS.map(function(sub, idx) {
+      var isFill = idx < 10;
+      if (isFill) {
+        return { id: idx, sublevel: sub, type: 'fill', prompt: '(' + sub + ') Fill: I ____ football every Sunday.', answer: 'play' };
+      } else {
+        return { id: idx, sublevel: sub, type: 'choice', prompt: '(' + sub + ') Choose: She ____ to school yesterday.', options: ['go','went','gone','goes'], answer: 'went' };
+      }
+    });
+
+    // Almacenamiento temporal de resultados por usuario (en window)
+    var CAMON_TEST_RESULTS = window.CAMON_TEST_RESULTS || {};
+    window.CAMON_TEST_RESULTS = CAMON_TEST_RESULTS;
+
+    // nombre de usuario en cliente
+    var CAMON_USERNAME = '${user.name}';
+
+    function startDemoLevelTest() {
+      var area = document.getElementById('camon-area');
+      var questions = CAMON_QUESTIONS.slice().sort(function(){ return Math.random() - 0.5; });
+      var html = '<form id="level-form"><div style="display:flex;flex-direction:column;gap:12px;">';
+      questions.forEach(function(q, i){
+        if (q.type === 'fill') {
+          html += '<div><label><strong>Pregunta ' + (i+1) + ':</strong> ' + q.prompt.replace('(' + q.sublevel + ') ','') + '</label><br><input type="text" name="q_' + i + '" data-ans="' + q.answer + '" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-top:6px;"></div>';
+        } else {
+          html += '<div><label><strong>Pregunta ' + (i+1) + ':</strong> ' + q.prompt.replace('(' + q.sublevel + ') ','') + '</label><br>';
+          q.options.forEach(function(opt){
+            html += '<label style="margin-right:8px;"><input type="radio" name="q_' + i + '" value="' + opt + '"> ' + opt + '</label>';
+          });
+          html += '</div>';
+        }
+      });
+      html += '<div style="margin-top:12px;"><button type="submit" style="padding:10px 14px;background:#3b82f6;color:#fff;border:none;border-radius:8px;">Enviar prueba</button></div></div></form>';
+      area.innerHTML = '<h4>Prueba inicial (25 preguntas)</h4>' + html;
+
+      document.getElementById('level-form').addEventListener('submit', function(e){
+        e.preventDefault();
+        var form = e.target;
+        var formData = new FormData(form);
+        var results = [];
+        questions.forEach(function(q, i){
+          var key = 'q_' + i;
+          var userVal = formData.get(key);
+          var correct = false;
+          if (q.type === 'fill') {
+            if (userVal && userVal.trim().toLowerCase() === q.answer.toLowerCase()) correct = true;
+          } else {
+            if (userVal && userVal === q.answer) correct = true;
+          }
+          results.push({ index: i, sublevel: q.sublevel, correct: correct });
+        });
+
+        var correctIndices = results.filter(function(r){ return r.correct; }).map(function(r){ return CAMON_SUBLEVELS.indexOf(r.sublevel); }).sort(function(a,b){return a-b;});
+        var assignedLevel = CAMON_SUBLEVELS[0];
+        if (correctIndices.length === 0) {
+          assignedLevel = CAMON_SUBLEVELS[0];
+        } else {
+          var mid = Math.floor((correctIndices.length - 1) / 2);
+          var medianIdx = correctIndices[mid];
+          assignedLevel = CAMON_SUBLEVELS[medianIdx] || CAMON_SUBLEVELS[CAMON_SUBLEVELS.length-1];
+        }
+
+        var score = results.filter(function(r){ return r.correct; }).length;
+        var now = new Date().toISOString();
+        var username = CAMON_USERNAME;
+        if (!CAMON_TEST_RESULTS[username]) CAMON_TEST_RESULTS[username] = [];
+        CAMON_TEST_RESULTS[username].push({ date: now, score: score, total: results.length, assignedLevel: assignedLevel });
+        // enviar al servidor para persistencia temporal
+        try {
+          fetch('/api/camon/result', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user: username, date: now, score: score, total: results.length, assignedLevel: assignedLevel })
+          }).then(()=>{/* ok */}).catch(()=>{/* ignore */});
+        } catch (e) {
+          // ignore fetch errors in demo
+        }
+
+  area.innerHTML = '<div style="background:#fff;padding:12px;border-radius:8px;"><h4>Resultado</h4><p>Puntuación: ' + score + '/' + results.length + '</p><p>Nivel asignado: <strong>' + assignedLevel + '</strong></p><button data-demo="evolution" style="padding:8px 12px;background:#10b981;color:#fff;border:none;border-radius:8px;">Ver evolución</button></div>';
+      });
+    }
+
+    function startDemoGrammar() {
+      const area = document.getElementById('camon-daily-area');
+      area.innerHTML = '<div style="background:#fff;padding:12px;border-radius:8px;">Demo: 10 preguntas de gramática (escribe la respuesta). [Implementación parcial]</div>';
+    }
+
+    function startDemoReading() {
+      const area = document.getElementById('camon-daily-area');
+      area.innerHTML = '<div style="background:#fff;padding:12px;border-radius:8px;">Demo: Reading con 10 preguntas de opción múltiple. [Implementación parcial]</div>';
+    }
+
+    function startDemoChat() {
+      const area = document.getElementById('camon-daily-area');
+      area.innerHTML = '<div style="background:#fff;padding:12px;border-radius:8px;">' +
+        '<p>Chat por voz con Elizabeth (demo): pulsa y habla.</p>' +
+        '<button id="record-btn" onmousedown="startRecording()" onmouseup="stopRecording()" style="padding:10px 14px;border-radius:8px;background:#ef4444;color:white;border:none;">🎤 Mantén para hablar</button>' +
+        '<div id="chat-area" style="margin-top:8px;height:160px;overflow:auto;border:1px solid #eee;padding:8px;border-radius:6px;background:#fafafa"></div>' +
+        '<input id="chat-input" style="display:none;margin-top:8px;width:100%;padding:8px;border-radius:6px;border:1px solid #ddd;" placeholder="(demo)" />' +
+        '</div>';
+      // Inicializar reconocimiento si está disponible
+      if ('webkitSpeechRecognition' in globalThis || 'SpeechRecognition' in globalThis) {
+        // ya se maneja en el bloque superior donde se crea recognition variable
+      } else {
+        const chatArea = document.getElementById('chat-area');
+        chatArea.innerHTML += '<div style="color:#666;">Reconocimiento de voz no soportado en este navegador (usa Chrome).</div>';
+      }
+    }
     
     // Inicializar
     showSection('level');
+    // Exponer funciones importantes en window para que los handlers inline o el rebind las encuentren
+    try {
+      window.showSection = showSection;
+      window.startLevelTest = startLevelTest;
+      window.startGrammar = startGrammar;
+      window.startReading = startReading;
+      window.toggleRecording = toggleRecording;
+      window.toggleTextInput = toggleTextInput;
+      window.sendTextMessage = sendTextMessage;
+      window.startRecording = startRecording;
+      window.stopRecording = stopRecording;
+      window.showCamonPanel = showCamonPanel;
+      window.startDemoLevelTest = startDemoLevelTest;
+      window.startDemoGrammar = startDemoGrammar;
+      window.startDemoReading = startDemoReading;
+      window.startDemoChat = startDemoChat;
+    } catch (e) {
+      // ignore if window isn't available in some environments
+    }
+  </script>
+  <script>
+  // Ensure inline 'onclick' attributes call the intended global functions even if
+  // some scripts are executed in a different order or closure. This replaces
+  // simple inline callers like "showSection('test')" with proper event listeners.
+    document.addEventListener('DOMContentLoaded', function(){
+      try {
+        document.querySelectorAll('[onclick]').forEach(function(el){
+          var code = el.getAttribute('onclick');
+          if (!code) return;
+          // match patterns like fnName('arg') or fnName()
+          var m = code.match(/^\s*([a-zA-Z0-9_$.]+)\s*\(\s*('([^']*)'|"([^"]*)")?\s*\)\s*;?\s*$/);
+          if (!m) return;
+          var fnName = m[1];
+          var arg = (m[3] !== undefined) ? m[3] : (m[4] !== undefined ? m[4] : null);
+          // remove inline attribute to avoid double-calls
+          el.removeAttribute('onclick');
+          el.addEventListener('click', function(e){
+            try {
+              var fn = window[fnName];
+              if (typeof fn === 'function') {
+                if (arg !== null) fn(arg);
+                else fn();
+              } else {
+                console.warn('Function not found on window:', fnName);
+              }
+            } catch (err) {
+              console.error('Error invoking handler', fnName, err);
+            }
+          });
+        });
+      } catch (e) {
+        console.error('onclick-rebind error', e && e.message ? e.message : e);
+      }
+    });
   </script>
 </body>
 </html>`;
@@ -520,35 +678,148 @@ const server = http.createServer((req, res) => {
     res.end(englishHTML);
     return;
   }
+  // Servir cliente Ca'mon externo
+  if (parsedUrl.pathname === '/camon.js') {
+    try {
+      const camonPath = path.join(__dirname, 'public', 'camon.js');
+      const camonContent = fs.readFileSync(camonPath, 'utf8');
+      res.writeHead(200, {'Content-Type': 'application/javascript'});
+      res.end(camonContent);
+    } catch (e) {
+      res.writeHead(404);
+      res.end('// camon.js not found');
+    }
+    return;
+  }
   
-  // Rutas de usuarios
+  // Rutas de usuarios por query (?user=...)
+  if (parsedUrl.pathname === '/' && query.user && USERS[query.user]) {
+    if (query.user === 'javi_administrador') {
+      res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
+      res.end(getAdminPage(query));
+      return;
+    } else {
+      res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
+      res.end(getUserPage(query.user, query));
+      return;
+    }
+  }
+  // Rutas antiguas personalizadas
   if (parsedUrl.pathname === '/javier/abc123xyz789def456') {
     res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
-    res.end(getUserPage('javier'));
+    res.end(getUserPage('javier', query));
     return;
   }
   if (parsedUrl.pathname === '/raquel/uvw012rst345ghi678') {
     res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
-    res.end(getUserPage('raquel'));
+    res.end(getUserPage('raquel', query));
     return;
   }
   if (parsedUrl.pathname === '/mario/jkl901mno234pqr567') {
     res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
-    res.end(getUserPage('mario'));
+    res.end(getUserPage('mario', query));
     return;
   }
   if (parsedUrl.pathname === '/alba/stu890vwx123yzb456') {
     res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
-    res.end(getUserPage('alba'));
+    res.end(getUserPage('alba', query));
     return;
   }
   if (parsedUrl.pathname === '/admin/cde789fgh012ijl345') {
     res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
-    res.end(getAdminPage());
+    res.end(getAdminPage(query));
     return;
   }
   
   // APIs
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/camon/result') {
+    // If server-side CAMON_SECRET is configured, require header X-CAMON-SECRET
+    if (CAMON_SECRET) {
+      const provided = req.headers['x-camon-secret'];
+      if (!provided || provided !== CAMON_SECRET) {
+        res.writeHead(403, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify({ error: 'forbidden' }));
+        return;
+      }
+    }
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const data = JSON.parse(body);
+        const user = data.user || 'unknown';
+        // rate limit
+        const now = Date.now();
+        const last = CAMON_LAST_SUBMIT[user] || 0;
+        if (now - last < CAMON_MIN_SUBMIT_INTERVAL_MS) {
+          res.writeHead(429, {'Content-Type': 'application/json'});
+          res.end(JSON.stringify({ error: 'too_many_requests' }));
+          return;
+        }
+        CAMON_LAST_SUBMIT[user] = now;
+        const score = parseInt(data.score || 0, 10);
+        const total = parseInt(data.total || 0, 10);
+        let assignedLevel = data.assignedLevel;
+        if (!assignedLevel) {
+          assignedLevel = computeAssignedLevel(score, total);
+        }
+        if (!CAMON_SERVER_RESULTS[user]) CAMON_SERVER_RESULTS[user] = [];
+        CAMON_SERVER_RESULTS[user].push({ date: data.date || new Date().toISOString(), score: score, total: total, assignedLevel: assignedLevel });
+        // Reglas de promoción: si en las 3 últimas pruebas el porcentaje >= 0.9, subir 1 subnivel
+        try {
+          const history = CAMON_SERVER_RESULTS[user].slice(-5); // revisar últimas hasta 5
+          const recent = CAMON_SERVER_RESULTS[user].slice(-3);
+          const passedThree = recent.length === 3 && recent.every(r => (r.total>0) && (r.score / r.total) >= 0.9);
+          if (passedThree) {
+            const current = CAMON_PROMOTIONS[user] && CAMON_PROMOTIONS[user].level ? CAMON_PROMOTIONS[user].level : assignedLevel;
+            const idx = SERVER_CAMON_SUBLEVELS.indexOf(current);
+            const next = SERVER_CAMON_SUBLEVELS[Math.min(SERVER_CAMON_SUBLEVELS.length -1, idx + 1)];
+            CAMON_PROMOTIONS[user] = CAMON_PROMOTIONS[user] || { history: [] };
+            CAMON_PROMOTIONS[user].level = next;
+            CAMON_PROMOTIONS[user].history = CAMON_PROMOTIONS[user].history || [];
+            CAMON_PROMOTIONS[user].history.push({ date: new Date().toISOString(), from: current, to: next });
+          }
+        } catch (e) {
+          console.error('Promotion check error', e.message);
+        }
+        // persistir en disco
+        saveCamonResultsToDisk();
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify({ success: true }));
+      } catch (e) {
+        res.writeHead(400, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify({ success: false, error: e.message }));
+      }
+    });
+    return;
+  }
+  // DEBUG: obtener resultados almacenados en servidor
+  if (req.method === 'GET' && parsedUrl.pathname === '/api/camon/debug') {
+    // proteger debug con secreto si está configurado
+    if (CAMON_SECRET) {
+      const provided = parsedUrl.query && parsedUrl.query.secret;
+      if (!provided || provided !== CAMON_SECRET) {
+        res.writeHead(403, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify({ error: 'forbidden' }));
+        return;
+      }
+    }
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    res.end(JSON.stringify(CAMON_SERVER_RESULTS));
+    return;
+  }
+  // GET history + promotions por usuario
+  if (req.method === 'GET' && parsedUrl.pathname === '/api/camon/history') {
+    const u = parsedUrl.query && parsedUrl.query.user ? parsedUrl.query.user : null;
+    if (!u) {
+      res.writeHead(400, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({ error: 'user required' }));
+      return;
+    }
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    res.end(JSON.stringify({ results: CAMON_SERVER_RESULTS[u] || [], promotions: CAMON_PROMOTIONS[u] || null }));
+    return;
+  }
   if (req.method === 'POST' && parsedUrl.pathname === '/api/activity') {
     let body = '';
     req.on('data', chunk => body += chunk);
@@ -563,7 +834,7 @@ const server = http.createServer((req, res) => {
         repeat: data.repeat,
         repeatDays: data.repeatDays || [],
         date: data.date,
-        completed: false
+        status: 'pendiente'
       };
       activities.push(activity);
       res.writeHead(200, {'Content-Type': 'application/json'});
@@ -572,17 +843,20 @@ const server = http.createServer((req, res) => {
     return;
   }
   
-  if (req.method === 'POST' && parsedUrl.pathname === '/api/complete-activity') {
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/activity/status') {
     let body = '';
     req.on('data', chunk => body += chunk);
     req.on('end', () => {
       const data = JSON.parse(body);
       const activity = activities.find(a => a.id === data.id);
       if (activity) {
-        activity.completed = data.completed;
+        activity.status = data.status;
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify({success: true}));
+      } else {
+        res.writeHead(404, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify({success: false, message: 'Activity not found'}));
       }
-      res.writeHead(200, {'Content-Type': 'application/json'});
-      res.end(JSON.stringify({success: true}));
     });
     return;
   }
@@ -637,35 +911,46 @@ const server = http.createServer((req, res) => {
     req.on('data', chunk => body += chunk);
     req.on('end', () => {
       const data = JSON.parse(body);
-      const key = `${data.week}-${data.day}-${data.meal}`;
-      mealPlan[key] = data.content;
+      const { weekKey, cellKey, type, content, recipeId } = data;
+      if (!mealPlan[weekKey]) {
+          mealPlan[weekKey] = {};
+      }
+      mealPlan[weekKey][cellKey] = { type, content, recipeId, done: false };
       res.writeHead(200, {'Content-Type': 'application/json'});
       res.end(JSON.stringify({success: true}));
     });
     return;
   }
   
-  if (req.method === 'POST' && parsedUrl.pathname === '/api/complete-meal') {
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/meal-plan/mark-done') {
     let body = '';
     req.on('data', chunk => body += chunk);
     req.on('end', () => {
-      const data = JSON.parse(body);
-      // Si es una receta, descontar ingredientes
-      if (data.recipeId) {
-        const recipe = recipes.find(r => r.id === data.recipeId);
-        if (recipe) {
-          recipe.ingredients.forEach(ing => {
-            const ingredientName = Object.keys(ing)[0];
-            const quantity = ing[ingredientName];
-            const inventoryItem = inventory.find(i => i.name === ingredientName);
-            if (inventoryItem) {
-              inventoryItem.quantity = Math.max(0, inventoryItem.quantity - quantity);
+        const { weekKey, cellKey, done } = JSON.parse(body);
+
+        if (mealPlan[weekKey] && mealPlan[weekKey][cellKey]) {
+            const meal = mealPlan[weekKey][cellKey];
+            meal.done = done;
+
+            if (done && meal.type === 'recipe') {
+                const recipe = recipes.find(r => r.id === meal.recipeId);
+                if (recipe && recipe.ingredients) {
+                    recipe.ingredients.forEach(ingObj => {
+                        const ingName = Object.keys(ingObj)[0];
+                        const ingQuantity = ingObj[ingName];
+                        const inventoryItem = inventory.find(i => i.name === ingName);
+                        if (inventoryItem) {
+                            inventoryItem.quantity = Math.max(0, inventoryItem.quantity - ingQuantity);
+                        }
+                    });
+                }
             }
-          });
+            res.writeHead(200, {'Content-Type': 'application/json'});
+            res.end(JSON.stringify({ success: true }));
+        } else {
+            res.writeHead(404, {'Content-Type': 'application/json'});
+            res.end(JSON.stringify({ success: false, message: 'Comida no encontrada.' }));
         }
-      }
-      res.writeHead(200, {'Content-Type': 'application/json'});
-      res.end(JSON.stringify({success: true}));
     });
     return;
   }
@@ -713,6 +998,44 @@ const server = http.createServer((req, res) => {
     }));
     return;
   }
+
+  // Dev logging endpoint (simple collector for client pings)
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/dev/log') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        console.log('DEV LOG:', body);
+      } catch (e) {}
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({ ok: true }));
+    });
+    return;
+  }
+
+  // Dev simple-auth endpoints to ease frontend testing (no real auth)
+  if (parsedUrl.pathname === '/api/simple-auth/user') {
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    res.end(JSON.stringify({ id: 'javier', email: 'javier@app.local', firstName: 'Javier' }));
+    return;
+  }
+
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/simple-auth/login') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      // echo back a simple user object
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({ ok: true, user: { id: 'javier', email: 'javier@app.local', firstName: 'Javier' } }));
+    });
+    return;
+  }
+
+  if (req.method === 'POST' && parsedUrl.pathname === '/api/simple-auth/logout') {
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    res.end(JSON.stringify({ ok: true }));
+    return;
+  }
   
   // API Chat con Elizabeth (OpenAI)
   if (req.method === 'POST' && parsedUrl.pathname === '/api/chat-elizabeth') {
@@ -749,10 +1072,35 @@ const server = http.createServer((req, res) => {
         const openaiData = await response.json();
         
         if (openaiData.choices && openaiData.choices[0]) {
+          const textResp = openaiData.choices[0].message.content;
+          // If API_KEY present, try to generate TTS audio (MP3) and return base64
+          let audioBase64 = null;
+          if (process.env.API_KEY) {
+            try {
+              const ttsRes = await fetch('https://api.openai.com/v1/audio/speech', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${process.env.API_KEY}`,
+                  'Content-Type': 'application/json',
+                  'Accept': 'audio/mpeg'
+                },
+                body: JSON.stringify({ model: 'gpt-4o-mini-tts', voice: 'alloy', input: textResp })
+              });
+
+              if (ttsRes && ttsRes.ok) {
+                const ab = await ttsRes.arrayBuffer();
+                const buf = Buffer.from(ab);
+                audioBase64 = buf.toString('base64');
+              }
+            } catch (e) {
+              console.error('TTS generation failed:', e && e.message ? e.message : e);
+            }
+          }
+
           res.writeHead(200, {'Content-Type': 'application/json'});
           res.end(JSON.stringify({
-            response: openaiData.choices[0].message.content,
-            audio: true
+            response: textResp,
+            audioBase64: audioBase64
           }));
         } else {
           throw new Error('Invalid OpenAI response');
